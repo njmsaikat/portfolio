@@ -641,7 +641,7 @@
           </div>
 
           <div class="col-lg-7 mt-5 mt-lg-0 d-flex align-items-stretch">
-            <form method="POST" role="form" class="php-email-form" data-netlify="true" name="contact">
+            <!-- <form method="POST" role="form" class="php-email-form" data-netlify="true" name="contact">
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label for="name">Your Name</label>
@@ -665,6 +665,25 @@
                   data-msg="Please write something for us"></textarea>
               </div>
               <div class="text-center"><button type="submit">Send Message</button></div>
+            </form> -->
+
+
+            <form name="contact" method="POST" data-netlify="true" class="php-email-form">
+              <div class="form-group">
+                <label>Your Name: </label>
+                <input class="form-control" type="text" name="name" />
+              </div>
+              <div class="form-group">
+                <label>Your Email:</label>
+                <input class="form-control" type="email" name="email" />
+              </div>
+              <div class="form-group">
+                <label>Message:</label>
+                <textarea class="form-control" name="message" rows="10"></textarea>
+              </div>
+              <div class="text-center">
+                <button type="submit">Send Message</button>
+              </div>
             </form>
           </div>
 
