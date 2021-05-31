@@ -828,6 +828,10 @@ section {
   padding: 10px 12px;
 }
 
+.captcha-new {
+  margin-bottom: 10px;
+}
+
 .contact .email-form button[type="submit"] {
   background: #0073aa;
   border: 0;
