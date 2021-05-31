@@ -872,12 +872,17 @@ section {
 --------------------------------------------------------------*/
 .breadcrumbs {
   padding: 20px 0;
-  background: #f9f9f9;
+  background: #030b14;
+  color: #fff;
 }
 
 .breadcrumbs h2 {
   font-size: 26px;
   font-weight: 300;
+}
+
+.breadcrumbs a{
+  color: #4fb6e6;
 }
 
 .breadcrumbs ol {
@@ -896,7 +901,7 @@ section {
 .breadcrumbs ol li + li::before {
   display: inline-block;
   padding-right: 10px;
-  color: #0e2442;
+  color: #fff;
   content: "/";
 }
 
@@ -1031,4 +1036,24 @@ section {
     width: auto;
     padding-right: 20px 15px;
   }
+}
+
+
+/*portfolio page*/
+.portfolio-page-title h2:after{
+  display: none;
+}
+
+
+/*show all button*/
+button.show-all {
+  background: #0073aa;
+  border: 0;
+  padding: 10px 24px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 4px;
+}
+button.show-all:hover {
+background: #37b3ed;
 }
