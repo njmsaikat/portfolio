@@ -1059,11 +1059,9 @@ background: #37b3ed;
 }
 
 /*skype chat button*/
-.bubble .lwc-chat-button {
+/* .bubble .lwc-chat-button {
   margin-bottom: 20px;
-}
+} */
 
-/*image*/
-img {
-  aspect-ratio: attr(width) / attr(height);
-}
+/*fb messenger chat*/
+
