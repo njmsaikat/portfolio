@@ -1062,3 +1062,8 @@ background: #37b3ed;
 .bubble .lwc-chat-button {
   margin-bottom: 20px;
 }
+
+/*image*/
+img {
+  aspect-ratio: attr(width) / attr(height);
+}
