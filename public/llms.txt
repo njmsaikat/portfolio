@@ -1,0 +1,25 @@
+# Saikat Roy
+
+> Full stack software engineer based in Dhaka, Bangladesh. Backend-leaning: builds REST APIs and web applications with Python and Django, and pairs them with React and Next.js frontends.
+
+## Core skills
+
+Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework, Next.js, React, REST API Design, PostgreSQL, MySQL, MongoDB, Redis, AWS, DigitalOcean, Docker, Nginx, Linux, Git & CI/CD, WordPress, Shopify.
+
+## Experience
+
+- Software Engineer, YOUR Campus (Mar 2022–Present) — backend architecture and deployment for a campus services platform (laundry, vending, e-commerce) serving university students in Bangladesh.
+- Web Developer, Upwork/Freelance (May 2021–Present) — front-end, WordPress, and Shopify development for clients worldwide.
+- Junior Software Developer, Germania Holdings Ltd. (Jul 2021–Nov 2022) — backend operations, server management, and DevOps for a smart vending machine service.
+- Executive Developer, Dokmi BD (Aug 2020–Jun 2021) — WordPress and Shopify development.
+
+## Note on project visibility
+
+Most production work (current employer and freelance clients) lives in private repositories under NDA and isn't publicly browsable. The Portfolio section shows public GitHub repositories and client sites where a live/public link exists; it is not a complete list of work performed — see Experience and Skills for the fuller picture.
+
+## Links
+
+- Portfolio: https://saikatroy.netlify.app
+- GitHub: https://github.com/njmsaikat
+- LinkedIn: https://www.linkedin.com/in/njmsaikat/
+- Resume/CV: https://saikatroy.netlify.app/cv/Profile.pdf

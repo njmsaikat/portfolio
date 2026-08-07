@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Tailwind v4 class-based dark mode: toggling `.dark` on <html> (done by the
+   inline no-flash script in layout.tsx) drives every `dark:` utility. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --color-bg: #ffffff;
+  --color-bg-elevated: #f6f7f8;
+  --color-surface: #ffffff;
+  --color-text: #0a0a0b;
+  --color-text-muted: #5b5f6a;
+  --color-border: rgba(10, 10, 11, 0.12);
+  --color-accent: #4338ca;
+  --color-accent-soft: rgba(67, 56, 202, 0.1);
+  --gradient-accent: linear-gradient(135deg, #4338ca, #4f46e5 60%, #6d28d9);
+  --grid-line: rgba(10, 10, 11, 0.05);
+}
+
+.dark {
+  --color-bg: #08090b;
+  --color-bg-elevated: #0d0f12;
+  --color-surface: #111318;
+  --color-text: #f1f2f4;
+  --color-text-muted: #8b8f9c;
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-accent: #818cf8;
+  --color-accent-soft: rgba(129, 140, 248, 0.12);
+  --gradient-accent: linear-gradient(135deg, #6366f1, #818cf8 60%, #a78bfa);
+  --grid-line: rgba(255, 255, 255, 0.05);
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-technical);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+.surface-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.spotlight-overlay {
+  background: radial-gradient(240px circle at var(--x, 50%) var(--y, 50%), var(--color-accent-soft), transparent 70%);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.eyebrow {
+  font-family: var(--font-technical);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.text-gradient {
+  background-image: var(--gradient-accent);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
