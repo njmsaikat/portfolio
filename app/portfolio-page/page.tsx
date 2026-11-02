@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ProjectCard } from "@/components/ProjectCard";
 import { BreadcrumbJsonLd } from "@/components/JsonLd";
 import { projects } from "@/data/projects";
@@ -33,13 +34,13 @@ export default function PortfolioPage() {
           <p className="mt-3 text-[var(--color-text-muted)]">
             Open-source repositories and client work, in one place. Most production work is under
             private repositories or NDA — see the{" "}
-            <a href="/#resume" className="text-[var(--color-accent)] hover:underline">
+            <Link href="/#resume" className="text-[var(--color-accent)] hover:underline">
               experience
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="/#skills" className="text-[var(--color-accent)] hover:underline">
+            <Link href="/#skills" className="text-[var(--color-accent)] hover:underline">
               skills
-            </a>{" "}
+            </Link>{" "}
             sections for the fuller picture.
           </p>
         </div>

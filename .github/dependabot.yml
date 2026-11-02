@@ -1,0 +1,19 @@
+# Batches dependency PRs so they don't pile up: at most one grouped
+# security PR and one grouped monthly minor/patch PR. Major versions
+# still arrive as individual PRs since they may need code changes.
+# Netlify builds a deploy preview for every PR, so a green preview
+# means the static build still works.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      npm-minor-and-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
