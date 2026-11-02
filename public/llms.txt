@@ -17,6 +17,14 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 
 Most production work (current employer and freelance clients) lives in private repositories under NDA and isn't publicly browsable. The Portfolio section shows public GitHub repositories and client sites where a live/public link exists; it is not a complete list of work performed — see Experience and Skills for the fuller picture.
 
+## Services
+
+- Django & REST API development: https://saikatroy.netlify.app/services/django-rest-api-development
+- Docker, DevOps & cloud deployment: https://saikatroy.netlify.app/services/docker-devops-deployment
+- Shopify development: https://saikatroy.netlify.app/services/shopify-development
+- WordPress development: https://saikatroy.netlify.app/services/wordpress-development
+- Also: full-stack web development (Django + React/Next.js) and technical consulting & support.
+
 ## Links
 
 - Portfolio: https://saikatroy.netlify.app

@@ -4,7 +4,7 @@ export const navItems = [
   { href: "/#expertise", label: "Expertise" },
   { href: "/#resume", label: "Experience" },
   { href: "/#portfolio", label: "Work" },
-  { href: "/#services", label: "Services" },
+  { href: "/services", label: "Services" },
   { href: "/blog", label: "Blog" },
   { href: "/#contact", label: "Contact" },
 ];
