@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
 import { certifications, education, experience } from "@/data/experience";
@@ -9,6 +10,7 @@ export function Resume() {
       eyebrow="Resume"
       title="Experience & education"
       description="Where I've worked, and how I got here."
+      className="bg-[var(--color-bg-elevated)]"
     >
       <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr]">
         <div>
@@ -44,6 +46,12 @@ export function Resume() {
               </li>
             ))}
           </ol>
+          <Link
+            href="/resume"
+            className="mt-10 inline-flex text-sm font-semibold text-[var(--color-accent)] hover:underline"
+          >
+            Full résumé (printable) &rarr;
+          </Link>
         </div>
 
         <div className="space-y-6">

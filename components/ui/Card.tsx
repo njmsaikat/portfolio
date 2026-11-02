@@ -6,9 +6,12 @@ import { useSpotlight } from "@/lib/useSpotlight";
 export function Card({
   children,
   className = "",
+  outerClassName = "",
 }: {
   children: ReactNode;
   className?: string;
+  // Applied to the bordered wrapper, e.g. grid placement like col-span.
+  outerClassName?: string;
 }) {
   const { ref, onMouseMove } = useSpotlight<HTMLDivElement>();
 
@@ -16,7 +19,7 @@ export function Card({
     <div
       ref={ref}
       onMouseMove={onMouseMove}
-      className="surface-panel group relative overflow-hidden rounded-lg transition-colors duration-200 hover:border-[var(--color-accent)]"
+      className={`surface-panel group relative overflow-hidden rounded-xl transition-colors duration-200 hover:border-[var(--color-accent)] ${outerClassName}`}
     >
       <div
         aria-hidden
