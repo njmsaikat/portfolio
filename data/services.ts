@@ -142,7 +142,7 @@ export const services: Service[] = [
       headline: "Shopify development",
       intro: [
         "I build and customise Shopify storefronts: theme changes, new store builds and migrations, so the store looks like the brand and is easy for your team to run day to day.",
-        "I've worked on Shopify since 2020, first at Dokmi BD and then for clients worldwide through Upwork. Client stores I've worked on include Vivalvic, Silver Mirror and Fusion Organics.",
+        "I've worked on Shopify since 2020, first at Dokmi BD and then for clients worldwide through Upwork. Client stores I've worked on range from fashion and skincare to health supplements.",
       ],
       deliverables: [
         {
@@ -164,7 +164,7 @@ export const services: Service[] = [
         },
       ],
       stack: ["Shopify", "HTML5", "CSS3", "JavaScript"],
-      relatedProjects: ["Vivalvic", "Silver Mirror", "Fusion Organics"],
+      relatedProjects: ["Women's fashion store", "Skincare store", "Health supplements store"],
       faqs: [
         {
           question: "Can you customise my existing theme?",
@@ -193,7 +193,7 @@ export const services: Service[] = [
       headline: "WordPress development",
       intro: [
         "I build, fix and rebuild WordPress sites: theme customisation, plugin setup, WooCommerce stores, migrations, and full rebuilds when a site has outgrown its theme.",
-        "WordPress is where my professional development work started, at Dokmi BD in 2020, and I've built WordPress sites for clients worldwide through Upwork since 2021. Client sites I've worked on include Mize Garden, Chiro Slumber and Duradry.",
+        "WordPress is where my professional development work started, at Dokmi BD in 2020, and I've built WordPress sites for clients worldwide through Upwork since 2021. Client sites I've worked on range from a farm and garden supplier to sleep products and personal care brands.",
       ],
       deliverables: [
         {
@@ -215,7 +215,7 @@ export const services: Service[] = [
         },
       ],
       stack: ["WordPress", "WooCommerce", "PHP", "MySQL", "JavaScript", "Bootstrap", "cPanel"],
-      relatedProjects: ["Mize Garden", "Chiro Slumber", "Duradry"],
+      relatedProjects: ["Farm & garden supply website", "Mattress & sleep products store", "Personal care brand website"],
       faqs: [
         {
           question: "Can you fix or extend my existing WordPress site?",

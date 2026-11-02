@@ -26,7 +26,7 @@ export const focusAreas: FocusArea[] = [
     description:
       "Shopify storefronts and WordPress sites for clients worldwide: theme customization, plugins, migrations and full rebuilds.",
     tags: ["Shopify", "WordPress", "WooCommerce"],
-    href: "/#portfolio",
+    href: "/work/freelance",
   },
   {
     eyebrow: "Open source",

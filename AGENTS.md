@@ -40,6 +40,7 @@ app/                 Routes (App Router)
   portfolio-page/    "/portfolio-page" full project listing
   resume/            "/resume"         HTML résumé, print-styled (browser "Save as PDF" is the PDF)
   services/          "/services"       service hub; services/[slug]/ renders each `page` in data/services.ts
+  work/[slug]/       "/work/<slug>"    case studies from data/caseStudies.ts (/work itself 301s to /portfolio-page)
   blog/              "/blog"           post index; blog/[slug]/ renders content/blog/<slug>.mdx
   rss.xml/route.ts   "/rss.xml"        RSS feed (static GET route handler)
   opengraph-image.tsx                  build-time social images (also per page/post, via lib/og.tsx)
@@ -66,6 +67,7 @@ All content lives in `data/*.ts`. These files are typed (`data/types.ts`) and co
 | File | Controls |
 | --- | --- |
 | `data/profile.ts` | Name, job title, headline/intro (hero), bio, contact info, photos, `yearsExperience`, `freelanceAvailable` |
+| `data/caseStudies.ts` | Case studies at `/work/<slug>` (YOUR Campus, SnacKeeper, freelance) |
 | `data/focus.ts` | "What I build" bento tiles on the home page (`size: "large"` = 2×2, `"wide"` = full row) |
 | `data/experience.ts` | Work history, education, certifications |
 | `data/skills.ts` | Skill groups (also feeds JSON-LD `knowsAbout`) |
@@ -79,6 +81,7 @@ Notes:
 - `data/projects.ts` is a **hand-curated snapshot**, not a live GitHub feed. Star counts are static. Don't add GitHub API calls: there's no server, and client-side fetching would add a dependency on rate limits.
 - **Service pages** are written for hiring searches ("Shopify developer for hire"). `metaTitle` is used as-is (no suffix) and `metaDescription` should stay ≤ 160 chars. `relatedProjects` must match `name`s in `projects.ts`, and `relatedPosts` lists blog slugs (those posts automatically link back to the service).
 - Hero stats: "Client sites delivered" is the count of `type: "client"` entries in `projects.ts`; years comes from `profile.yearsExperience`.
+- **Confidentiality (Saikat's explicit rules):** case studies stay at the level of products, public numbers, role, *high-level* architecture and tech stack. Never describe internal design, data flows, infrastructure, security or partner details. Payments are "payment gateway integration", never a "wallet". **Never name freelance clients** anywhere (text, card titles, image file names, links): client work uses generic titles like "Skincare store". Keep big platform numbers out of the hero; they belong in the case studies.
 - **Content must stay factual.** Every claim on the site is grounded in `data/` (sourced from the résumé/LinkedIn export). Don't invent metrics, clients, technologies per job, or response-time promises.
 - **Blog posts:** add `content/blog/<slug>.mdx` exporting `metadata` (`title`, optional `seoTitle` of about 60 chars for `<title>`, `description`, `date` as `yyyy-mm-dd`, optional `updated`, `tags`). The index, post page, OG image, RSS feed, sitemap and home "Latest from the blog" pick it up automatically. The slug is the URL, so don't rename published files.
 - Profile photos: `public/images/saikat-roy.jpg` (4:5, 960×1200) keeps the **same filename as the old photo** because that URL is indexed; `saikat-roy-square.jpg` (600×600) is for avatars, OG images and JSON-LD. Strip EXIF/GPS metadata from any new photo.
@@ -89,7 +92,7 @@ Notes:
 ## Hard constraints (don't break these)
 
 1. **Static export only.** Never introduce anything that needs a server at runtime: request-dependent route handlers, server actions, `cookies()`/`headers()`, dynamic routes without `generateStaticParams` (+ `dynamicParams = false`), middleware, or image optimization. Metadata routes, `opengraph-image` files and GET route handlers must keep `export const dynamic = "force-static"`.
-2. **URLs are frozen for SEO.** Keep the routes `/`, `/portfolio-page`, `/blog`, `/blog/<slug>`, `/resume`, `/services` and `/services/<slug>`, and the home anchors `#about #skills #resume #portfolio #services #testimonials #contact` (plus the newer `#expertise #writing`), exactly as they are. Keep `trailingSlash: false` in `next.config.ts`. `next.config` redirects don't work in a static export; old or renamed URLs get a 301 in `public/_redirects` (Netlify). It already maps the removed `/cv/saikat-roy-cv.pdf` and the old site's `/portfolio-details(.html)`.
+2. **URLs are frozen for SEO.** Keep the routes `/`, `/portfolio-page`, `/blog`, `/blog/<slug>`, `/resume`, `/services`, `/services/<slug>` and `/work/<slug>`, and the home anchors `#about #skills #resume #portfolio #services #testimonials #contact` (plus the newer `#expertise #writing`), exactly as they are. Keep `trailingSlash: false` in `next.config.ts`. `next.config` redirects don't work in a static export; old or renamed URLs get a 301 in `public/_redirects` (Netlify). It already maps the removed `/cv/saikat-roy-cv.pdf` and the old site's `/portfolio-details(.html)`.
 3. **Netlify Forms.** The contact `<form name="contact" data-netlify="true">` in `components/sections/Contact.tsx` must render **unconditionally in the static HTML** (never behind a client-only mount, `useEffect` gate or dynamic import). Netlify detects forms by crawling the built HTML. Keep the hidden `form-name` input and the `bot-field` honeypot, and keep field `name`s stable.
 4. **Content visible without JS.** Never hide real content by default and reveal it with JavaScript (e.g. IntersectionObserver fade-ins). A previous scroll-reveal was removed because content stayed invisible when hydration was slow or failed.
 5. **`public/googlee86a7ed265752fd7.html`** is a Google Search Console verification file. Don't modify, move or reformat it.

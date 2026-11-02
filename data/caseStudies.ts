@@ -41,6 +41,7 @@ export const caseStudies: CaseStudy[] = [
     roleDetail:
       "I design and build backend services from scratch, integrate payment gateways and machines, keep production stable as usage grows, and review the team's backend work.",
     stack: ["Python", "Django", "Django REST Framework", "PostgreSQL", "Redis", "Celery", "Docker", "Nginx", "AWS S3", "Firebase", "Sentry"],
+    cta: { href: "/services/django-rest-api-development", label: "Backend services" },
     press: [
       {
         outlet: "The Daily Star",
@@ -99,6 +100,7 @@ export const caseStudies: CaseStudy[] = [
       "Connected vending machines backed by a central server for sales, mobile payments and refunds, built for unattended, round-the-clock operation.",
     roleDetail:
       "I worked across the backend, payment and refund flows, and day-to-day operations, using Python, PHP and MySQL.",
+    cta: { href: "/services/docker-devops-deployment", label: "DevOps services" },
     stack: ["Python", "Django", "PHP", "MySQL", "PostgreSQL", "bKash & Nagad payment APIs", "Linux servers"],
     press: [
       {
@@ -124,5 +126,108 @@ export const caseStudies: CaseStudy[] = [
       title: "What happened next",
       text: "When SnacKeeper moved to YOUR Campus, I brought it into the YOUR Shop vending backend, where it now runs alongside the rest of the fleet.",
     },
+  },
+  {
+    slug: "freelance",
+    title: "Freelance web development: Shopify, WordPress and frontend work for clients worldwide",
+    metaTitle: "Freelance Shopify & WordPress Case Study | Saikat Roy",
+    metaDescription:
+      "Freelance work on Upwork and Fiverr since 2021: WordPress redesigns, Shopify theme customization, data migrations and responsive frontend fixes for clients worldwide.",
+    company: "Upwork & Fiverr",
+    role: "Freelance Web Developer",
+    period: "May 2021 – present · alongside full-time engineering",
+    summary:
+      "Redesigns, migrations, responsive fixes and Shopify theme work for clients worldwide, with five-star client reviews.",
+    intro: [
+      "Since 2021 I've worked with businesses around the world through Upwork and Fiverr, alongside my full-time engineering role. Clients come to me with a store that doesn't look like their brand, a site that breaks on mobile, or content stuck on an old platform. I get it fixed, polished and live.",
+      "I bring the same discipline as my backend work: understand the problem first, change only what's needed, and hand over something the client can run without me.",
+    ],
+    metrics: [
+      { value: "2021", label: "Freelancing since" },
+      { value: "Worldwide", label: "Clients" },
+      { value: "Shopify & WordPress", label: "Core platforms" },
+    ],
+    builtTitle: "What clients hire me for",
+    built: [
+      {
+        name: "WordPress redesigns",
+        description:
+          "Bringing dated WordPress sites up to date with new layouts and theme customization that fit the brand, without rebuilding what already works.",
+      },
+      {
+        name: "Shopify theme customization",
+        description: "Custom sections, layouts and styling for Shopify storefronts, including designs made to order.",
+      },
+      {
+        name: "Data & site migrations",
+        description: "Moving content, products and pages between platforms and hosts, planned so everything arrives intact.",
+      },
+      {
+        name: "Responsive frontend fixes",
+        description: "Fixing layouts that break on phones and tablets, so the site works on every screen.",
+      },
+      {
+        name: "WooCommerce & plugins",
+        description: "Setting up and configuring plugins, and WooCommerce for clients who sell online.",
+      },
+      {
+        name: "Speed & SEO fixes",
+        description: "Faster page loads and on-page SEO fixes, so the site is quicker to use and easier to find.",
+      },
+      {
+        name: "Landing pages & page builders",
+        description: "Campaign and product landing pages, hand-coded or built with page builders like Elementor.",
+      },
+      { name: "Custom frontend builds", description: "Hand-built, responsive front ends from a design." },
+    ],
+    architectureTitle: "How I work",
+    architecture:
+      "Mobile-first, pixel-perfect implementation, clear communication at every step, and a clean handover the client can maintain on their own.",
+    roleDetail:
+      "End to end: scoping the request with the client, building or fixing it, testing across devices, and delivering what was agreed.",
+    stack: [
+      "Shopify",
+      "Liquid",
+      "WordPress",
+      "WooCommerce",
+      "Elementor",
+      "PHP",
+      "JavaScript",
+      "jQuery",
+      "HTML5",
+      "CSS3",
+      "Bootstrap",
+      "MySQL",
+    ],
+    cta: { href: "/services/shopify-development", label: "Shopify & WordPress services" },
+    press: [],
+    quotes: [
+      {
+        text: "Saikat did a great job with fixing the responsiveness issues on our website. He communicated very well…",
+        source: "Upwork client",
+        rating: 5,
+      },
+      {
+        text: "…he made me a custom order for my request, he made a very outstanding design for my store and delivered early. Would use again A+",
+        source: "Fiverr client, United States",
+        rating: 5,
+      },
+      {
+        text: "Respectful freelancer, made the changes and was courteous.",
+        source: "Upwork client",
+        rating: 5,
+      },
+    ],
+    projects: [
+      "Women's fashion store",
+      "Skincare store",
+      "Health supplements store",
+      "Farm & garden supply website",
+      "Mattress & sleep products store",
+      "Personal care brand website",
+      "Mattress brand storefront",
+      "Custom apparel printing site",
+      "Book launch website",
+    ],
   },
 ];

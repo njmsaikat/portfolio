@@ -116,10 +116,15 @@ export interface CaseStudy {
   built: { name: string; description: string; status?: string }[];
   // High level only — never internal design, infrastructure or security detail.
   architecture: string;
+  architectureTitle?: string; // defaults to "How it's built"
   roleDetail: string;
   stack: string[];
   press: { outlet: string; title: string; url: string; date: string }[];
   closing?: { title: string; text: string };
+  // Verbatim client reviews (from the screenshots in public/images/testimonials).
+  quotes?: { text: string; source: string; rating: number }[];
+  projects?: string[]; // names from data/projects.ts to showcase
+  cta: { href: string; label: string }; // secondary button in the closing CTA
 }
 
 export interface Testimonial {

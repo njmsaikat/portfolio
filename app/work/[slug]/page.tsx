@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { BreadcrumbJsonLd } from "@/components/JsonLd";
 import { CaseStudyCard } from "@/components/CaseStudyCard";
 import { ButtonLink } from "@/components/ui/Button";
+import { ProjectCard } from "@/components/ProjectCard";
 import { caseStudies } from "@/data/caseStudies";
+import { projects } from "@/data/projects";
 import { site } from "@/data/site";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -46,6 +48,9 @@ export default async function CaseStudyPage({ params }: Props) {
   const study = caseStudies.find((s) => s.slug === slug);
   if (!study) notFound();
   const others = caseStudies.filter((s) => s.slug !== slug);
+  const showcased = (study.projects ?? [])
+    .map((name) => projects.find((p) => p.name === name))
+    .filter((p) => p !== undefined);
 
   return (
     <>
@@ -123,7 +128,10 @@ export default async function CaseStudyPage({ params }: Props) {
       <section className="border-t border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
         <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 sm:py-20 lg:grid-cols-2">
           <div>
-            <Heading eyebrow="Architecture" title="How it's built" />
+            <Heading
+              eyebrow={study.architectureTitle ? "Approach" : "Architecture"}
+              title={study.architectureTitle ?? "How it's built"}
+            />
             <p className="mt-5 text-[var(--color-text-muted)]">{study.architecture}</p>
             <h3 className="mt-10 font-[family-name:var(--font-technical)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
               Tech stack
@@ -151,6 +159,40 @@ export default async function CaseStudyPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {study.quotes && study.quotes.length > 0 && (
+        <section className="border-t border-[var(--color-border)]">
+          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+            <Heading eyebrow="Reviews" title="What clients say" />
+            <ul className="mt-10 grid gap-5 md:grid-cols-3">
+              {study.quotes.map((q) => (
+                <li key={q.text} className="surface-panel flex flex-col rounded-xl p-6">
+                  <p aria-label={`${q.rating} out of 5 stars`} className="text-[var(--color-warm)]">
+                    {"★".repeat(q.rating)}
+                  </p>
+                  <blockquote className="mt-3 flex-1 text-[var(--color-text)]">&ldquo;{q.text}&rdquo;</blockquote>
+                  <p className="mt-4 font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)]">
+                    {q.source}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {showcased.length > 0 && (
+        <section className="border-t border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
+          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+            <Heading eyebrow="Portfolio" title="Selected client work" />
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {showcased.map((project) => (
+                <ProjectCard key={project.name} project={project} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {study.press.length > 0 && (
         <section className="border-t border-[var(--color-border)]">
@@ -186,14 +228,14 @@ export default async function CaseStudyPage({ params }: Props) {
             </div>
             <div className="flex flex-wrap gap-3">
               <ButtonLink href="/#contact">Start a conversation</ButtonLink>
-              <ButtonLink href="/services/django-rest-api-development" variant="secondary">
-                Backend services
+              <ButtonLink href={study.cta.href} variant="secondary">
+                {study.cta.label}
               </ButtonLink>
             </div>
           </div>
           {others.length > 0 && (
             <div className="mt-14">
-              <p className="eyebrow">Another case study</p>
+              <p className="eyebrow">More case studies</p>
               <div className="mt-6 grid gap-6 md:grid-cols-2">
                 {others.map((s) => (
                   <CaseStudyCard key={s.slug} study={s} />

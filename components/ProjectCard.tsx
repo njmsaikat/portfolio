@@ -75,7 +75,7 @@ export function ProjectCard({ project }: { project: Project }) {
               Visit site &rarr;
             </a>
           ) : (
-            <span className="text-sm text-[var(--color-text-muted)]">No live link</span>
+            <span className="text-sm text-[var(--color-text-muted)]">Client work</span>
           )}
         </div>
       </div>

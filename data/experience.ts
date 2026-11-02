@@ -19,6 +19,7 @@ export const experience: ExperienceEntry[] = [
     start: "May 2021",
     end: "Present",
     description: "Freelance front-end, WordPress, and Shopify development for clients worldwide.",
+    caseStudy: "/work/freelance",
   },
   {
     role: "Junior Software Developer",

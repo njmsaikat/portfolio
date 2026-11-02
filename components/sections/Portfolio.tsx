@@ -13,7 +13,7 @@ export function Portfolio() {
       title="Featured work"
       description="Case studies from the platforms I build professionally, and products I've designed and shipped on my own."
     >
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {caseStudies.map((study) => (
           <CaseStudyCard key={study.slug} study={study} />
         ))}
