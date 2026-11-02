@@ -1,0 +1,5 @@
+# Netlify redirects (next.config redirects don't run in a static export).
+# 301s keep old, possibly indexed URLs pointing at their current equivalents.
+/cv/saikat-roy-cv.pdf     /resume          301
+/portfolio-details.html   /portfolio-page  301
+/portfolio-details        /portfolio-page  301
