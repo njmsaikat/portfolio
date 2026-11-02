@@ -8,12 +8,12 @@ export const profile = {
   intro:
     "From smart vending machines and campus laundry to Shopify storefronts: Django and REST API backends, the infrastructure that keeps them running around the clock, and the storefronts customers actually use.",
   roles: ["Senior Backend Engineer", "Django & REST API Developer", "Shopify & WordPress Developer"],
-  // Hero stats. Platform figures are public on your-campus.com (machines,
-  // universities) or confirmed by Saikat (app users), 2026-11.
+  // Hero facts. Kept deliberately understated (Saikat's call, 2026-11): platform
+  // numbers belong in the case studies, where they have context.
   stats: [
-    { value: "6+", label: "Years shipping software" },
-    { value: "135K+", label: "App users on the platform I build" },
-    { value: "445+", label: "IoT machines connected" },
+    { value: "6+", label: "Years in software" },
+    { value: "Senior Backend", label: "at YOUR Campus" },
+    { value: "Dhaka, BD", label: "Working worldwide" },
   ],
   location: "Dhaka, Bangladesh",
   timezone: "GMT+6",

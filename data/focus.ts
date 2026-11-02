@@ -8,7 +8,7 @@ export const focusAreas: FocusArea[] = [
     title: "Smart-campus platform",
     description:
       "On the core backend team since day zero: smart laundry, smart vending, YOUR Mart and more, for 135,000+ students across 21 universities in Bangladesh.",
-    tags: ["135K+ app users", "285+ washing machines", "160+ vending machines"],
+    tags: ["YOUR Laundry", "YOUR Shop", "YOUR Mart"],
     href: "/work/your-campus",
     size: "large",
   },

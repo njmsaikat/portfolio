@@ -69,11 +69,11 @@ export function Hero() {
             </div>
           </div>
 
-          <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-[var(--color-border)] pt-6">
+          <dl className="mt-12 flex max-w-xl flex-wrap gap-x-10 gap-y-5 border-t border-[var(--color-border)] pt-6">
             {profile.stats.map((stat) => (
               <div key={stat.label} className="flex flex-col-reverse">
                 <dt className="mt-1 text-xs text-[var(--color-text-muted)]">{stat.label}</dt>
-                <dd className="font-[family-name:var(--font-technical)] text-2xl font-semibold">{stat.value}</dd>
+                <dd className="font-[family-name:var(--font-technical)] whitespace-nowrap text-xl font-semibold sm:text-2xl">{stat.value}</dd>
               </div>
             ))}
           </dl>
