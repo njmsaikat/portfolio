@@ -1,0 +1,37 @@
+# The live site is on Netlify. GitHub Pages (njmsaikat.github.io/portfolio)
+# only serves github-pages/: redirect stubs that send every old URL to the
+# matching page on saikatroy.netlify.app, so search engines consolidate on one
+# domain instead of indexing a Jekyll-rendered README.
+#
+# One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+name: GitHub Pages redirect
+
+on:
+  push:
+    branches: [master]
+    paths: ["github-pages/**", ".github/workflows/github-pages-redirect.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: github-pages
+      - id: deployment
+        uses: actions/deploy-pages@v4
