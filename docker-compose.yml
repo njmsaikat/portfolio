@@ -1,0 +1,38 @@
+# Local testing without installing Node on the host.
+#   docker compose up dev       -> next dev with hot reload at http://localhost:3000
+#   docker compose up preview   -> production static export (what Netlify serves) at http://localhost:4000
+# node_modules and .next live in named volumes, separate per service, so the
+# container never shares native binaries or build caches with the host.
+# npm ci only re-runs when package-lock.json is newer than the last install
+# (npm writes node_modules/.package-lock.json on every install), so restarts are fast.
+services:
+  dev:
+    build: .
+    command: >
+      sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci) &&
+             npx next dev --hostname 0.0.0.0"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - dev_node_modules:/app/node_modules
+      - dev_next:/app/.next
+
+  preview:
+    build: .
+    # serve's clean URLs mirror Netlify (/blog serves blog.html).
+    command: >
+      sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci) &&
+             npm run lint && npm run build && npx -y serve@14.2.4 out -l 4000"
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      - preview_node_modules:/app/node_modules
+      - preview_next:/app/.next
+
+volumes:
+  dev_node_modules:
+  dev_next:
+  preview_node_modules:
+  preview_next:

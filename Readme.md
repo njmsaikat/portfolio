@@ -20,6 +20,15 @@ npm run build   # outputs to out/
 npx serve out   # preview the static export locally
 ```
 
+### With Docker (no local Node needed)
+
+```bash
+docker compose up dev       # dev server with hot reload → http://localhost:3000
+docker compose up preview   # lint + static build, served like Netlify → http://localhost:4000
+```
+
+The first start installs dependencies into a Docker volume (a few minutes); later starts reuse it.
+
 ## Updating content
 
 All real content lives under [`data/`](data) as plain TypeScript objects/arrays — edit these files and the site updates everywhere they're used (including the JSON-LD structured data). No component code needs to change for a content update.

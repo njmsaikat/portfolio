@@ -1,0 +1,2 @@
+# The Dockerfile copies nothing (source is bind-mounted), so send no build context.
+*
