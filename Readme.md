@@ -40,7 +40,7 @@ All real content lives under [`data/`](data) as plain TypeScript objects/arrays 
 | `data/experience.ts` | Work experience, education, certifications |
 | `data/skills.ts` | Skill groups shown in the Skills section |
 | `data/projects.ts` | Featured/all projects (GitHub repos and client work) |
-| `data/services.ts` | Services offered |
+| `data/services.ts` | Services offered; entries with a `page` also get their own page at `/services/<slug>` |
 | `data/testimonials.ts` | Client review screenshots |
 | `data/site.ts` | Site-wide metadata, social links, GA ID |
 

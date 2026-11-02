@@ -87,6 +87,39 @@ export function BlogPostingJsonLd({ post }: { post: Post }) {
   );
 }
 
+export function ServiceJsonLd({ name, description, slug }: { name: string; description: string; slug: string }) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "Service",
+        name,
+        serviceType: name,
+        description,
+        url: `${site.url}/services/${slug}`,
+        provider: { "@type": "Person", "@id": personId, name: profile.name, url: site.url },
+        areaServed: "Worldwide",
+      }}
+    />
+  );
+}
+
+export function FaqJsonLd({ faqs }: { faqs: { question: string; answer: string }[] }) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: { "@type": "Answer", text: faq.answer },
+        })),
+      }}
+    />
+  );
+}
+
 export function BreadcrumbJsonLd({ items }: { items: { name: string; url: string }[] }) {
   return (
     <JsonLdScript

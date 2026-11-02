@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
@@ -15,12 +16,20 @@ export function Services() {
     >
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((service) => (
-          <Card key={service.title} className="h-full">
+          <Card key={service.title} className="flex h-full flex-col">
             <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)]">
               <ServiceIcon icon={service.icon} />
             </div>
             <h3 className="mt-4 text-base font-semibold">{service.title}</h3>
-            <p className="mt-2 text-sm text-[var(--color-text-muted)]">{service.description}</p>
+            <p className="mt-2 flex-1 text-sm text-[var(--color-text-muted)]">{service.description}</p>
+            {service.page && (
+              <Link
+                href={`/services/${service.page.slug}`}
+                className="mt-4 text-sm font-medium text-[var(--color-accent)] hover:underline"
+              >
+                Learn more<span className="sr-only">: {service.page.headline}</span> &rarr;
+              </Link>
+            )}
           </Card>
         ))}
       </div>

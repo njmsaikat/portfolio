@@ -39,6 +39,7 @@ app/                 Routes (App Router)
   page.tsx           "/"               home page, all sections
   portfolio-page/    "/portfolio-page" full project listing
   resume/            "/resume"         HTML résumé, print-styled (browser "Save as PDF" is the PDF)
+  services/          "/services"       service hub; services/[slug]/ renders each `page` in data/services.ts
   blog/              "/blog"           post index; blog/[slug]/ renders content/blog/<slug>.mdx
   rss.xml/route.ts   "/rss.xml"        RSS feed (static GET route handler)
   opengraph-image.tsx                  build-time social images (also per page/post, via lib/og.tsx)
@@ -69,13 +70,14 @@ All content lives in `data/*.ts`. These files are typed (`data/types.ts`) and co
 | `data/experience.ts` | Work history, education, certifications |
 | `data/skills.ts` | Skill groups (also feeds JSON-LD `knowsAbout`) |
 | `data/projects.ts` | GitHub repos and client work. `featured: true` puts an entry on the home page |
-| `data/services.ts` | Services offered |
+| `data/services.ts` | Service cards; a service with a `page` also gets `/services/<slug>` (deliverables, stack, related projects/posts, FAQs) |
 | `data/testimonials.ts` | Review screenshots |
 | `data/site.ts` | Site URL, title, description, GA ID, social links |
 
 Notes:
 
 - `data/projects.ts` is a **hand-curated snapshot**, not a live GitHub feed. Star counts are static. Don't add GitHub API calls: there's no server, and client-side fetching would add a dependency on rate limits.
+- **Service pages** are written for hiring searches ("Shopify developer for hire"). `metaTitle` is used as-is (no suffix) and `metaDescription` should stay ≤ 160 chars. `relatedProjects` must match `name`s in `projects.ts`, and `relatedPosts` lists blog slugs (those posts automatically link back to the service).
 - Hero stats: "Client sites delivered" is the count of `type: "client"` entries in `projects.ts`; years comes from `profile.yearsExperience`.
 - **Content must stay factual.** Every claim on the site is grounded in `data/` (sourced from the résumé/LinkedIn export). Don't invent metrics, clients, technologies per job, or response-time promises.
 - **Blog posts:** add `content/blog/<slug>.mdx` exporting `metadata` (`title`, optional `seoTitle` of about 60 chars for `<title>`, `description`, `date` as `yyyy-mm-dd`, optional `updated`, `tags`). The index, post page, OG image, RSS feed, sitemap and home "Latest from the blog" pick it up automatically. The slug is the URL, so don't rename published files.
@@ -87,7 +89,7 @@ Notes:
 ## Hard constraints (don't break these)
 
 1. **Static export only.** Never introduce anything that needs a server at runtime: request-dependent route handlers, server actions, `cookies()`/`headers()`, dynamic routes without `generateStaticParams` (+ `dynamicParams = false`), middleware, or image optimization. Metadata routes, `opengraph-image` files and GET route handlers must keep `export const dynamic = "force-static"`.
-2. **URLs are frozen for SEO.** Keep the routes `/`, `/portfolio-page`, `/blog`, `/resume` and `/blog/<slug>`, and the home anchors `#about #skills #resume #portfolio #services #testimonials #contact` (plus the newer `#expertise #writing`), exactly as they are. Keep `trailingSlash: false` in `next.config.ts`. `next.config` redirects don't work in a static export; use `public/_redirects` (Netlify) if a URL must ever change.
+2. **URLs are frozen for SEO.** Keep the routes `/`, `/portfolio-page`, `/blog`, `/blog/<slug>`, `/resume`, `/services` and `/services/<slug>`, and the home anchors `#about #skills #resume #portfolio #services #testimonials #contact` (plus the newer `#expertise #writing`), exactly as they are. Keep `trailingSlash: false` in `next.config.ts`. `next.config` redirects don't work in a static export; old or renamed URLs get a 301 in `public/_redirects` (Netlify). It already maps the removed `/cv/saikat-roy-cv.pdf` and the old site's `/portfolio-details(.html)`.
 3. **Netlify Forms.** The contact `<form name="contact" data-netlify="true">` in `components/sections/Contact.tsx` must render **unconditionally in the static HTML** (never behind a client-only mount, `useEffect` gate or dynamic import). Netlify detects forms by crawling the built HTML. Keep the hidden `form-name` input and the `bot-field` honeypot, and keep field `name`s stable.
 4. **Content visible without JS.** Never hide real content by default and reveal it with JavaScript (e.g. IntersectionObserver fade-ins). A previous scroll-reveal was removed because content stayed invisible when hydration was slow or failed.
 5. **`public/googlee86a7ed265752fd7.html`** is a Google Search Console verification file. Don't modify, move or reformat it.

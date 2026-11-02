@@ -5,6 +5,7 @@ import { BreadcrumbJsonLd, BlogPostingJsonLd } from "@/components/JsonLd";
 import { formatDate, getPost, getPostSlugs } from "@/lib/posts";
 import { profile } from "@/data/profile";
 import { site } from "@/data/site";
+import { servicePages } from "@/data/services";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -41,6 +42,7 @@ export default async function PostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPost(slug);
   const { default: Content } = await import(`@/content/blog/${slug}.mdx`);
+  const relatedServices = servicePages.filter((s) => s.page.relatedPosts?.includes(slug));
 
   return (
     <>
@@ -69,7 +71,22 @@ export default async function PostPage({ params }: Props) {
           <Content />
         </div>
 
-        <footer className="surface-panel mt-16 flex items-center gap-4 rounded-xl p-5">
+        {relatedServices.length > 0 && (
+          <aside className="mt-16 rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-accent-soft)] p-5">
+            <p className="text-sm font-semibold">Need help with this in your own project?</p>
+            <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+              {relatedServices.map((s) => (
+                <li key={s.page.slug}>
+                  <Link href={`/services/${s.page.slug}`} className="text-sm font-medium text-[var(--color-accent)] hover:underline">
+                    {s.page.headline} &rarr;
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+
+        <footer className="surface-panel mt-6 flex items-center gap-4 rounded-xl p-5">
           <Image src={profile.photoSquare} alt="" width={56} height={56} className="h-14 w-14 rounded-full object-cover" />
           <div>
             <p className="font-semibold">{profile.name}</p>

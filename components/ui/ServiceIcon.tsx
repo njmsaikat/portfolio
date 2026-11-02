@@ -4,6 +4,7 @@ const paths: Record<string, string> = {
   box: "M21 8 12 3 3 8v8l9 5 9-5V8ZM3 8l9 5 9-5M12 13v8",
   cloud: "M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 8.16 4 4 0 0 1 16 18H7Z",
   "shopping-bag": "M6 8h12l-1 12H7L6 8ZM9 8V6a3 3 0 0 1 6 0v2",
+  layout: "M4 4h16v16H4zM4 9h16M9 9v11",
   "life-buoy": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM6.3 6.3l3.1 3.1M17.7 6.3l-3.1 3.1M6.3 17.7l3.1-3.1M17.7 17.7l-3.1-3.1",
 };
 
