@@ -1,6 +1,6 @@
 # Saikat Roy
 
-> Software Engineer at YOUR Campus in Dhaka, Bangladesh. Builds the backends behind real-world commerce: Django and REST API backends for smart vending, campus laundry and e-commerce platforms, plus Shopify and WordPress stores for freelance clients. Backend-leaning full stack: pairs Django with React and Next.js frontends.
+> Senior Backend Engineer at YOUR Campus in Dhaka, Bangladesh, on the core team since day zero. Builds the backends behind real-world commerce: Django and REST API backends for smart vending, campus laundry and e-commerce platforms, plus Shopify and WordPress stores for freelance clients. Backend-leaning full stack: pairs Django with React and Next.js frontends.
 
 ## Core skills
 
@@ -8,10 +8,17 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 
 ## Experience
 
-- Software Engineer, YOUR Campus (Mar 2022–Present) — backend architecture and deployment for a campus services platform (laundry, vending, e-commerce) serving university students in Bangladesh.
+- Senior Backend Engineer, YOUR Campus (Mar 2022–Present) — core team from day zero; builds the backend of an IoT campus-services platform with 135,000+ app users across 21 universities (285+ app-controlled washing machines, 160+ smart vending machines): YOUR Laundry, YOUR Shop, YOUR Mart, YOUR Locker, YOUR Planet, YOUR Printer (in development), plus bKash/Nagad/SSLCommerz/aamarPay payment integration. Case study: https://saikatroy.netlify.app/work/your-campus
 - Web Developer, Upwork/Freelance (May 2021–Present) — front-end, WordPress, and Shopify development for clients worldwide.
-- Junior Software Developer, Germania Holdings Ltd. (Jul 2021–Nov 2022) — backend operations, server management, and DevOps for a smart vending machine service.
-- Executive Developer, Dokmi BD (Aug 2020–Jun 2021) — WordPress and Shopify development.
+- Junior Software Developer, Germania Holdings Ltd. (Jul 2021–Nov 2022) — part of the team that built SnacKeeper, a 24/7 smart vending network in Dhaka with bKash payments (Python, PHP, MySQL); SnacKeeper later moved to YOUR Campus. Case study: https://saikatroy.netlify.app/work/snackeeper
+- Executive Developer, Dokmi BD (Aug 2020–Jun 2021) — WordPress, Shopify and frontend development.
+
+## Products built
+
+- HisabBD — free English & Bangla calculators for Bangladesh: https://bd-hisab.vercel.app
+- Hottogol — funny Bangladeshi simulators and games: https://hottogol.vercel.app
+- Bangladesh Healthcare Search — medicines, hospitals, clinics and pharmacies: https://bdhealthsearch.vercel.app
+- Pujo Guide — bilingual Durga Puja and Bengali festival guide: https://pujoguide.vercel.app
 
 ## Note on project visibility
 

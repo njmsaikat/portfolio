@@ -67,7 +67,7 @@ export function Expertise() {
                     className="text-sm font-medium text-[var(--color-accent)] hover:underline"
                     aria-label={`Learn more: ${area.title}`}
                   >
-                    {external ? "Visit ↗" : "See work →"}
+                    {external ? "Visit ↗" : area.href.startsWith("/work/") ? "Read case study →" : "See work →"}
                   </Link>
                 )}
               </div>

@@ -3,13 +3,14 @@ import { Certification, EducationEntry, ExperienceEntry } from "./types";
 // Sourced from resume + LinkedIn export (public/cv/Profile.pdf, 2026-08-07).
 export const experience: ExperienceEntry[] = [
   {
-    role: "Software Engineer",
+    role: "Senior Backend Engineer",
     company: "YOUR Campus",
     companyUrl: "https://your-campus.com/",
     start: "Mar 2022",
     end: "Present",
     description:
-      "Core team member on in-house software architecture, execution, and deployment for a campus platform serving university students in Bangladesh with a smart laundry service, a vending machine service, and an e-commerce service.",
+      "Core team member from day zero of an IoT campus-services platform used by 135,000+ students across 21 universities. I build the backend for its products (smart laundry, smart vending, YOUR Mart, lockers, recycling and printing) and integrate payment gateways including bKash, Nagad, SSLCommerz and aamarPay.",
+    caseStudy: "/work/your-campus",
   },
   {
     role: "Web Developer",
@@ -26,7 +27,8 @@ export const experience: ExperienceEntry[] = [
     start: "Jul 2021",
     end: "Nov 2022",
     description:
-      "Worked on the technical team behind SnacKeeper, a pioneer smart vending machine service in Bangladesh — design, implementation, backend operations, server management, DevOps, and keeping the system running 24/7.",
+      "Part of the in-house team that built SnacKeeper, a smart vending network in Dhaka with bKash payments: backend, payments and refunds in Python, PHP and MySQL, plus server management and DevOps to keep it running 24/7. SnacKeeper later moved to YOUR Campus, where I continued developing it.",
+    caseStudy: "/work/snackeeper",
   },
   {
     role: "Executive Developer",
@@ -35,7 +37,7 @@ export const experience: ExperienceEntry[] = [
     start: "Aug 2020",
     end: "Jun 2021",
     description:
-      "WordPress and Shopify development: theme customization, plugin implementation, site migrations, and full website rebuilds using Bootstrap and JavaScript.",
+      "WordPress, Shopify and frontend development at a Dhaka digital agency: theme customization, plugins, migrations and full site rebuilds.",
   },
 ];
 

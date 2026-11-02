@@ -43,6 +43,14 @@ export function Resume() {
                   )}
                 </h4>
                 <p className="mt-2 text-sm text-[var(--color-text-muted)]">{entry.description}</p>
+                {entry.caseStudy && (
+                  <Link
+                    href={entry.caseStudy}
+                    className="mt-2 inline-flex text-sm font-medium text-[var(--color-accent)] hover:underline"
+                  >
+                    Read the case study &rarr;
+                  </Link>
+                )}
               </li>
             ))}
           </ol>

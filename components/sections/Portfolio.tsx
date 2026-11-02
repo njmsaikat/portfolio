@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { ProjectCard } from "@/components/ProjectCard";
+import { CaseStudyCard } from "@/components/CaseStudyCard";
+import { caseStudies } from "@/data/caseStudies";
 import { featuredProjects } from "@/data/projects";
 
 export function Portfolio() {
@@ -9,9 +11,18 @@ export function Portfolio() {
       id="portfolio"
       eyebrow="Portfolio"
       title="Featured work"
-      description="A mix of open-source repositories and client projects. Most of my production work at YOUR Campus and for freelance clients lives in private repositories under NDA — the skills and experience above reflect that work even where the code itself can't be shown."
+      description="Case studies from the platforms I build professionally, and products I've designed and shipped on my own."
     >
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
+        {caseStudies.map((study) => (
+          <CaseStudyCard key={study.slug} study={study} />
+        ))}
+      </div>
+
+      <h3 className="mt-16 font-[family-name:var(--font-technical)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+        Products I&apos;ve built
+      </h3>
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
         {featuredProjects.map((project) => (
           <ProjectCard key={project.name} project={project} />
         ))}
@@ -22,7 +33,7 @@ export function Portfolio() {
           prefetch={false}
           className="text-sm font-semibold text-[var(--color-accent)] hover:underline"
         >
-          View all projects &rarr;
+          All projects, open source and client work &rarr;
         </Link>
       </div>
     </Section>

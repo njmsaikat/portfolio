@@ -5,20 +5,20 @@ import { FocusArea } from "./types";
 export const focusAreas: FocusArea[] = [
   {
     eyebrow: "YOUR Campus · 2022 – present",
-    title: "Campus commerce platform",
+    title: "Smart-campus platform",
     description:
-      "Core team member on the in-house software behind a campus platform for university students in Bangladesh: a smart laundry service, a vending machine service and an e-commerce service. Architecture, execution and deployment.",
-    tags: ["Smart laundry", "Vending", "E-commerce"],
-    href: "https://your-campus.com/",
+      "On the core backend team since day zero: smart laundry, smart vending, YOUR Mart and more, for 135,000+ students across 21 universities in Bangladesh.",
+    tags: ["135K+ app users", "285+ washing machines", "160+ vending machines"],
+    href: "/work/your-campus",
     size: "large",
   },
   {
     eyebrow: "SnacKeeper · 2021 – 2022",
-    title: "Smart vending operations",
+    title: "Smart vending network",
     description:
-      "Backend operations, server management and DevOps for SnacKeeper, a pioneering smart vending machine service in Bangladesh, keeping the whole system running 24/7.",
-    tags: ["Backend ops", "DevOps", "24/7 uptime"],
-    href: "https://ghl-bd.com/",
+      "Helped build SnacKeeper's 24/7 vending backend with bKash payments at Germania Holdings, then carried it into YOUR Campus.",
+    tags: ["Vending", "bKash payments", "24/7"],
+    href: "/work/snackeeper",
   },
   {
     eyebrow: "Freelance · 2021 – present",

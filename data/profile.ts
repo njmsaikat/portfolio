@@ -1,13 +1,20 @@
 export const profile = {
   name: "Saikat Roy",
-  jobTitle: "Software Engineer",
+  jobTitle: "Senior Backend Engineer",
   company: "YOUR Campus",
   companyUrl: "https://your-campus.com/",
   // Positioning line used in the hero and as the site's core message.
   headline: "I build the backends behind real-world commerce.",
   intro:
     "From smart vending machines and campus laundry to Shopify storefronts: Django and REST API backends, the infrastructure that keeps them running around the clock, and the storefronts customers actually use.",
-  roles: ["Software Engineer", "Django Backend Developer", "Shopify & WordPress Developer"],
+  roles: ["Senior Backend Engineer", "Django & REST API Developer", "Shopify & WordPress Developer"],
+  // Hero stats. Platform figures are public on your-campus.com (machines,
+  // universities) or confirmed by Saikat (app users), 2026-11.
+  stats: [
+    { value: "6+", label: "Years shipping software" },
+    { value: "135K+", label: "App users on the platform I build" },
+    { value: "445+", label: "IoT machines connected" },
+  ],
   location: "Dhaka, Bangladesh",
   timezone: "GMT+6",
   email: "njmsaikat@gmail.com",
@@ -25,7 +32,7 @@ export const profile = {
     { name: "Hindi", level: "Limited working" },
   ],
   bio: [
-    "I'm a backend-leaning full stack engineer. I build REST APIs and web applications with Python and Django, and pair them with React and Next.js frontends. Since 2020 I've worked on systems where software meets the physical world: the SnacKeeper smart vending network at Germania Holdings, and now the campus platform at YOUR Campus, which serves university students in Bangladesh with smart laundry, vending and e-commerce.",
+    "I'm a Senior Backend Engineer in Dhaka. I've been on the core team at YOUR Campus since day zero, building the backend of an IoT platform that now serves 135,000+ app users across 21 universities, with 285+ app-controlled washing machines and 160+ smart vending machines. Before that, I helped build SnacKeeper, a smart vending network, at Germania Holdings.",
     "Alongside that, I build and customize Shopify and WordPress stores for freelance clients worldwide. I care about code that's readable and easy to operate: clear API boundaries, containerized deployments, and infrastructure that doesn't need babysitting. This site is itself built with Next.js and TypeScript, statically exported and deployed on Netlify.",
   ],
 };

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/data/site";
 import { getAllPosts } from "@/lib/posts";
 import { servicePages } from "@/data/services";
+import { caseStudies } from "@/data/caseStudies";
 
 export const dynamic = "force-static";
 
@@ -16,6 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${site.url}/services`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     ...servicePages.map((s) => ({
       url: `${site.url}/services/${s.page.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    })),
+    ...caseStudies.map((s) => ({
+      url: `${site.url}/work/${s.slug}`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.9,
