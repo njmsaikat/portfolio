@@ -1,9 +1,59 @@
 import { Project } from "./types";
 
-// Manual snapshot of real public GitHub repositories and real client work,
-// captured 2026-08-07. Update by hand when new work should be featured —
-// this is not a live GitHub API feed.
+// Manual snapshot of Saikat's live products, public GitHub repositories and
+// real client work (repos captured 2026-08-07, products added 2026-11).
+// Update by hand when new work should be featured — this is not a live
+// GitHub API feed. `featured: true` shows a project on the home page.
 export const projects: Project[] = [
+  {
+    type: "product",
+    name: "HisabBD",
+    description:
+      "Free English & Bangla calculators for everyday life in Bangladesh, covering loans, VAT, savings, exam GPA, land units and more. Everything runs in the browser, so nothing you type leaves your device.",
+    stack: ["Next.js", "TypeScript", "Tailwind", "Vitest", "Playwright"],
+    image: "/images/projects/hisabbd.jpg",
+    liveUrl: "https://bd-hisab.vercel.app",
+    featured: true,
+  },
+  {
+    type: "product",
+    name: "Hottogol",
+    description:
+      "Short, funny simulators and games about everyday life in Bangladesh, from a Dhaka CNG ride to marbles. Bilingual, no sign-up, and results you can share with friends.",
+    stack: ["Next.js", "TypeScript", "Tailwind", "Motion"],
+    image: "/images/projects/hottogol.jpg",
+    liveUrl: "https://hottogol.vercel.app",
+    featured: true,
+  },
+  {
+    type: "product",
+    name: "Bangladesh Healthcare Search",
+    description:
+      "Search 36,328 DGDA-registered medicines and thousands of hospitals, clinics and pharmacies across Bangladesh, built from open-data pipelines.",
+    stack: ["Next.js", "TypeScript", "Node.js data pipelines"],
+    image: "/images/projects/bd-health-search.jpg",
+    liveUrl: "https://bdhealthsearch.vercel.app",
+    featured: true,
+  },
+  {
+    type: "product",
+    name: "Pujo Guide",
+    description:
+      "A free bilingual guide to Durga Puja and Bengali festivals, with a pandal map, festival dates in Kolkata and Dhaka time, and a live crowd board. Every date is sourced.",
+    stack: ["Next.js", "React", "TypeScript", "Supabase", "Leaflet"],
+    image: "/images/projects/pujo-guide.jpg",
+    liveUrl: "https://pujoguide.vercel.app",
+    featured: true,
+  },
+  {
+    type: "github",
+    name: "django-api-cookiecutter",
+    description:
+      "A production-ready Django REST API template with role-based JWT auth, Docker for dev/test/prod, and optional Redis, Celery, S3 and Sentry.",
+    url: "https://github.com/njmsaikat/django-api-cookiecutter",
+    language: "Python",
+    stars: 0,
+  },
   {
     type: "github",
     name: "portfolio",
@@ -12,7 +62,6 @@ export const projects: Project[] = [
     url: "https://github.com/njmsaikat/portfolio",
     language: "TypeScript",
     stars: 17,
-    featured: true,
   },
   {
     type: "github",
@@ -22,7 +71,6 @@ export const projects: Project[] = [
     url: "https://github.com/njmsaikat/django-postgres-setup-docker-compose",
     language: "Python",
     stars: 0,
-    featured: true,
   },
   {
     type: "github",
@@ -31,7 +79,6 @@ export const projects: Project[] = [
     url: "https://github.com/njmsaikat/weather-live",
     language: "JavaScript",
     stars: 0,
-    featured: true,
   },
   {
     type: "github",
@@ -81,76 +128,70 @@ export const projects: Project[] = [
     language: "Shell",
     stars: 1,
   },
+  // Client work is anonymized (Saikat's call, 2026-11): generic titles, no
+  // client names or live links anywhere on the site, including file names.
   {
     type: "client",
-    name: "Casper New",
-    description: "Custom front-end site design and build, deployed for a client.",
-    category: "frontend",
-    image: "/images/projects/casper-new.png",
-    liveUrl: "https://casper-new.netlify.app/",
-    featured: true,
-  },
-  {
-    type: "client",
-    name: "Real Thread",
-    description: "Custom front-end site design and build, deployed for a client.",
-    category: "frontend",
-    image: "/images/projects/real-thread.png",
-    liveUrl: "https://realthread-new.netlify.app/",
-    featured: true,
-  },
-  {
-    type: "client",
-    name: "Vivalvic",
+    name: "Women's fashion store",
     description: "Shopify storefront development and customization for a client.",
     category: "shopify",
-    image: "/images/projects/vivalvic.png",
-    liveUrl: "https://www.vivalavic.com/",
-    featured: true,
+    image: "/images/projects/shopify-fashion.png",
   },
   {
     type: "client",
-    name: "One the Horizon",
-    description: "Custom front-end site design and build, deployed for a client.",
+    name: "Skincare store",
+    description: "Shopify storefront development and customization for a client.",
+    category: "shopify",
+    image: "/images/projects/shopify-skincare.png",
+  },
+  {
+    type: "client",
+    name: "Health supplements store",
+    description: "Shopify storefront development and customization for a client.",
+    category: "shopify",
+    image: "/images/projects/shopify-supplements.png",
+  },
+  {
+    type: "client",
+    name: "Farm & garden supply website",
+    description: "WordPress theme customization and site build for a client.",
+    category: "wordpress",
+    image: "/images/projects/wordpress-farm-garden.png",
+  },
+  {
+    type: "client",
+    name: "Mattress & sleep products store",
+    description: "WordPress theme customization and site build for a client.",
+    category: "wordpress",
+    image: "/images/projects/wordpress-sleep-store.png",
+  },
+  {
+    type: "client",
+    name: "Personal care brand website",
+    description: "WordPress theme customization and site build for a client.",
+    category: "wordpress",
+    image: "/images/projects/wordpress-personal-care.png",
+  },
+  {
+    type: "client",
+    name: "Mattress brand storefront",
+    description: "Custom front-end site design and build for a client.",
     category: "frontend",
-    image: "/images/projects/one-the-horizon.png",
-    liveUrl: "https://book-new.netlify.app/",
+    image: "/images/projects/frontend-mattress.png",
   },
   {
     type: "client",
-    name: "Silver Mirror",
-    description: "Shopify storefront development and customization for a client.",
-    category: "shopify",
-    image: "/images/projects/silver-mirror.png",
-    liveUrl: "https://shop.silvermirror.com/",
+    name: "Custom apparel printing site",
+    description: "Custom front-end site design and build for a client.",
+    category: "frontend",
+    image: "/images/projects/frontend-apparel.png",
   },
   {
     type: "client",
-    name: "Mize Garden",
-    description: "WordPress theme customization and site build for a client.",
-    category: "wordpress",
-    image: "/images/projects/mize-garden.png",
-  },
-  {
-    type: "client",
-    name: "Chiro Slumber",
-    description: "WordPress theme customization and site build for a client.",
-    category: "wordpress",
-    image: "/images/projects/chiro-slumber.png",
-  },
-  {
-    type: "client",
-    name: "Duradry",
-    description: "WordPress theme customization and site build for a client.",
-    category: "wordpress",
-    image: "/images/projects/duradry.png",
-  },
-  {
-    type: "client",
-    name: "Fusion Organics",
-    description: "Shopify storefront development and customization for a client.",
-    category: "shopify",
-    image: "/images/projects/fusion-organics.png",
+    name: "Book launch website",
+    description: "Custom front-end site design and build for a client.",
+    category: "frontend",
+    image: "/images/projects/frontend-book.png",
   },
 ];
 

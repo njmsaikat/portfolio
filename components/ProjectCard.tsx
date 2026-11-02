@@ -59,19 +59,23 @@ export function ProjectCard({ project }: { project: Project }) {
       <div className="relative flex flex-1 flex-col p-6">
         <h3 className="text-base font-semibold">{project.name}</h3>
         <p className="mt-2 flex-1 text-sm text-[var(--color-text-muted)]">{project.description}</p>
-        <div className="mt-4 flex items-center justify-between">
-          <Badge>{project.category}</Badge>
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {(project.type === "product" ? project.stack : [project.category]).map((tag) => (
+              <Badge key={tag}>{tag}</Badge>
+            ))}
+          </div>
           {project.liveUrl ? (
             <a
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--color-accent)] hover:underline"
+              className="shrink-0 whitespace-nowrap text-sm font-medium text-[var(--color-accent)] hover:underline"
             >
               Visit site &rarr;
             </a>
           ) : (
-            <span className="text-sm text-[var(--color-text-muted)]">No live link</span>
+            <span className="text-sm text-[var(--color-text-muted)]">Client work</span>
           )}
         </div>
       </div>
