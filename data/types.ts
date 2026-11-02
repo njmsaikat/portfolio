@@ -65,6 +65,15 @@ export interface Service {
   icon: string;
 }
 
+export interface FocusArea {
+  eyebrow: string;
+  title: string;
+  description: string;
+  tags: string[];
+  href?: string;
+  size?: "large" | "wide";
+}
+
 export interface Testimonial {
   platform: "Fiverr" | "Upwork";
   image: string;

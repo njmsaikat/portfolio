@@ -17,6 +17,7 @@ export function About() {
       eyebrow="About"
       title="A bit about me"
       description="Backend-leaning, full stack, and comfortable owning a project end to end."
+      className="bg-[var(--color-bg-elevated)]"
     >
       <div className="grid gap-10 md:grid-cols-2">
         <div className="space-y-4 text-[var(--color-text-muted)]">
@@ -25,7 +26,7 @@ export function About() {
           ))}
         </div>
 
-        <dl className="surface-panel grid grid-cols-1 gap-5 rounded-lg p-6 sm:grid-cols-2">
+        <dl className="surface-panel grid grid-cols-1 gap-5 rounded-xl p-6 sm:grid-cols-2">
           {facts.map((fact) => (
             <div key={fact.label}>
               <dt className="font-[family-name:var(--font-technical)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">

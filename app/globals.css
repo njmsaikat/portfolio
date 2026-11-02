@@ -4,30 +4,39 @@
    inline no-flash script in layout.tsx) drives every `dark:` utility. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Palette: emerald accent with a warm amber highlight. Solid accent is used
+   for anything carrying text (buttons, links) so contrast stays >= 4.5:1;
+   the gradient is decorative only. */
 :root {
-  --color-bg: #ffffff;
-  --color-bg-elevated: #f6f7f8;
+  --color-bg: #fbfbf9;
+  --color-bg-elevated: #f2f4f1;
   --color-surface: #ffffff;
-  --color-text: #0a0a0b;
-  --color-text-muted: #5b5f6a;
-  --color-border: rgba(10, 10, 11, 0.12);
-  --color-accent: #4338ca;
-  --color-accent-soft: rgba(67, 56, 202, 0.1);
-  --gradient-accent: linear-gradient(135deg, #4338ca, #4f46e5 60%, #6d28d9);
-  --grid-line: rgba(10, 10, 11, 0.05);
+  --color-text: #0c100e;
+  --color-text-muted: #56605a;
+  --color-border: rgba(12, 16, 14, 0.1);
+  --color-accent: #047857;
+  --color-accent-contrast: #ffffff;
+  --color-accent-soft: rgba(4, 120, 87, 0.09);
+  --color-warm: #b45309;
+  --gradient-accent: linear-gradient(120deg, #047857, #0d9488 55%, #d97706);
+  --grid-line: rgba(12, 16, 14, 0.045);
+  --glow: rgba(13, 148, 136, 0.16);
 }
 
 .dark {
-  --color-bg: #08090b;
-  --color-bg-elevated: #0d0f12;
-  --color-surface: #111318;
-  --color-text: #f1f2f4;
-  --color-text-muted: #8b8f9c;
-  --color-border: rgba(255, 255, 255, 0.09);
-  --color-accent: #818cf8;
-  --color-accent-soft: rgba(129, 140, 248, 0.12);
-  --gradient-accent: linear-gradient(135deg, #6366f1, #818cf8 60%, #a78bfa);
-  --grid-line: rgba(255, 255, 255, 0.05);
+  --color-bg: #070a09;
+  --color-bg-elevated: #0b0f0e;
+  --color-surface: #101614;
+  --color-text: #edf2ef;
+  --color-text-muted: #8f9a94;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-accent: #34d399;
+  --color-accent-contrast: #03140d;
+  --color-accent-soft: rgba(52, 211, 153, 0.1);
+  --color-warm: #fbbf24;
+  --gradient-accent: linear-gradient(120deg, #34d399, #2dd4bf 50%, #fbbf24);
+  --grid-line: rgba(255, 255, 255, 0.04);
+  --glow: rgba(45, 212, 191, 0.12);
 }
 
 @theme inline {
@@ -42,57 +51,218 @@
   --font-mono: var(--font-technical);
 }
 
-* {
-  border-color: var(--color-border);
+/* Custom rules live in Tailwind's base/components layers: unlayered CSS beats
+   every layered utility regardless of specificity, which would silently
+   disable utilities like hover:border-* or print:border-0 on these elements. */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+  }
+
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
+@layer components {
+  .surface-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .spotlight-overlay {
+    background: radial-gradient(240px circle at var(--x, 50%) var(--y, 50%), var(--color-accent-soft), transparent 70%);
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Soft colored glow behind the hero, masked so the grid fades out at the edges. */
+  .hero-glow {
+    background:
+      radial-gradient(600px circle at 75% 20%, var(--glow), transparent 70%),
+      radial-gradient(500px circle at 10% 80%, var(--color-accent-soft), transparent 70%);
+  }
+
+  .mask-fade {
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  }
+
+  .gradient-ring {
+    background: var(--gradient-accent);
+  }
+
+  .eyebrow {
+    font-family: var(--font-technical);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .text-gradient {
+    background-image: var(--gradient-accent);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  /* ---- Blog article typography (hand-rolled instead of @tailwindcss/typography) ---- */
+  .prose {
+    color: var(--color-text);
+    line-height: 1.75;
+  }
+  .prose > * + * {
+    margin-top: 1.25em;
+  }
+  .prose h2 {
+    margin-top: 2.2em;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  .prose h3 {
+    margin-top: 1.8em;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  .prose h2 + *,
+  .prose h3 + * {
+    margin-top: 0.75em;
+  }
+  .prose p,
+  .prose li {
+    color: color-mix(in srgb, var(--color-text) 86%, transparent);
+  }
+  .prose a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  .prose strong {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .prose ul,
+  .prose ol {
+    padding-left: 1.4em;
+  }
+  .prose ul {
+    list-style: disc;
+  }
+  .prose ol {
+    list-style: decimal;
+  }
+  .prose li + li {
+    margin-top: 0.4em;
+  }
+  .prose li::marker {
+    color: var(--color-text-muted);
+  }
+  .prose blockquote {
+    border-left: 3px solid var(--color-accent);
+    padding-left: 1em;
+    color: var(--color-text-muted);
+  }
+  .prose :not(pre) > code {
+    font-family: var(--font-technical);
+    font-size: 0.875em;
+    padding: 0.15em 0.4em;
+    border-radius: 0.35rem;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+  }
+  .prose pre {
+    font-family: var(--font-technical);
+    font-size: 0.85rem;
+    line-height: 1.65;
+    padding: 1rem 1.25rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--color-border);
+    overflow-x: auto;
+  }
+  .prose table {
+    width: 100%;
+    font-size: 0.9rem;
+    border-collapse: collapse;
+  }
+  .prose th,
+  .prose td {
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  .prose th {
+    font-weight: 600;
+  }
+  .prose hr {
+    border-top: 1px solid var(--color-border);
+  }
+  .prose h2 a,
+  .prose h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
-body {
-  background: var(--color-bg);
-  color: var(--color-text);
+/* Shiki dual themes: light colors are inline by default; swap to the dark
+   set (emitted as --shiki-dark CSS variables) when the dark class is on. */
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
 }
 
-section[id] {
-  scroll-margin-top: 5rem;
-}
-
-.surface-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.spotlight-overlay {
-  background: radial-gradient(240px circle at var(--x, 50%) var(--y, 50%), var(--color-accent-soft), transparent 70%);
-}
-
-.grid-bg {
-  background-image:
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-.eyebrow {
-  font-family: var(--font-technical);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-}
-
-.text-gradient {
-  background-image: var(--gradient-accent);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+/* ---- Route transitions (React <ViewTransition> in app/layout.tsx) ---- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ---- Print (the /resume page doubles as the downloadable PDF) ---- */
+@media print {
+  :root,
+  .dark {
+    --color-bg: #ffffff;
+    --color-bg-elevated: #ffffff;
+    --color-surface: #ffffff;
+    --color-text: #000000;
+    --color-text-muted: #333333;
+    --color-border: #d4d4d4;
+    --color-accent: #035c43;
+  }
+  @page {
+    margin: 14mm;
   }
 }

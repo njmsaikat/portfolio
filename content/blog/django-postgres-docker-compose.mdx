@@ -1,0 +1,159 @@
+export const metadata = {
+  title: "Django + PostgreSQL with Docker Compose: my starter setup, and the one-letter bug that loses your data",
+  seoTitle: "Django + PostgreSQL Docker Compose: the volume typo that loses data",
+  description:
+    "A walkthrough of the Docker Compose template I start Django projects from, why it needs a wait-for-database step, and how a typo in a volume path silently threw away PostgreSQL data on every docker compose down.",
+  date: "2026-11-02",
+  tags: ["Django", "PostgreSQL", "Docker"],
+};
+
+Almost every Django backend I start needs the same few things: PostgreSQL instead of SQLite, the same environment on every machine, and one command to bring it all up. I keep that setup as a template repository, [django-postgres-setup-docker-compose](https://github.com/njmsaikat/django-postgres-setup-docker-compose), so a new project starts from a working stack instead of a blank folder.
+
+Re-reading it recently, I found a bug that had been there since the first commit. It never caused an error message. It just quietly threw away the database. This post walks through the template and then through that bug, because it's an easy one to make.
+
+## The setup
+
+Two services: the Django app and PostgreSQL, on a shared network. Here it is, trimmed to the parts that matter:
+
+```yaml
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    command: >
+      sh -c "cd /app/backend &&
+             python manage.py wait_for_db &&
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.env/dev.env
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - pgdata:/var/lib/posgresql/data
+
+volumes:
+  pgdata:
+```
+
+Django reads its database settings (`DB_HOST=db`, `DB_NAME`, `DB_USER`, …) from `.env/dev.env`. Inside the Compose network, the hostname `db` resolves to the Postgres container, so the same settings work for everyone on the team.
+
+## Why `depends_on` isn't enough
+
+`depends_on: [db]` only controls **start order**. Compose starts the Postgres container first, but "container started" isn't "database ready to accept connections". On a cold start Postgres takes a few seconds to initialise, and if Django runs `migrate` in that window, it crashes with `OperationalError: could not connect to server`.
+
+The template solves this with a small management command that retries until the database answers:
+
+```python
+import time
+
+from psycopg2 import OperationalError as Psycopg2OpError
+from django.core.management.base import BaseCommand
+from django.db.utils import OperationalError
+
+
+class Command(BaseCommand):
+    """Django command to wait for database."""
+
+    def handle(self, *args, **options):
+        self.stdout.write("Waiting for database...")
+        db_up = False
+        while db_up is False:
+            try:
+                self.check(databases=["default"])
+                db_up = True
+            except (Psycopg2OpError, OperationalError):
+                self.stdout.write("Database unavailable, waiting 1 second...")
+                time.sleep(1)
+
+        self.stdout.write(self.style.SUCCESS("Database available!"))
+```
+
+`self.check(databases=["default"])` runs Django's system checks against the database, which forces a real connection. Until Postgres is up, that raises, and the loop sleeps and tries again.
+
+## The bug: look closely at the volume path
+
+```yaml
+volumes:
+  - pgdata:/var/lib/posgresql/data
+```
+
+That's `posgresql`, not `postgresql`. One missing letter.
+
+Here's why nothing visibly broke:
+
+- The named volume `pgdata` was mounted at a path **Postgres never uses**. That directory just stayed empty.
+- The official `postgres` image declares its data directory as a `VOLUME`. With no mount on the real path, Docker quietly creates an **anonymous volume** for it.
+- `docker compose stop`/`start`, and even recreating the container with `docker compose up`, keep that anonymous volume. So during day-to-day development, the data seemed to persist.
+- But `docker compose down` removes the container. The next `up` creates a new container with a **brand-new, empty** anonymous volume. Every table, every test user, every migration: gone. The old data is still sitting in an orphaned volume with a random hash name, which is why nobody notices it's "missing" rather than "deleted".
+
+You can spot it in two commands:
+
+```bash
+# The named volume is empty: Postgres never wrote to it
+docker compose exec db ls -la /var/lib/posgresql/data
+
+# Orphaned anonymous volumes pile up with hash names
+docker volume ls --filter dangling=true
+```
+
+## The fix, and a second trap behind it
+
+The obvious fix is to correct the spelling. But the template also uses an **unpinned** `image: postgres`, which today resolves to PostgreSQL 18 or newer, and the official image changed its layout in 18:
+
+| Image | Default data directory (`PGDATA`) | Mount your volume at |
+| --- | --- | --- |
+| `postgres:17` and older | `/var/lib/postgresql/data` | `/var/lib/postgresql/data` |
+| `postgres:18` and newer | `/var/lib/postgresql/18/docker` | `/var/lib/postgresql` |
+
+So with an unpinned tag, "correcting" the path to `/var/lib/postgresql/data` gets you a container that refuses to start on 18+. The real fix is two changes: **pin the major version**, and mount the path documented for that version.
+
+```yaml
+db:
+  image: postgres:17
+  volumes:
+    - pgdata:/var/lib/postgresql/data
+```
+
+Pinning matters for more than this bug. Major PostgreSQL versions can't read each other's data files without `pg_upgrade` or a dump and restore, so a floating `latest` tag can break a working database the next time someone pulls.
+
+## What else I'd change today
+
+The template was written for Python 3.8 and Django 3.2, and both have since reached end of life. If I were starting it fresh in 2026:
+
+- **Use a healthcheck instead of (or as well as) the wait command.** Compose can wait for Postgres itself:
+
+  ```yaml
+  db:
+    image: postgres:17
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d mydb"]
+      interval: 2s
+      retries: 15
+
+  backend:
+    depends_on:
+      db:
+        condition: service_healthy
+  ```
+
+- **Don't run `makemigrations` on container start.** Migrations are code: generate them deliberately, review them, and commit them. Startup should only `migrate`.
+- **Upgrade the runtime**: a current Python 3 image and a supported Django LTS release.
+- **Keep credentials in the env file**, not hard-coded in `docker-compose.yml`, so the database and Django read them from the same place.
+
+## Takeaway
+
+Docker volumes fail silently. A wrong mount path is still a valid mount path, and an image's anonymous volume will happily cover for you until the day you run `docker compose down`. If your local database has ever "reset itself", check the spelling of your volume path, then pin your Postgres version.

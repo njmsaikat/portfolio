@@ -1,10 +1,12 @@
+// Section anchors (#about, #resume, ...) are preserved from the original site.
 export const navItems = [
   { href: "/#about", label: "About" },
-  { href: "/#skills", label: "Skills" },
-  { href: "/#resume", label: "Resume" },
-  { href: "/#portfolio", label: "Portfolio" },
+  { href: "/#expertise", label: "Expertise" },
+  { href: "/#resume", label: "Experience" },
+  { href: "/#portfolio", label: "Work" },
   { href: "/#services", label: "Services" },
-  { href: "/#testimonials", label: "Reviews" },
-  { href: "/#contact", label: "Contact" },
   { href: "/blog", label: "Blog" },
+  { href: "/#contact", label: "Contact" },
 ];
+
+export const resumeLink = { href: "/resume", label: "Résumé" };

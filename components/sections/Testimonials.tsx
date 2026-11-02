@@ -13,7 +13,6 @@ export function Testimonials() {
       eyebrow="Reviews"
       title="Client feedback"
       description={`Screenshots of real client reviews from ${fiverr?.label} and ${upwork?.label}.`}
-      className="bg-[var(--color-bg-elevated)]"
     >
       <div className="-mx-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-4">
         {testimonials.map((testimonial, i) => (

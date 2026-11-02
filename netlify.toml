@@ -4,3 +4,16 @@
 
 [build.environment]
   NODE_VERSION = "24"
+
+# Next's static export writes generated Open Graph images without a file
+# extension (e.g. /opengraph-image, /blog/<slug>/opengraph-image), so tell
+# browsers and social crawlers they're PNGs.
+[[headers]]
+  for = "/opengraph-image"
+  [headers.values]
+    Content-Type = "image/png"
+
+[[headers]]
+  for = "/*/opengraph-image"
+  [headers.values]
+    Content-Type = "image/png"

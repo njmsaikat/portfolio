@@ -10,7 +10,6 @@ export function Skills() {
       eyebrow="Skills"
       title="What I work with"
       description="Backend-first, with a full stack toolkit for shipping complete products."
-      className="bg-[var(--color-bg-elevated)]"
     >
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {skillGroups.map((group) => (
