@@ -11,20 +11,20 @@
   "dependencies": {
     "@mdx-js/loader": "3.1.1",
     "@mdx-js/react": "3.1.1",
-    "@next/mdx": "16.4.1",
-    "next": "16.4.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "@next/mdx": "16.4.3",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@shikijs/rehype": "4.6.0",
     "@tailwindcss/postcss": "^4",
     "@types/mdx": "2.0.14",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.1",
+    "eslint-config-next": "16.4.3",
     "rehype-slug": "6.0.0",
     "remark-gfm": "4.0.1",
     "shiki": "4.6.0",
