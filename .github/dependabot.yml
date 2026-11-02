@@ -22,6 +22,14 @@ updates:
       # ESLint 10 yet. Remove this once they do.
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 (native compiler) has no JS compiler API, which Next's
+      # type-check and typescript-eslint (<6.1) need. Revisit when they support it.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # Must match the Node major we run (NODE_VERSION in netlify.toml,
+      # Dockerfile). Bump by hand together with those.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
