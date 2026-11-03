@@ -10,7 +10,7 @@ import { certifications, education, experience } from "@/data/experience";
 export const metadata: Metadata = {
   title: "Résumé",
   description:
-    "Résumé of Saikat Roy, Software Engineer at YOUR Campus in Dhaka: Django and REST API backends, DevOps for smart vending and campus commerce platforms, and Shopify/WordPress development.",
+    "Résumé of Saikat Roy, Senior Backend Engineer at YOUR Campus in Dhaka: Django and REST APIs, smart vending and commerce platforms, Shopify and WordPress.",
   alternates: { canonical: "/resume" },
   openGraph: {
     title: "Résumé | Saikat Roy",

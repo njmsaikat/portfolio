@@ -8,7 +8,11 @@ export const metadata: Metadata = {
   title: "Blog",
   description:
     "Practical notes on Django, PostgreSQL, Docker and running commerce backends in production, by Saikat Roy.",
-  alternates: { canonical: "/blog" },
+  alternates: {
+    canonical: "/blog",
+    languages: { en: "/blog", bn: "/bn/blog", "x-default": "/blog" },
+    types: { "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }] },
+  },
   openGraph: {
     title: "Blog | Saikat Roy",
     description: "Practical notes on Django, PostgreSQL, Docker and running commerce backends in production.",
@@ -36,6 +40,15 @@ export default async function BlogPage() {
             RSS
           </a>
           .
+        </p>
+        <p className="mt-3 text-[var(--color-text-muted)]">
+          I write about what I run into while building backends for commerce platforms: Django and Django REST
+          Framework, PostgreSQL, Docker-based setups, deployment, and integrating Bangladeshi payment gateways such as
+          bKash, Nagad, SSLCommerz and aamarPay. Posts are written in English, with Bangla versions where they exist (
+          <Link href="/bn/blog" lang="bn" className="text-[var(--color-accent)] hover:underline">
+            বাংলা ব্লগ
+          </Link>
+          ).
         </p>
 
         {posts.length === 0 ? (

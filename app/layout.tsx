@@ -21,7 +21,11 @@ export const metadata: Metadata = {
   description: site.description,
   authors: [{ name: site.name, url: site.url }],
   alternates: {
-    types: { "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }] },
+    types: {
+      "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }],
+      // llms.txt convention: machine-readable site summary for AI assistants.
+      "text/markdown": [{ url: "/llms.txt", title: "llms.txt" }],
+    },
   },
   openGraph: {
     title: site.title,

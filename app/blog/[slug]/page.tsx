@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { BreadcrumbJsonLd, BlogPostingJsonLd } from "@/components/JsonLd";
-import { formatDate, getPost, getPostSlugs } from "@/lib/posts";
+import { formatDate, getPost, getPostSlugs, hasPost } from "@/lib/posts";
 import { profile } from "@/data/profile";
 import { site } from "@/data/site";
 import { servicePages } from "@/data/services";
@@ -24,7 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: post.seoTitle ? { absolute: post.seoTitle } : post.title,
     description: post.description,
     keywords: post.tags,
-    alternates: { canonical: `/blog/${slug}` },
+    alternates: {
+      canonical: `/blog/${slug}`,
+      ...(hasPost(slug, "bn") && {
+        languages: { en: `/blog/${slug}`, bn: `/bn/blog/${slug}`, "x-default": `/blog/${slug}` },
+      }),
+    },
     openGraph: {
       type: "article",
       title: post.title,
@@ -42,6 +47,7 @@ export default async function PostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPost(slug);
   const { default: Content } = await import(`@/content/blog/${slug}.mdx`);
+  const hasBn = hasPost(slug, "bn");
   const relatedServices = servicePages.filter((s) => s.page.relatedPosts?.includes(slug));
 
   return (
@@ -56,9 +62,16 @@ export default async function PostPage({ params }: Props) {
       <BlogPostingJsonLd post={post} />
 
       <article className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
-        <Link href="/blog" className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
-          &larr; All posts
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <Link href="/blog" className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
+            &larr; All posts
+          </Link>
+          {hasBn && (
+            <Link href={`/bn/blog/${slug}`} lang="bn" hrefLang="bn" className="font-medium text-[var(--color-accent)] hover:underline">
+              বাংলায় পড়ুন
+            </Link>
+          )}
+        </div>
         <header className="mt-8 border-b border-[var(--color-border)] pb-8">
           <p className="font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)]">
             <time dateTime={post.date}>{formatDate(post.date)}</time> · {post.readingMinutes} min read

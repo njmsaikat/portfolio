@@ -2,6 +2,8 @@
 
 > Senior Backend Engineer at YOUR Campus in Dhaka, Bangladesh, on the core team since day zero. Builds the backends behind real-world commerce: Django and REST API backends for smart vending, campus laundry and e-commerce platforms, plus Shopify and WordPress stores for freelance clients. Backend-leaning full stack: pairs Django with React and Next.js frontends.
 
+Machine-readable summaries: this file (/llms.txt) and the full text of the site in Markdown at https://saikatroy.netlify.app/llms-full.txt
+
 ## Core skills
 
 Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework, Next.js, React, REST API Design, PostgreSQL, MySQL, MongoDB, Redis, AWS, DigitalOcean, Docker, Nginx, Linux, Git & CI/CD, WordPress, Shopify.
@@ -26,6 +28,7 @@ Most production work (current employer and freelance clients) lives in private r
 
 ## Services
 
+- Services overview: https://saikatroy.netlify.app/services
 - Django & REST API development: https://saikatroy.netlify.app/services/django-rest-api-development
 - Docker, DevOps & cloud deployment: https://saikatroy.netlify.app/services/docker-devops-deployment
 - Shopify development: https://saikatroy.netlify.app/services/shopify-development
@@ -38,5 +41,8 @@ Most production work (current employer and freelance clients) lives in private r
 - GitHub: https://github.com/njmsaikat
 - LinkedIn: https://www.linkedin.com/in/njmsaikat/
 - Résumé (HTML, printable to PDF): https://saikatroy.netlify.app/resume
-- Blog: https://saikatroy.netlify.app/blog (RSS: https://saikatroy.netlify.app/rss.xml)
+- Blog (English): https://saikatroy.netlify.app/blog (RSS: https://saikatroy.netlify.app/rss.xml). Each post also has a Markdown version at /blog/<slug>/index.md
+- Blog (Bangla): https://saikatroy.netlify.app/bn/blog (RSS: https://saikatroy.netlify.app/bn/rss.xml)
+- Latest post: Django + PostgreSQL with Docker Compose, and the volume typo that loses data: https://saikatroy.netlify.app/blog/django-postgres-docker-compose
+- Full text of this site for LLMs: https://saikatroy.netlify.app/llms-full.txt
 - All projects: https://saikatroy.netlify.app/portfolio-page
