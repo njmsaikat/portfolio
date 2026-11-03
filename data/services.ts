@@ -65,6 +65,72 @@ export const services: Service[] = [
     },
   },
   {
+    title: "Payment Gateway Integration",
+    description:
+      "bKash, Nagad, SSLCommerz and aamarPay integration for Django backends: checkout, payment verification, refunds and sandbox-to-live go-live.",
+    icon: "shopping-bag",
+    page: {
+      slug: "payment-gateway-integration-bangladesh",
+      metaTitle: "Payment Gateway Integration in Bangladesh | Saikat Roy",
+      metaDescription:
+        "bKash, Nagad, SSLCommerz and aamarPay payment gateway integration for Django and Python backends: checkout, verification, refunds and go-live support.",
+      headline: "Payment gateway integration in Bangladesh",
+      intro: [
+        "I integrate Bangladesh's payment gateways (bKash, Nagad, SSLCommerz and aamarPay) into Django and Python backends, so customers can pay at checkout and your system reliably knows what was paid.",
+        "At YOUR Campus I integrate all four of these gateways into the platform's backend. Earlier, on SnacKeeper's smart vending network, I worked on bKash payments and on refunds through bKash and Nagad. Payments are where a backend has to be most careful, and that's the experience I bring to your project.",
+      ],
+      deliverables: [
+        {
+          title: "Checkout integration",
+          description:
+            "Creating a payment with the gateway, sending the customer to pay, and bringing them back to your app with a clear result.",
+        },
+        {
+          title: "Payment verification & callbacks",
+          description:
+            "Handling the gateway's callbacks and verifying each payment on the server before an order is marked as paid, so the browser's word is never the only proof.",
+        },
+        {
+          title: "Refunds",
+          description:
+            "Refund flows through the gateways, tied back to the original order so your records and the customer's money stay in agreement.",
+        },
+        {
+          title: "Sandbox-to-live go-live support",
+          description:
+            "Building and testing against each gateway's sandbox, then supporting the move to live credentials and your first real payments.",
+        },
+      ],
+      stack: ["Python", "Django", "Django REST Framework", "PostgreSQL", "bKash", "Nagad", "SSLCommerz", "aamarPay"],
+      relatedProjects: [],
+      relatedPosts: [],
+      faqs: [
+        {
+          question: "Which payment gateways can you integrate?",
+          answer:
+            "bKash, Nagad, SSLCommerz and aamarPay. I've integrated all four into a production Django backend at YOUR Campus.",
+        },
+        {
+          question: "Do you integrate into an existing Django project?",
+          answer:
+            "Yes. I start by reading the existing code and order flow, then add the gateway integration without rewriting what already works.",
+        },
+        {
+          question: "Can you handle refunds as well as payments?",
+          answer:
+            "Yes. I've built refund flows through bKash and Nagad, and refunds are part of this service alongside checkout and verification.",
+        },
+        {
+          question: "Do you need my live gateway credentials to start?",
+          answer:
+            "No. Development and testing happen against each gateway's sandbox. Live credentials are only needed at go-live, and your gateway account itself stays with you.",
+        },
+        { question: "Do you work with clients outside Bangladesh?", answer: worldwide },
+        { question: "How do we get started?", answer: getStarted },
+      ],
+    },
+  },
+  {
     title: "Full-Stack Web Development",
     description:
       "End-to-end applications pairing a Django/DRF backend with a React or Next.js frontend, from data model to deployed UI.",

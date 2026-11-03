@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Project } from "@/data/types";
@@ -57,8 +58,24 @@ export function ProjectCard({ project }: { project: Project }) {
         />
       </div>
       <div className="relative flex flex-1 flex-col p-6">
-        <h3 className="text-base font-semibold">{project.name}</h3>
+        <h3 className="text-base font-semibold">
+          {project.type === "product" ? (
+            <Link href={`/projects/${project.slug}`} className="hover:text-[var(--color-accent)]">
+              {project.name}
+            </Link>
+          ) : (
+            project.name
+          )}
+        </h3>
         <p className="mt-2 flex-1 text-sm text-[var(--color-text-muted)]">{project.description}</p>
+        {project.type === "product" && (
+          <Link
+            href={`/projects/${project.slug}`}
+            className="mt-3 text-sm font-medium text-[var(--color-text)] hover:text-[var(--color-accent)]"
+          >
+            Details &rarr;
+          </Link>
+        )}
         <div className="mt-4 flex items-end justify-between gap-3">
           <div className="flex flex-wrap gap-1.5">
             {(project.type === "product" ? project.stack : [project.category]).map((tag) => (
