@@ -47,7 +47,7 @@ export const services: Service[] = [
       ],
       stack: ["Python", "Django", "Django REST Framework", "PostgreSQL", "Redis", "Docker", "Nginx"],
       relatedProjects: ["django-postgres-setup-docker-compose", "kafka-local", "rabbitmq-local"],
-      relatedPosts: ["django-postgres-docker-compose"],
+      relatedPosts: ["bkash-tokenized-checkout-django", "django-postgres-docker-compose"],
       faqs: [
         {
           question: "Can you work on an existing Django project?",
@@ -103,7 +103,7 @@ export const services: Service[] = [
       ],
       stack: ["Python", "Django", "Django REST Framework", "PostgreSQL", "bKash", "Nagad", "SSLCommerz", "aamarPay"],
       relatedProjects: [],
-      relatedPosts: [],
+      relatedPosts: ["bangladesh-payment-gateways-for-developers", "bkash-tokenized-checkout-django"],
       faqs: [
         {
           question: "Which payment gateways can you integrate?",

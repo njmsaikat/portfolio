@@ -54,7 +54,7 @@ export default async function BanglaBlogPage() {
               <li key={post.slug}>
                 <Link href={`/bn/blog/${post.slug}`} className="group block py-8">
                   <p className="font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)]">
-                    <time dateTime={post.date}>{formatDate(post.date, "bn")}</time> · {post.readingMinutes} {bn.minRead}
+                    <time dateTime={post.date}>{formatDate(post.date, "bn")}</time> · {post.readingMinutes.toLocaleString("bn-BD")} {bn.minRead}
                   </p>
                   <h2 className="mt-2 text-xl font-semibold leading-snug tracking-tight transition-colors group-hover:text-[var(--color-accent)]">
                     {post.title}

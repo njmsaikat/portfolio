@@ -98,7 +98,7 @@ export default async function BanglaPostPage({ params }: Props) {
         </div>
         <header className="mt-8 border-b border-[var(--color-border)] pb-8">
           <p className="font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)]">
-            <time dateTime={post.date}>{formatDate(post.date, "bn")}</time> · {post.readingMinutes} {bn.minRead}
+            <time dateTime={post.date}>{formatDate(post.date, "bn")}</time> · {post.readingMinutes.toLocaleString("bn-BD")} {bn.minRead}
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-snug tracking-tight sm:text-4xl">{post.title}</h1>
           <p className="mt-4 text-lg leading-relaxed text-[var(--color-text-muted)]">{post.description}</p>

@@ -8,7 +8,7 @@ export const about = {
     "Saikat Roy is a Senior Backend Engineer in Dhaka, Bangladesh, building Django and REST API backends for real-world commerce at YOUR Campus.",
   intro: [
     `${profile.name} is a ${profile.jobTitle} based in ${profile.location}. Since March 2022 ${profile.name} has been on the core team at ${profile.company}, building the backend of an IoT campus-services platform from day zero.`,
-    "Alongside that, Saikat builds and customizes Shopify and WordPress stores for freelance clients worldwide, and builds small free products of their own.",
+    "Alongside that, Saikat builds and customizes Shopify and WordPress stores for freelance clients worldwide, and builds small, free products on the side.",
   ],
   work: [
     "Django and Django REST Framework backends and REST APIs, with PostgreSQL and containerized deployments.",

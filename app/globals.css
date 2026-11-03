@@ -216,7 +216,11 @@
     border: 1px solid var(--color-border);
     overflow-x: auto;
   }
+  /* Wide tables scroll sideways on small screens instead of squeezing. */
   .prose table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
     width: 100%;
     font-size: 0.9rem;
     border-collapse: collapse;
