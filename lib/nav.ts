@@ -1,6 +1,7 @@
-// Section anchors (#about, #resume, ...) are preserved from the original site.
+// Section anchors (#about, #resume, ...) are preserved from the original site;
+// "About" now points to the dedicated /about page (the #about anchor still exists).
 export const navItems = [
-  { href: "/#about", label: "About" },
+  { href: "/about", label: "About" },
   { href: "/#expertise", label: "Expertise" },
   { href: "/#resume", label: "Experience" },
   { href: "/#portfolio", label: "Work" },

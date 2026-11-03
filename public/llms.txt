@@ -30,6 +30,7 @@ Most production work (current employer and freelance clients) lives in private r
 ## Services
 
 - Services overview: https://saikatroy.netlify.app/services
+- Payment gateway integration in Bangladesh (bKash, Nagad, SSLCommerz, aamarPay): https://saikatroy.netlify.app/services/payment-gateway-integration-bangladesh
 - Django & REST API development: https://saikatroy.netlify.app/services/django-rest-api-development
 - Docker, DevOps & cloud deployment: https://saikatroy.netlify.app/services/docker-devops-deployment
 - Shopify development: https://saikatroy.netlify.app/services/shopify-development
@@ -38,6 +39,8 @@ Most production work (current employer and freelance clients) lives in private r
 
 ## Links
 
+- About Saikat Roy (canonical profile page): https://saikatroy.netlify.app/about
+- Product pages: https://saikatroy.netlify.app/projects/hisabbd, /projects/hottogol, /projects/bd-rail-ticket-alarm, /projects/bangladesh-healthcare-search, /projects/pujo-guide
 - Portfolio: https://saikatroy.netlify.app
 - GitHub: https://github.com/njmsaikat
 - LinkedIn: https://www.linkedin.com/in/njmsaikat/

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { profile } from "@/data/profile";
 
@@ -45,6 +46,9 @@ export function About() {
           ))}
         </dl>
       </div>
+      <Link href="/about" className="mt-8 inline-flex text-sm font-semibold text-[var(--color-accent)] hover:underline">
+        More about me &rarr;
+      </Link>
     </Section>
   );
 }
