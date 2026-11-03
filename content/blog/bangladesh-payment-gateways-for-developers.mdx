@@ -1,141 +1,110 @@
 export const metadata = {
-  title: "Bangladesh payment gateways for developers: bKash, Nagad, SSLCommerz and aamarPay compared",
+  title: "bKash, Nagad, SSLCommerz or aamarPay? A developer's guide to Bangladesh payment gateways",
   seoTitle: "bKash, Nagad, SSLCommerz, aamarPay: a developer comparison",
   description:
-    "How bKash, Nagad, SSLCommerz and aamarPay integrations work for backend developers: checkout model, API steps, payment confirmation, refunds and sandbox.",
+    "How bKash, Nagad, SSLCommerz and aamarPay integrations work, how they differ, and how to pick one for your Django or Python backend.",
   date: "2026-11-03",
   tags: ["Payments", "bKash", "Nagad", "SSLCommerz", "aamarPay", "Bangladesh"],
 };
 
-*বাংলায় পড়ুন: [এই লেখার বাংলা সংস্করণ](/bn/blog/bangladesh-payment-gateways-for-developers)*
+If you're building an app or online store in Bangladesh, sooner or later someone asks: "Can customers pay with bKash?" Then: "What about cards?" I've integrated bKash, Nagad, SSLCommerz and aamarPay into Django backends. This post is the short guide I wish I'd had the first time.
 
-I've integrated bKash, Nagad, SSLCommerz and aamarPay into Django backends. They solve the same problem, but each one works differently: how you start a payment, how you find out it succeeded, and what you can do afterwards. This post is the overview I wish I'd had the first time. It's the hub of a series: later posts go deep on one gateway each, starting with [bKash Tokenized Checkout in Django](/blog/bkash-tokenized-checkout-django).
+> **The quick answer**
+>
+> - **Your customers mostly pay with bKash?** Integrate bKash directly.
+> - **You need cards, internet banking and wallets in one go?** Use an aggregator: SSLCommerz or aamarPay.
+> - **You need to issue refunds from your own admin panel?** bKash and SSLCommerz have refund APIs in their public docs.
+> - **Plenty of projects use two:** bKash directly, plus an aggregator for everything else.
 
-> **About accuracy.** Everything below is taken from each gateway's official public documentation (linked in every section) as it stood on the publish date, 3 November 2026. Gateways change their APIs. Check the latest docs and test in the gateway's sandbox before you take real money. Where I couldn't confirm something from an official source, I say so.
+## How every gateway works
 
-## The shape every integration shares
+Strip away the names and all four follow the same five steps:
 
-Strip away the field names and all four follow the same pattern:
+1. **Your server creates a payment** and gets back a link to the gateway's payment page.
+2. **The customer pays on the gateway's page**, never on your site, so card numbers and PINs never touch your server.
+3. **The customer is sent back** to your site with a result.
+4. **Your server double-checks the result with the gateway** before marking the order paid.
+5. **Optionally, the gateway also notifies your server directly**, in case the customer never makes it back.
 
-1. **Your server starts the payment** with your secret credentials and gets back a URL for the gateway's hosted payment page.
-2. **You redirect the customer** to that page. Card numbers, wallet PINs and OTPs are entered there, never on your site.
-3. **The customer comes back** to a callback URL on your site, with a result in the query string or a form POST.
-4. **Your server confirms the result directly with the gateway** (an execute, validation or search API call) and checks the amount and your own order reference.
-5. **Optionally, the gateway notifies you server-to-server** (an IPN or webhook) as a backup for customers who never make it back.
-
-Step 4 is where integrations go wrong. The customer's browser carries the callback, so anyone can type that URL. Every gateway below tells you, in its own words, not to trust it on its own.
+**Step 4 is where integrations go wrong.** The result in step 3 arrives through the customer's browser, so anyone can fake it. Every gateway's documentation says the same thing in its own words: confirm it server-to-server.
 
 ## bKash
 
-**What it is:** bKash's own payment gateway, for taking payments straight from a customer's bKash wallet. It only accepts bKash; for cards or other wallets you need another gateway.
+**Best for:** customers who pay from their bKash wallet. It only takes bKash.
 
-**Integration model:** The docs call [Tokenized Checkout](https://developer.bka.sh/docs/product-overview) "the standard way to accept payments today": your server creates a payment, you redirect the customer to the `bkashURL` bKash returns, and bKash sends the result to your callback URL. It comes in three variants:
+**How it works:** bKash's recommended flow is **Tokenized Checkout**. Your server gets an access token, creates a payment, and redirects the customer to bKash to enter their wallet number, OTP and PIN. When they come back, your server calls **Execute Payment** to finish it. There are also options for saved wallets (later payments need only a PIN) and for authorizing now and capturing later.
 
-- **[Without agreement](https://developer.bka.sh/docs/tokenized-without-agreement)**: a one-time payment. The customer enters wallet number, OTP and PIN on the bKash page every time.
-- **[With agreement](https://developer.bka.sh/docs/tokenized-with-agreement)**: the customer links their wallet once (wallet number and OTP), you store the Agreement ID, and later payments only need their PIN.
-- **[Auth & Capture](https://developer.bka.sh/docs/tokenized-auth-capture)**: authorize and hold the amount, then capture it after delivery, or void it.
+**Watch out for:**
 
-The older embedded Checkout iFrame is marked "Not Recommended" on the same product overview page.
+- **The token is rate-limited.** bKash allows only two token requests an hour, so cache the token and share it between your servers.
+- **A "success" on the way back isn't payment yet.** Only a successful Execute Payment (or a "Completed" status when you query the payment) means you've been paid.
 
-**Main API steps** (without agreement):
+**Refunds:** supported, full or partial, within 60 days. **Docs:** [developer.bka.sh](https://developer.bka.sh/docs/product-overview)
 
-1. [Grant Token](https://developer.bka.sh/docs/grant-token): send your merchant `username` and `password` as headers and `app_key`/`app_secret` in the body. You get an `id_token` (default lifetime 3600 seconds) and a `refresh_token` (valid for 30 days).
-2. [Refresh Token](https://developer.bka.sh/docs/refresh-token) before the `id_token` expires, ideally between the 50th and 55th minute. The [token management page](https://developer.bka.sh/docs/token-managment-v2) says not to call Grant or Refresh more than twice an hour; going over that blocks you for an hour. So cache the token and share it across your workers.
-3. [Create Payment](https://developer.bka.sh/docs/create-payment-3) returns a `paymentId` and the `bkashURL` to redirect to.
-4. bKash redirects back to your callback URL with `paymentID`, `status` (`success`, `failure` or `cancel`) and `signature`.
-5. On success, [Execute Payment](https://developer.bka.sh/docs/execute-payment-4) finalizes it and returns a `trxId` with `transactionStatus: "Completed"`.
-
-**Confirmation:** The docs are explicit that the success callback "isn't final confirmation". Only a successful Execute Payment response, or a `Completed` status from [Query Payment](https://developer.bka.sh/docs/query-payment), means the order is paid. If Execute doesn't answer within its 30-second timeout, call Query Payment: `Completed` means paid, and `Initiated` means the customer has to start a new payment. bKash also offers an [Instant Payment Notification](https://developer.bka.sh/page/instant-payment-notification) webhook. bKash support provisions it, the documented payloads are signed Amazon SNS messages, and it only fires for successful transactions.
-
-**Refunds:** The [Refund API](https://developer.bka.sh/docs/refund-transaction) supports full and partial refunds: up to 10 per transaction, within 60 days, never more than the `maxRefundableAmount` returned with the payment, and no duplicate refund within 10 minutes. [Refund Status](https://developer.bka.sh/docs/refund-status) returns the refund history.
-
-**Sandbox:** The [product overview](https://developer.bka.sh/docs/product-overview) says the sandbox "is open to everyone, whether or not on-boarding is complete yet". Sandbox hosts follow the pattern `https://<service-name>.sandbox.bka.sh` (for Tokenized Checkout, the API pages use `https://tokenized.sandbox.bka.sh/v2/tokenized-checkout/...`). Production hosts follow `https://<service-name>.pay.bka.sh`, and bKash issues production credentials after merchant onboarding. The pages I read don't describe a self-service sandbox sign-up, so expect to ask bKash for sandbox credentials. bKash supports only TLS 1.2 or newer.
-
-Full walkthrough: [bKash Tokenized Checkout in Django](/blog/bkash-tokenized-checkout-django).
+Step-by-step guide: [bKash Tokenized Checkout in Django](/blog/bkash-tokenized-checkout-django).
 
 ## Nagad
 
-This section is short, and that's deliberate.
+**Best for:** customers who pay from their Nagad wallet.
 
-As of the publish date I couldn't find Nagad merchant API documentation published openly by Nagad. Nagad's website (nagad.com.bd) refused my automated requests, and searching for API references turned up only community-written libraries and plugins, not anything from Nagad. This series only uses official sources, so I'm not going to describe Nagad endpoints, headers or signing rules from third-party code.
+**The honest part:** I couldn't find merchant API documentation that Nagad publishes openly. What turns up online is community-written code, not anything official, and this series only uses official sources. So there's no step-by-step here yet.
 
-If you're integrating Nagad:
-
-- Ask Nagad for the integration specification and sandbox access as part of merchant onboarding, and build against that document.
-- Treat community packages as unofficial. Read their code before you hand them your merchant keys, and check them against the spec you were given.
-- The rules at the end of this post (server-side confirmation, amount checks, idempotent order updates) apply just the same.
-
-The Nagad deep-dive in this series will be written when I can base it on official material.
+**If you're integrating Nagad:** ask Nagad for the integration specification and sandbox access during merchant onboarding, and build against that. Treat community packages as unofficial: read their code before you give them your merchant keys. The golden rules below still apply.
 
 ## SSLCommerz
 
-**What it is:** A payment aggregator. One integration gives the customer a hosted page listing many payment methods: cards, mobile banking and internet banking. The `multi_card_name` list in the [v4 docs](https://developer.sslcommerz.com/doc/v4/) shows the range, from Visa, Mastercard and Amex to bKash and DBBL Mobile Banking to several banks' internet banking.
+**Best for:** offering many payment methods through one integration: cards, mobile banking (including bKash) and internet banking.
 
-**Integration model:** Two front ends over the same backend: **Hosted Payment** (redirect to SSLCommerz) or **Easy Checkout** (an embedded JavaScript popup). Either way, the docs say to call the SSLCommerz APIs from your server "to avoid data tampering".
+**How it works:** Your server creates a payment session and redirects the customer to the SSLCommerz page (or opens their checkout popup). The customer picks a method and pays. SSLCommerz then notifies your server, and your server confirms the payment with their **Validation API**.
 
-**Main API steps:**
+**Watch out for:**
 
-1. **Create a session**: `POST /gwprocess/v4/api.php` with `store_id`, `store_passwd`, `total_amount`, `currency`, a unique `tran_id`, `success_url`, `fail_url`, `cancel_url`, an optional but recommended `ipn_url`, and customer and product fields. The docs give the allowed amount range as 10.00 to 500000.00 BDT.
-2. The response has `status: "SUCCESS"`, a `sessionkey` (save it) and a `GatewayPageURL` to redirect the customer to.
-3. The customer pays and is sent back to your success, fail or cancel URL.
+- **Validate every payment.** Only a "VALID" or "VALIDATED" answer from the Validation API counts, and check that the amount matches your order.
+- **Refunds need setup.** Refunds are supported, but on the live system your server's public IP must be registered with SSLCommerz.
 
-**Confirmation:** SSLCommerz POSTs an **IPN** to your listener with `status` (`VALID`, `FAILED`, `CANCELLED`, `EXPIRED` or `UNATTEMPTED`), `tran_id`, `val_id`, `amount`, `currency`, `risk_level`, and `verify_sign`/`verify_key`. You then call the **Order Validation API**, `GET /validator/api/validationserverAPI.php` with `val_id`, `store_id` and `store_passwd`. Only `VALID` (or `VALIDATED`, meaning you've already validated it once) counts as success, and the docs tell you to check the amount, currency and `tran_id` against your database. A `risk_level` of 1 marks a risky transaction; the docs suggest holding the service and verifying the customer first. There's also a Transaction Query API that looks up a payment by `sessionkey` or `tran_id`.
-
-**Refunds:** Documented. Initiate a refund with `bank_tran_id`, a unique `refund_trans_id` (a parameter the docs say was added on 24/02/2025), `refund_amount` and `refund_remarks`. You get back a `refund_ref_id` you can later query for `refunded`, `processing` or `cancelled`. On the live system your server's public IP must be registered with SSLCommerz.
-
-**Sandbox:** Self-service [sandbox registration](https://developer.sslcommerz.com/registration/). Sandbox and live use separate store IDs and hosts (`sandbox.sslcommerz.com` and `securepay.sslcommerz.com`), and the docs list test card numbers. Only TLS 1.2 or newer is accepted. SSLCommerz also publishes official libraries on [GitHub](https://github.com/sslcommerz), including a Python one.
-
-One thing to keep in mind: the v4 docs page header still says "Updated: May 12th, 2019", but the page has newer notes in it (a 2022 logistics change, the 2025 refund parameter). Read the whole page, not just the first table.
+**Sandbox:** you can sign up for a test account yourself. **Docs:** [developer.sslcommerz.com](https://developer.sslcommerz.com/doc/v4/)
 
 ## aamarPay
 
-**What it is:** Another aggregator. Its [overview](https://aamarpay.readme.io/reference/overview) describes a redirect-based gateway covering "card systems, mobile financial systems, and local and international wallets".
+**Best for:** another all-in-one option covering cards, mobile banking, and local and international wallets.
 
-**Main API steps:**
+**How it works:** Your server starts a payment and redirects the customer to aamarPay. When they finish, aamarPay sends the result back to your site, and your server confirms it with their **Search Transaction** API.
 
-1. [Initiate Payment (JSON)](https://aamarpay.readme.io/reference/initiate-payment-json): `POST /jsonpost.php` with `store_id`, `signature_key`, a unique `tran_id` (32 characters max), `amount`, `currency`, `desc`, `cus_name`, `cus_email`, `cus_phone`, `success_url`, `fail_url`, `cancel_url` and `type: "json"`.
-2. The response is `{"result": "true", "payment_url": "..."}`. Redirect the customer to `payment_url`.
-3. When the customer finishes, aamarPay sends a POST request to your `success_url` or `fail_url` with fields including `mer_txnid` (your ID), `pg_txnid`, `amount`, `pay_status` and `status_code`, where `0` is initiated, `2` successful, `3` expired and `7` failed.
+**Watch out for:**
 
-**Confirmation:** The docs tell you to check `status_code` and `amount`, and recommend calling [Search Transaction](https://aamarpay.readme.io/reference/search-transaction) from your success endpoint: `GET /api/v1/trxcheck/request.php` with `request_id` (your transaction ID), `store_id`, `signature_key` and `type=json`. There's also an [IPN webhook](https://aamarpay.readme.io/reference/instant-payment-notification), which aamarPay support sets up during onboarding. It only covers successful payments, and the docs say each notification is signed, but the pages I read don't explain how to verify that signature. Until you have that from aamarPay, treat the IPN as a prompt to call Search Transaction, not as proof of payment.
+- **No refund API** in the public docs. Ask aamarPay before you build on refunds.
+- **Django's CSRF check will block the callback**, because the result is posted from aamarPay's site. Exempt just that view, which makes the server-side confirmation even more important.
 
-Two practical notes. The callbacks are cross-site POSTs, so in Django those two views need `csrf_exempt` (the docs' [Common Issues](https://aamarpay.readme.io/reference/common-issues) page covers the Laravel version of the same problem), which makes the server-side confirmation even more important. And the `signature_key` travels in the Search Transaction query string, so keep that call on your server and don't log full request URLs.
-
-**Refunds:** The public API reference has no refund endpoint as of the publish date. If you need programmatic refunds, ask aamarPay before you commit.
-
-**Sandbox:** The docs publish shared test credentials (store ID `aamarpaytest` on `sandbox.aamarpay.com`). Live runs on `secure.aamarpay.com`, with credentials from aamarPay support. There are official sample projects on [GitHub](https://github.com/aamarpay-dev), including one for Python.
+**Sandbox:** the docs share public test credentials, so you can start right away. **Docs:** [aamarpay.readme.io](https://aamarpay.readme.io/reference/overview)
 
 ## Side by side
 
-| Gateway | Customer pays on | Confirm the payment with | Refund API in public docs | Sandbox access |
+| | bKash | Nagad | SSLCommerz | aamarPay |
 | --- | --- | --- | --- | --- |
-| bKash | bKash hosted page (redirect) | Execute Payment, or Query Payment | Yes: partial or full, 60 days | Docs say open to all; ask bKash for credentials |
-| Nagad | Not covered: no public official docs found | Not covered | Not covered | From Nagad during onboarding |
-| SSLCommerz | Hosted page or Easy Checkout popup | IPN plus Order Validation API | Yes, with live IP registration | Self-service registration |
-| aamarPay | Hosted page (redirect) | Callback POST plus Search Transaction | Not in the public reference | Public test credentials in docs |
+| **Payment methods** | bKash wallet | Nagad wallet | Cards, banks, wallets | Cards, banks, wallets |
+| **Confirm payment with** | Execute Payment | From Nagad's spec | Validation API | Search Transaction |
+| **Refund API (public docs)** | Yes | Unknown | Yes | No |
+| **Start testing** | Ask bKash | Ask Nagad | Self sign-up | Public test account |
 
-## Which to choose: the trade-offs
+## Which should you pick?
 
-There's no single right answer. These are the questions I actually ask:
+- **Most customers pay with bKash:** go direct to bKash. You get the smoothest wallet experience, including saved wallets.
+- **You need cards as well:** pick an aggregator. One integration gives you most payment methods on one page.
+- **Support staff will issue refunds from your admin panel:** choose a gateway with a refund API (bKash or SSLCommerz).
+- **You might add a second gateway later:** design for it now. Keep one `Payment` table and your order logic gateway-agnostic, with a small adapter per gateway.
 
-- **Which payment methods do your customers need?** A direct bKash integration only takes bKash, but it gives you the wallet-native features: saved agreements with PIN-only repeat payments, and Auth & Capture for bookings. An aggregator like SSLCommerz or aamarPay gives you cards, mobile banking and internet banking through one integration and one hosted page, but less control over each method's flow.
-- **Do you need programmatic refunds?** bKash and SSLCommerz document refund APIs. aamarPay's public reference doesn't. If support staff issue refunds from your admin panel, that matters.
-- **How much state can you manage?** bKash expects you to manage tokens (with a strict rate limit), execute every payment yourself, and reconcile timeouts with Query Payment. The aggregators are closer to "create session, redirect, validate". That's simpler, but your confirmation still depends entirely on calling their validation or search API correctly.
-- **How easy is it to start building?** aamarPay publishes test credentials, SSLCommerz has self-service sandbox registration, bKash describes an open sandbox, and Nagad's material comes through onboarding. That affects how soon your team can start, not how good the gateway is.
-- **Many projects use more than one.** It's common to integrate bKash directly and an aggregator for everything else. If that might happen, keep your `Payment` model and order logic gateway-agnostic from day one, with a small adapter per gateway.
+Fees, settlement times and contracts are commercial terms, so get them from each provider in writing.
 
-Fees, settlement times and contracts aren't covered here. They're commercial terms, so get them from each provider in writing.
+## The golden rules
 
-## Rules that apply to every gateway
+1. **Never mark an order paid from the redirect alone.** Always confirm with the gateway from your server.
+2. **Check the amount, currency and order reference** the gateway returns against what you expected.
+3. **Mark orders paid exactly once.** Customers refresh, notifications retry, and two can arrive at the same time. In Django, lock the payment row with `select_for_update` inside `transaction.atomic` and skip it if it's already paid.
+4. **Save the gateway's transaction IDs.** You'll need them for support and refunds.
+5. **Keep credentials in environment variables** on the server, and out of your logs.
 
-- **Never mark an order paid from the redirect alone.** Confirm server-to-server (execute, validate or search) every time.
-- **Compare what the gateway says against what you expected:** amount, currency, and your own order or transaction reference.
-- **Make "mark as paid" idempotent.** Callbacks get refreshed, IPNs get retried, and two of them can arrive at once. Lock the payment row (`select_for_update` inside `transaction.atomic` in Django) and do nothing if it's already paid.
-- **Store the gateway's identifiers**: `paymentId`/`trxId` for bKash, `tran_id`/`val_id`/`bank_tran_id` for SSLCommerz, `mer_txnid`/`pg_txnid` for aamarPay. Support and refunds will need them.
-- **Run a reconciliation job** for payments stuck in a pending state. Customers close tabs and networks drop.
-- **Keep credentials in environment variables**, on the server only, and out of your logs.
-- **Exempt only the specific callback views from CSRF**, and never trust what they receive without confirming it.
+## A note on accuracy
 
-## What's next
+Everything here comes from each gateway's official public documentation as of 3 November 2026. Gateways change their APIs, so check the latest docs and test in the sandbox before you take real money.
 
-The next post builds a complete [bKash Tokenized Checkout integration in Django](/blog/bkash-tokenized-checkout-django): token caching, create, callback, execute, query fallback, idempotent order updates, refunds and a go-live checklist. SSLCommerz and aamarPay come after that, and Nagad once I can work from official documentation.
+**Next in the series:** a complete [bKash Tokenized Checkout integration in Django](/blog/bkash-tokenized-checkout-django), then SSLCommerz and aamarPay. Nagad will follow once I can work from official documentation.

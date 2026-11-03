@@ -3,7 +3,7 @@ import Script from "next/script";
 import { ViewTransition } from "react";
 import "./globals.css";
 import { bodyFont, technicalFont } from "@/lib/fonts";
-import { noFlashThemeScript } from "@/components/theme/theme-script";
+import { ThemeScript } from "@/components/theme/ThemeScript";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
+        <ThemeScript />
         <SiteJsonLd />
       </head>
       <body className={`${bodyFont.variable} ${technicalFont.variable} font-sans antialiased`}>

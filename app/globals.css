@@ -143,13 +143,16 @@
   /* ---- Blog article typography (hand-rolled instead of @tailwindcss/typography) ---- */
   .prose {
     color: var(--color-text);
-    line-height: 1.75;
+    font-size: 1.0625rem;
+    line-height: 1.8;
   }
   .prose > * + * {
     margin-top: 1.25em;
   }
   .prose h2 {
-    margin-top: 2.2em;
+    margin-top: 2.4em;
+    padding-top: 1.4em;
+    border-top: 1px solid var(--color-border);
     font-size: 1.5rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -171,8 +174,13 @@
   .prose a {
     color: var(--color-accent);
     text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
+    transition: text-decoration-color 0.2s;
+  }
+  .prose a:hover {
+    text-decoration-color: currentColor;
   }
   .prose strong {
     font-weight: 600;
@@ -195,9 +203,17 @@
     color: var(--color-text-muted);
   }
   .prose blockquote {
-    border-left: 3px solid var(--color-accent);
-    padding-left: 1em;
-    color: var(--color-text-muted);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0.9rem;
+    background: var(--color-accent-soft);
+    padding: 1rem 1.25rem;
+  }
+  .prose blockquote > * + * {
+    margin-top: 0.6em;
+  }
+  .prose blockquote ul {
+    padding-left: 1.2em;
   }
   .prose :not(pre) > code {
     font-family: var(--font-technical);
@@ -225,14 +241,27 @@
     font-size: 0.9rem;
     border-collapse: collapse;
   }
+  .prose table {
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+  }
   .prose th,
   .prose td {
     border-bottom: 1px solid var(--color-border);
-    padding: 0.5rem 0.75rem;
+    padding: 0.65rem 0.9rem;
     text-align: left;
+    vertical-align: top;
   }
   .prose th {
     font-weight: 600;
+    background: var(--color-bg-elevated);
+    white-space: nowrap;
+  }
+  .prose tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--color-bg-elevated) 55%, transparent);
+  }
+  .prose tbody tr:last-child td {
+    border-bottom: 0;
   }
   .prose hr {
     border-top: 1px solid var(--color-border);

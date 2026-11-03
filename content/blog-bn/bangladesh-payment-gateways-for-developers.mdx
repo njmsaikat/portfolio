@@ -1,141 +1,110 @@
 export const metadata = {
-  title: "ডেভেলপারদের জন্য বাংলাদেশের পেমেন্ট গেটওয়ে: bKash, Nagad, SSLCommerz আর aamarPay-এর তুলনা",
-  seoTitle: "bKash, Nagad, SSLCommerz, aamarPay: ডেভেলপারের চোখে তুলনা",
+  title: "bKash, Nagad, SSLCommerz নাকি aamarPay? বাংলাদেশের পেমেন্ট গেটওয়ে নিয়ে ডেভেলপারদের গাইড",
+  seoTitle: "bKash, Nagad, SSLCommerz, aamarPay: ডেভেলপারের তুলনা",
   description:
-    "ব্যাকএন্ড ডেভেলপারের চোখে bKash, Nagad, SSLCommerz আর aamarPay: চেকআউট মডেল, API ধাপ, পেমেন্ট কনফার্মেশন, রিফান্ড আর sandbox।",
+    "bKash, Nagad, SSLCommerz আর aamarPay ইন্টিগ্রেশন কীভাবে কাজ করে, কোথায় কোথায় আলাদা, আর Django বা Python ব্যাকএন্ডের জন্য কোনটা বেছে নেবেন।",
   date: "2026-11-03",
-  tags: ["পেমেন্ট", "bKash", "Nagad", "SSLCommerz", "aamarPay", "বাংলাদেশ"],
+  tags: ["Payments", "bKash", "Nagad", "SSLCommerz", "aamarPay", "Bangladesh"],
 };
 
-*Read in English: [English version](/blog/bangladesh-payment-gateways-for-developers)*
+বাংলাদেশে অ্যাপ বা অনলাইন স্টোর বানালে একটা সময় কেউ না কেউ জিজ্ঞেস করবেই: "কাস্টমাররা কি bKash দিয়ে পেমেন্ট করতে পারবে?" তারপর: "কার্ড?" আমি Django ব্যাকএন্ডে bKash, Nagad, SSLCommerz আর aamarPay ইন্টিগ্রেট করেছি। প্রথমবার কাজ করার সময় যে ছোট গাইডটা হাতে পেলে ভালো হতো, এই লেখাটা সেটাই।
 
-Django ব্যাকএন্ডে আমি bKash, Nagad, SSLCommerz আর aamarPay চারটাই ইন্টিগ্রেট করেছি। চারটা একই সমস্যার সমাধান করে, কিন্তু কাজের ধরন আলাদা: পেমেন্ট কীভাবে শুরু হয়, সফল হলো কি না সেটা কীভাবে জানা যায়, আর পরে কী কী করা যায়। প্রথমবার কাজ করার সময় যে ওভারভিউটা হাতে থাকলে সুবিধা হতো, এই লেখাটা সেটাই। এটা একটা সিরিজের মূল লেখা; পরের লেখাগুলোতে একেকটা গেটওয়ে নিয়ে বিস্তারিত থাকবে, শুরু হচ্ছে [Django-তে bKash Tokenized Checkout](/bn/blog/bkash-tokenized-checkout-django) দিয়ে।
+> **সংক্ষেপে উত্তর**
+>
+> - **আপনার কাস্টমাররা বেশির ভাগ bKash দিয়ে পেমেন্ট করে?** সরাসরি bKash ইন্টিগ্রেট করুন।
+> - **কার্ড, ইন্টারনেট ব্যাংকিং আর ওয়ালেট, সব একসাথে লাগবে?** aggregator নিন: SSLCommerz বা aamarPay।
+> - **নিজের admin panel থেকে রিফান্ড দিতে হবে?** bKash আর SSLCommerz-এর পাবলিক ডকে refund API আছে।
+> - **অনেক প্রজেক্টে দুটোই থাকে:** সরাসরি bKash, আর বাকি সবকিছুর জন্য একটা aggregator।
 
-> **তথ্যের নির্ভুলতা নিয়ে।** নিচের সব তথ্য প্রতিটা গেটওয়ের অফিশিয়াল পাবলিক ডকুমেন্টেশন থেকে নেওয়া (প্রতিটা অংশে লিংক আছে), প্রকাশের তারিখ ৩ নভেম্বর ২০২৬ অনুযায়ী। গেটওয়েগুলো তাদের API বদলায়, তাই আসল টাকা নেওয়ার আগে লেটেস্ট ডক মিলিয়ে নিন আর গেটওয়ের sandbox-এ টেস্ট করে নিন। কোনো তথ্য অফিশিয়াল সোর্স থেকে নিশ্চিত করতে না পারলে সেটা স্পষ্ট করে বলে দিয়েছি।
+## সব গেটওয়ে যেভাবে কাজ করে
 
-## সব ইন্টিগ্রেশনের কাঠামো একই
+নাম বাদ দিলে চারটাই একই পাঁচ ধাপে চলে:
 
-ফিল্ডের নামগুলো বাদ দিলে চারটাই একই প্যাটার্নে চলে:
+1. **আপনার server একটা পেমেন্ট তৈরি করে** আর গেটওয়ের পেমেন্ট পেজের একটা লিংক ফেরত পায়।
+2. **কাস্টমার গেটওয়ের পেজে পেমেন্ট করে**, আপনার সাইটে কখনোই না। তাই কার্ড নম্বর আর PIN আপনার server-এ আসেই না।
+3. **কাস্টমারকে আপনার সাইটে ফেরত পাঠানো হয়** ফলাফলসহ।
+4. **আপনার server গেটওয়ের কাছে ফলাফলটা আবার যাচাই করে**, তারপর অর্ডার paid করে।
+5. **চাইলে গেটওয়ে সরাসরি আপনার server-কেও জানায়**, কাস্টমার যদি আর ফিরেই না আসে।
 
-1. **আপনার সার্ভার পেমেন্ট শুরু করে** নিজের গোপন credential দিয়ে, আর গেটওয়ের hosted payment page-এর একটা URL ফেরত পায়।
-2. **কাস্টমারকে সেই পেজে redirect করেন।** কার্ড নম্বর, ওয়ালেট PIN, OTP সবকিছু সেখানেই দেওয়া হয়, কখনোই আপনার সাইটে না।
-3. **কাস্টমার ফিরে আসে** আপনার সাইটের একটা callback URL-এ, ফলাফলসহ (query string-এ বা form POST হিসেবে)।
-4. **আপনার সার্ভার সরাসরি গেটওয়ের সাথে ফলাফল কনফার্ম করে** (execute, validation বা search API কল করে), আর amount ও নিজের order reference মিলিয়ে দেখে।
-5. **চাইলে গেটওয়ে server-to-server নোটিফিকেশনও পাঠায়** (IPN বা webhook)। যে কাস্টমার আর ফিরে আসে না, তাদের জন্য এটা ব্যাকআপ।
-
-ইন্টিগ্রেশনে ভুল সবচেয়ে বেশি হয় ৪ নম্বর ধাপে। Callback আসে কাস্টমারের ব্রাউজার দিয়ে, তাই URL-টা যে কেউ টাইপ করে বসাতে পারে। নিচের প্রতিটা গেটওয়ে নিজের ভাষায় একই কথা বলে: শুধু callback দেখে বিশ্বাস করবেন না।
+**গোলমাল সবচেয়ে বেশি হয় ৪ নম্বর ধাপে।** ৩ নম্বর ধাপের ফলাফল আসে কাস্টমারের ব্রাউজার দিয়ে, তাই যে কেউ সেটা নকল করতে পারে। প্রতিটা গেটওয়ের ডকুমেন্টেশন নিজের ভাষায় একই কথা বলে: server-to-server কনফার্ম করুন।
 
 ## bKash
 
-**এটা কী:** bKash-এর নিজস্ব পেমেন্ট গেটওয়ে, যেটা দিয়ে কাস্টমারের bKash ওয়ালেট থেকে সরাসরি পেমেন্ট নেওয়া যায়। এটা শুধু bKash নেয়; কার্ড বা অন্য ওয়ালেটের জন্য আরেকটা গেটওয়ে লাগবে।
+**কার জন্য ভালো:** যাদের কাস্টমার bKash ওয়ালেট থেকে পেমেন্ট করে। এটা শুধু bKash নেয়।
 
-**ইন্টিগ্রেশন মডেল:** ডকে [Tokenized Checkout](https://developer.bka.sh/docs/product-overview)-কে বলা হয়েছে "the standard way to accept payments today"। আপনার সার্ভার পেমেন্ট create করে, bKash যে `bkashURL` দেয় সেখানে কাস্টমারকে redirect করেন, তারপর bKash ফলাফলটা আপনার callback URL-এ পাঠায়। এর তিনটা ধরন আছে:
+**কীভাবে কাজ করে:** bKash-এর recommended ফ্লো হলো **Tokenized Checkout**। আপনার server একটা access token নেয়, পেমেন্ট তৈরি করে, আর কাস্টমারকে bKash-এ redirect করে। সেখানে কাস্টমার ওয়ালেট নম্বর, OTP আর PIN দেয়। কাস্টমার ফিরে এলে আপনার server **Execute Payment** কল করে পেমেন্ট শেষ করে। সেভ করা ওয়ালেটের অপশনও আছে (পরের পেমেন্টে শুধু PIN লাগে), আবার এখন authorize করে পরে capture করার অপশনও আছে।
 
-- **[Without agreement](https://developer.bka.sh/docs/tokenized-without-agreement)**: এককালীন পেমেন্ট। প্রতিবার কাস্টমার bKash পেজে ওয়ালেট নম্বর, OTP আর PIN দেয়।
-- **[With agreement](https://developer.bka.sh/docs/tokenized-with-agreement)**: কাস্টমার একবার ওয়ালেট লিংক করে (ওয়ালেট নম্বর আর OTP দিয়ে), আপনি Agreement ID সেভ রাখেন, পরের পেমেন্টগুলোতে শুধু PIN লাগে।
-- **[Auth & Capture](https://developer.bka.sh/docs/tokenized-auth-capture)**: আগে টাকাটা authorize করে hold রাখা, ডেলিভারির পর capture করা, অথবা void করে দেওয়া।
+**যা খেয়াল রাখবেন:**
 
-একই প্রোডাক্ট ওভারভিউ পেজে পুরোনো embedded Checkout iFrame-কে "Not Recommended" বলা আছে।
+- **Token-এর rate limit আছে।** bKash ঘণ্টায় মাত্র দুইবার token request করতে দেয়। তাই token cache করুন আর আপনার server-গুলোর মধ্যে শেয়ার করুন।
+- **ফেরার পথে "success" মানেই পেমেন্ট হয়ে যাওয়া না।** শুধু Execute Payment সফল হলে (বা পেমেন্ট query করলে "Completed" স্ট্যাটাস পেলে) বুঝবেন টাকা পেয়েছেন।
 
-**মূল API ধাপ** (without agreement):
+**Refunds:** সাপোর্ট আছে, পুরো বা আংশিক, ৬০ দিনের মধ্যে। **Docs:** [developer.bka.sh](https://developer.bka.sh/docs/product-overview)
 
-1. [Grant Token](https://developer.bka.sh/docs/grant-token): মার্চেন্ট `username` আর `password` header-এ, আর `app_key`/`app_secret` body-তে পাঠালে একটা `id_token` (ডিফল্ট মেয়াদ ৩৬০০ সেকেন্ড) আর একটা `refresh_token` (মেয়াদ ৩০ দিন) পাবেন।
-2. `id_token` মেয়াদ শেষ হওয়ার আগে, আদর্শভাবে ৫০ থেকে ৫৫ মিনিটের মধ্যে, [Refresh Token](https://developer.bka.sh/docs/refresh-token) কল করুন। [Token management পেজে](https://developer.bka.sh/docs/token-managment-v2) বলা আছে, ঘণ্টায় দুইবারের বেশি Grant বা Refresh কল করা যাবে না; করলে এক ঘণ্টার জন্য ব্লক। তাই টোকেন cache করুন, আর সব worker যেন একই টোকেন ব্যবহার করে।
-3. [Create Payment](https://developer.bka.sh/docs/create-payment-3) একটা `paymentId` আর redirect করার জন্য `bkashURL` দেয়।
-4. bKash কাস্টমারকে আপনার callback URL-এ ফেরত পাঠায় `paymentID`, `status` (`success`, `failure` বা `cancel`) আর `signature` সহ।
-5. Success হলে [Execute Payment](https://developer.bka.sh/docs/execute-payment-4) কল করে পেমেন্টটা সম্পন্ন করতে হয়। উত্তরে আসে একটা `trxId` আর `transactionStatus: "Completed"`।
-
-**কনফার্মেশন:** ডকে পরিষ্কার লেখা, success callback "isn't final confirmation"। অর্ডার paid ধরা যাবে শুধু Execute Payment সফল হলে, অথবা [Query Payment](https://developer.bka.sh/docs/query-payment) `Completed` দেখালে। Execute যদি ৩০ সেকেন্ডের timeout-এর মধ্যে উত্তর না দেয়, Query Payment কল করুন: `Completed` মানে পেমেন্ট হয়েছে, আর `Initiated` মানে কাস্টমারকে নতুন করে পেমেন্ট শুরু করতে হবে। bKash-এর একটা [Instant Payment Notification](https://developer.bka.sh/page/instant-payment-notification) webhook-ও আছে। এটা bKash সাপোর্ট চালু করে দেয়, ডকে দেখানো payload-গুলো signed Amazon SNS মেসেজ, আর এটা শুধু সফল ট্রানজ্যাকশনে আসে।
-
-**রিফান্ড:** [Refund API](https://developer.bka.sh/docs/refund-transaction)-তে full আর partial দুই রকম রিফান্ডই করা যায়: একটা ট্রানজ্যাকশনে সর্বোচ্চ ১০টা, ৬০ দিনের মধ্যে, পেমেন্টের সাথে আসা `maxRefundableAmount`-এর বেশি না, আর ১০ মিনিটের মধ্যে duplicate রিফান্ড চলবে না। [Refund Status](https://developer.bka.sh/docs/refund-status) দিয়ে রিফান্ডের ইতিহাস দেখা যায়।
-
-**Sandbox:** [প্রোডাক্ট ওভারভিউ](https://developer.bka.sh/docs/product-overview) বলছে sandbox "is open to everyone, whether or not on-boarding is complete yet"। Sandbox host-এর প্যাটার্ন `https://<service-name>.sandbox.bka.sh` (Tokenized Checkout-এর API পেজগুলোতে `https://tokenized.sandbox.bka.sh/v2/tokenized-checkout/...`)। Production host-এর প্যাটার্ন `https://<service-name>.pay.bka.sh`, আর production credential মার্চেন্ট onboarding শেষে bKash দেয়। যে পেজগুলো পড়েছি সেখানে sandbox-এর জন্য নিজে নিজে সাইন-আপের কোনো উপায় দেখিনি, তাই sandbox credential-এর জন্য bKash-এর সাথে যোগাযোগ করতে হবে ধরে নিন। bKash শুধু TLS 1.2 বা তার নতুন ভার্সন সাপোর্ট করে।
-
-পুরো ওয়াকথ্রু: [Django-তে bKash Tokenized Checkout](/bn/blog/bkash-tokenized-checkout-django)।
+ধাপে ধাপে গাইড: [Django-তে bKash Tokenized Checkout](/bn/blog/bkash-tokenized-checkout-django)।
 
 ## Nagad
 
-এই অংশটা ইচ্ছা করেই ছোট।
+**কার জন্য ভালো:** যাদের কাস্টমার Nagad ওয়ালেট থেকে পেমেন্ট করে।
 
-প্রকাশের তারিখ পর্যন্ত Nagad নিজে উন্মুক্তভাবে প্রকাশ করেছে এমন কোনো মার্চেন্ট API ডকুমেন্টেশন আমি খুঁজে পাইনি। Nagad-এর ওয়েবসাইট (nagad.com.bd) আমার automated request ফিরিয়ে দিয়েছে, আর API reference খুঁজতে গিয়ে পেয়েছি শুধু কমিউনিটির লেখা লাইব্রেরি আর প্লাগইন, Nagad-এর নিজের কিছু না। এই সিরিজে শুধু অফিশিয়াল সোর্স ব্যবহার করছি, তাই থার্ড-পার্টি কোড দেখে Nagad-এর endpoint, header বা signing-এর নিয়ম লিখব না।
+**সত্যি কথাটা:** Nagad ওপেনভাবে merchant API ডকুমেন্টেশন পাবলিশ করে, এমন কিছু আমি খুঁজে পাইনি। অনলাইনে যা পাওয়া যায় সেটা কমিউনিটির লেখা কোড, অফিশিয়াল কিছু না, আর এই সিরিজে আমি শুধু অফিশিয়াল সোর্স ব্যবহার করি। তাই এখানে এখনো ধাপে ধাপে গাইড নেই।
 
-Nagad ইন্টিগ্রেট করতে হলে:
-
-- মার্চেন্ট onboarding-এর সময় Nagad-এর কাছ থেকে ইন্টিগ্রেশন স্পেসিফিকেশন আর sandbox অ্যাক্সেস চেয়ে নিন, আর সেই ডকুমেন্ট ধরে কাজ করুন।
-- কমিউনিটি প্যাকেজকে আনঅফিশিয়াল হিসেবেই দেখুন। মার্চেন্ট key দেওয়ার আগে কোডটা পড়ে নিন, আর হাতে পাওয়া স্পেসের সাথে মিলিয়ে দেখুন।
-- লেখার শেষে যে নিয়মগুলো আছে (server-side কনফার্মেশন, amount যাচাই, idempotent অর্ডার আপডেট), সেগুলো এখানেও একইভাবে খাটে।
-
-অফিশিয়াল ম্যাটেরিয়াল হাতে পেলে এই সিরিজের Nagad পর্বটা লিখব।
+**Nagad ইন্টিগ্রেট করলে:** merchant onboarding-এর সময় Nagad-এর কাছ থেকে integration specification আর sandbox access চেয়ে নিন, আর সেটা ধরেই কাজ করুন। কমিউনিটি প্যাকেজকে unofficial ধরে নিন: merchant key দেওয়ার আগে তাদের কোড পড়ে দেখুন। নিচের golden rules এখানেও খাটে।
 
 ## SSLCommerz
 
-**এটা কী:** একটা পেমেন্ট aggregator। একটা ইন্টিগ্রেশনেই কাস্টমার একটা hosted পেজে অনেকগুলো পেমেন্ট মেথড পায়: কার্ড, মোবাইল ব্যাংকিং, ইন্টারনেট ব্যাংকিং। [v4 ডকের](https://developer.sslcommerz.com/doc/v4/) `multi_card_name` লিস্ট দেখলেই পরিসরটা বোঝা যায়: Visa, Mastercard, Amex থেকে bKash, DBBL Mobile Banking, আবার বিভিন্ন ব্যাংকের ইন্টারনেট ব্যাংকিং।
+**কার জন্য ভালো:** একটা ইন্টিগ্রেশনেই অনেক পেমেন্ট মেথড দিতে চাইলে: কার্ড, মোবাইল ব্যাংকিং (bKash সহ) আর ইন্টারনেট ব্যাংকিং।
 
-**ইন্টিগ্রেশন মডেল:** একই ব্যাকএন্ডের ওপর দুই রকম ফ্রন্টএন্ড: **Hosted Payment** (SSLCommerz-এ redirect) অথবা **Easy Checkout** (embedded JavaScript popup)। যেটাই নিন, ডক বলছে "to avoid data tampering" SSLCommerz-এর API-গুলো আপনার সার্ভার থেকেই কল করতে হবে।
+**কীভাবে কাজ করে:** আপনার server একটা payment session তৈরি করে আর কাস্টমারকে SSLCommerz-এর পেজে redirect করে (অথবা তাদের checkout popup খোলে)। কাস্টমার একটা মেথড বেছে পেমেন্ট করে। এরপর SSLCommerz আপনার server-কে নোটিফাই করে, আর আপনার server তাদের **Validation API** দিয়ে পেমেন্টটা কনফার্ম করে।
 
-**মূল API ধাপ:**
+**যা খেয়াল রাখবেন:**
 
-1. **Session তৈরি:** `POST /gwprocess/v4/api.php`, সাথে `store_id`, `store_passwd`, `total_amount`, `currency`, ইউনিক `tran_id`, `success_url`, `fail_url`, `cancel_url`, ঐচ্ছিক কিন্তু রেকমেন্ডেড `ipn_url`, আর কাস্টমার ও প্রোডাক্টের ফিল্ড। ডক অনুযায়ী amount হতে হবে ১০.০০ থেকে ৫,০০,০০০.০০ টাকার মধ্যে।
-2. উত্তরে আসে `status: "SUCCESS"`, একটা `sessionkey` (এটা সেভ রাখুন) আর কাস্টমারকে redirect করার জন্য `GatewayPageURL`।
-3. কাস্টমার পেমেন্ট করে আপনার success, fail বা cancel URL-এ ফিরে আসে।
+- **প্রতিটা পেমেন্ট validate করুন।** Validation API থেকে শুধু "VALID" বা "VALIDATED" এলেই ধরবেন, আর amount আপনার অর্ডারের সাথে মিলছে কি না দেখে নিন।
+- **রিফান্ডের জন্য সেটআপ লাগে।** রিফান্ড সাপোর্ট করে, কিন্তু live সিস্টেমে আপনার server-এর public IP SSLCommerz-এ রেজিস্টার করা থাকতে হবে।
 
-**কনফার্মেশন:** SSLCommerz আপনার listener-এ একটা **IPN** POST করে। তাতে থাকে `status` (`VALID`, `FAILED`, `CANCELLED`, `EXPIRED` বা `UNATTEMPTED`), `tran_id`, `val_id`, `amount`, `currency`, `risk_level`, আর `verify_sign`/`verify_key`। এরপর **Order Validation API** কল করতে হয়: `GET /validator/api/validationserverAPI.php`, সাথে `val_id`, `store_id` আর `store_passwd`। সফল ধরা হবে শুধু `VALID` হলে (অথবা `VALIDATED` হলে, মানে আগে একবার validate করা হয়ে গেছে)। ডক বলছে amount, currency আর `tran_id` ডাটাবেসের সাথে মিলিয়ে দেখতে। `risk_level` ১ মানে ঝুঁকিপূর্ণ ট্রানজ্যাকশন; ডকের পরামর্শ হলো সার্ভিস আটকে রেখে আগে কাস্টমার ভেরিফাই করা। এছাড়া একটা Transaction Query API আছে, যেটা দিয়ে `sessionkey` বা `tran_id` ধরে পেমেন্ট খোঁজা যায়।
-
-**রিফান্ড:** ডকুমেন্টেড আছে। রিফান্ড শুরু করতে লাগে `bank_tran_id`, একটা ইউনিক `refund_trans_id` (ডক অনুযায়ী প্যারামিটারটা যোগ হয়েছে 24/02/2025-এ), `refund_amount` আর `refund_remarks`। উত্তরে একটা `refund_ref_id` আসে; পরে সেটা দিয়ে কোয়েরি করলে স্ট্যাটাস পাবেন `refunded`, `processing` বা `cancelled`। লাইভ সিস্টেমে আপনার সার্ভারের public IP SSLCommerz-এ রেজিস্টার করা থাকতে হবে।
-
-**Sandbox:** নিজে নিজেই [sandbox রেজিস্ট্রেশন](https://developer.sslcommerz.com/registration/) করা যায়। Sandbox আর লাইভের store ID আর host আলাদা (`sandbox.sslcommerz.com` আর `securepay.sslcommerz.com`), আর ডকে টেস্ট কার্ড নম্বর দেওয়া আছে। শুধু TLS 1.2 বা তার নতুন ভার্সন চলে। SSLCommerz [GitHub](https://github.com/sslcommerz)-এ অফিশিয়াল লাইব্রেরিও রাখে, তার মধ্যে একটা Python-এর।
-
-একটা কথা মাথায় রাখবেন: v4 ডক পেজের হেডারে এখনো "Updated: May 12th, 2019" লেখা, অথচ পেজের ভেতরে নতুন নোট আছে (২০২২-এর logistics পরিবর্তন, ২০২৫-এর রিফান্ড প্যারামিটার)। শুধু প্রথম টেবিল না, পুরো পেজটা পড়ুন।
+**Sandbox:** নিজে সাইন আপ করে টেস্ট অ্যাকাউন্ট নিতে পারবেন। **Docs:** [developer.sslcommerz.com](https://developer.sslcommerz.com/doc/v4/)
 
 ## aamarPay
 
-**এটা কী:** আরেকটা aggregator। এর [ওভারভিউতে](https://aamarpay.readme.io/reference/overview) বলা আছে এটা redirect-ভিত্তিক গেটওয়ে, যেখানে "card systems, mobile financial systems, and local and international wallets" সব আছে।
+**কার জন্য ভালো:** আরেকটা all-in-one অপশন, যেখানে কার্ড, মোবাইল ব্যাংকিং, আর লোকাল ও ইন্টারন্যাশনাল ওয়ালেট আছে।
 
-**মূল API ধাপ:**
+**কীভাবে কাজ করে:** আপনার server পেমেন্ট শুরু করে আর কাস্টমারকে aamarPay-তে redirect করে। কাস্টমারের পেমেন্ট শেষ হলে aamarPay ফলাফল আপনার সাইটে পাঠায়, আর আপনার server তাদের **Search Transaction** API দিয়ে সেটা কনফার্ম করে।
 
-1. [Initiate Payment (JSON)](https://aamarpay.readme.io/reference/initiate-payment-json): `POST /jsonpost.php`, সাথে `store_id`, `signature_key`, ইউনিক `tran_id` (সর্বোচ্চ ৩২ ক্যারেক্টার), `amount`, `currency`, `desc`, `cus_name`, `cus_email`, `cus_phone`, `success_url`, `fail_url`, `cancel_url` আর `type: "json"`।
-2. উত্তর আসে `{"result": "true", "payment_url": "..."}`। কাস্টমারকে `payment_url`-এ redirect করুন।
-3. কাস্টমারের কাজ শেষ হলে aamarPay আপনার `success_url` বা `fail_url`-এ একটা POST রিকোয়েস্ট পাঠায়। তাতে থাকে `mer_txnid` (আপনার আইডি), `pg_txnid`, `amount`, `pay_status` আর `status_code`, যেখানে `0` মানে initiated, `2` সফল, `3` মেয়াদোত্তীর্ণ, `7` ব্যর্থ।
+**যা খেয়াল রাখবেন:**
 
-**কনফার্মেশন:** ডক বলছে `status_code` আর `amount` যাচাই করতে, আর success endpoint থেকে [Search Transaction](https://aamarpay.readme.io/reference/search-transaction) কল করার পরামর্শ দিচ্ছে: `GET /api/v1/trxcheck/request.php`, সাথে `request_id` (আপনার ট্রানজ্যাকশন আইডি), `store_id`, `signature_key` আর `type=json`। একটা [IPN webhook](https://aamarpay.readme.io/reference/instant-payment-notification)-ও আছে, যেটা onboarding-এর সময় aamarPay সাপোর্ট সেট করে দেয়। এটা শুধু সফল পেমেন্টে আসে। ডকে লেখা প্রতিটা নোটিফিকেশন signed, কিন্তু যে পেজগুলো পড়েছি সেখানে signature কীভাবে ভেরিফাই করতে হয় তা বলা নেই। aamarPay-এর কাছ থেকে সেটা না পাওয়া পর্যন্ত IPN-কে পেমেন্টের প্রমাণ ধরবেন না; Search Transaction কল করার ইঙ্গিত হিসেবে ধরুন।
+- **পাবলিক ডকে refund API নেই।** রিফান্ডের ওপর কিছু বানানোর আগে aamarPay-কে জিজ্ঞেস করে নিন।
+- **Django-র CSRF check callback আটকে দেবে**, কারণ ফলাফলটা aamarPay-র সাইট থেকে POST হয়ে আসে। শুধু ওই view-টা exempt করুন। এতে server-side কনফার্মেশন আরও বেশি জরুরি হয়ে যায়।
 
-দুটো প্র্যাকটিক্যাল কথা। Callback-গুলো cross-site POST, তাই Django-তে ওই দুটো view-এ `csrf_exempt` লাগবে (ডকের [Common Issues](https://aamarpay.readme.io/reference/common-issues) পেজে Laravel-এ একই সমস্যার কথা আছে)। এতে server-side কনফার্মেশন আরও জরুরি হয়ে যায়। আর Search Transaction-এর query string-এ `signature_key` যায়, তাই কলটা সার্ভার থেকেই করুন, আর পুরো request URL লগে লিখবেন না।
-
-**রিফান্ড:** প্রকাশের তারিখ পর্যন্ত পাবলিক API reference-এ কোনো রিফান্ড endpoint নেই। প্রোগ্রাম থেকে রিফান্ড দরকার হলে আগেই aamarPay-কে জিজ্ঞেস করে নিন।
-
-**Sandbox:** ডকে শেয়ার্ড টেস্ট credential দেওয়া আছে (`sandbox.aamarpay.com`-এ store ID `aamarpaytest`)। লাইভ চলে `secure.aamarpay.com`-এ, credential দেয় aamarPay সাপোর্ট। [GitHub](https://github.com/aamarpay-dev)-এ অফিশিয়াল স্যাম্পল প্রজেক্টও আছে, তার মধ্যে একটা Python-এর।
+**Sandbox:** ডকে পাবলিক টেস্ট credential দেওয়া আছে, তাই এখনই শুরু করতে পারবেন। **Docs:** [aamarpay.readme.io](https://aamarpay.readme.io/reference/overview)
 
 ## পাশাপাশি তুলনা
 
-| গেটওয়ে | কাস্টমার কোথায় পে করে | পেমেন্ট কনফার্ম হয় যেভাবে | পাবলিক ডকে রিফান্ড API | Sandbox অ্যাক্সেস |
+| | bKash | Nagad | SSLCommerz | aamarPay |
 | --- | --- | --- | --- | --- |
-| bKash | bKash-এর hosted পেজ (redirect) | Execute Payment, বা Query Payment | আছে: partial বা full, ৬০ দিন | ডকে সবার জন্য খোলা বলা; credential bKash-এর কাছে চাইতে হবে |
-| Nagad | কভার করা হয়নি: অফিশিয়াল পাবলিক ডক পাইনি | কভার করা হয়নি | কভার করা হয়নি | Onboarding-এর সময় Nagad দেয় |
-| SSLCommerz | Hosted পেজ বা Easy Checkout popup | IPN, তারপর Order Validation API | আছে, লাইভে IP রেজিস্ট্রেশন লাগে | নিজে রেজিস্ট্রেশন করা যায় |
-| aamarPay | Hosted পেজ (redirect) | Callback POST, তারপর Search Transaction | পাবলিক reference-এ নেই | ডকেই টেস্ট credential দেওয়া |
+| **পেমেন্ট মেথড** | bKash ওয়ালেট | Nagad ওয়ালেট | কার্ড, ব্যাংক, ওয়ালেট | কার্ড, ব্যাংক, ওয়ালেট |
+| **পেমেন্ট কনফার্ম করার উপায়** | Execute Payment | Nagad-এর spec থেকে | Validation API | Search Transaction |
+| **Refund API (পাবলিক ডকে)** | আছে | জানা নেই | আছে | নেই |
+| **টেস্টিং শুরু** | bKash-কে বলুন | Nagad-কে বলুন | নিজে সাইন আপ | পাবলিক টেস্ট অ্যাকাউন্ট |
 
-## কোনটা নেবেন: ট্রেড-অফগুলো
+## কোনটা বেছে নেবেন?
 
-একটাই সঠিক উত্তর নেই। আমি আসলে এই প্রশ্নগুলো করি:
+- **বেশির ভাগ কাস্টমার bKash দিয়ে পেমেন্ট করে:** সরাসরি bKash নিন। ওয়ালেটের অভিজ্ঞতা সবচেয়ে স্মুথ পাবেন, সেভ করা ওয়ালেটসহ।
+- **কার্ডও লাগবে:** aggregator নিন। একটা ইন্টিগ্রেশনেই একটা পেজে বেশির ভাগ পেমেন্ট মেথড পেয়ে যাবেন।
+- **সাপোর্ট স্টাফ admin panel থেকে রিফান্ড দেবে:** refund API আছে এমন গেটওয়ে নিন (bKash বা SSLCommerz)।
+- **পরে দ্বিতীয় একটা গেটওয়ে যোগ করতে পারেন:** এখন থেকেই সেটা ভেবে ডিজাইন করুন। একটাই `Payment` table রাখুন, আর অর্ডারের লজিক গেটওয়ে-নিরপেক্ষ রাখুন, প্রতিটা গেটওয়ের জন্য ছোট একটা adapter দিয়ে।
 
-- **আপনার কাস্টমারদের কোন পেমেন্ট মেথড লাগবে?** সরাসরি bKash ইন্টিগ্রেশনে শুধু bKash নেওয়া যায়, কিন্তু ওয়ালেটের নিজস্ব ফিচারগুলো পাওয়া যায়: সেভ করা agreement দিয়ে শুধু PIN-এ বারবার পেমেন্ট, আর বুকিংয়ের জন্য Auth & Capture। SSLCommerz বা aamarPay-এর মতো aggregator দিয়ে একটা ইন্টিগ্রেশন আর একটা hosted পেজেই কার্ড, মোবাইল ব্যাংকিং, ইন্টারনেট ব্যাংকিং পাওয়া যায়, তবে প্রতিটা মেথডের ফ্লোর ওপর নিয়ন্ত্রণ কম থাকে।
-- **প্রোগ্রাম থেকে রিফান্ড লাগবে?** bKash আর SSLCommerz রিফান্ড API ডকুমেন্ট করেছে, aamarPay-এর পাবলিক reference-এ নেই। আপনার সাপোর্ট টিম যদি অ্যাডমিন প্যানেল থেকে রিফান্ড দেয়, তাহলে এটা গুরুত্বপূর্ণ।
-- **কতটা state সামলাতে পারবেন?** bKash আশা করে আপনি টোকেন ম্যানেজ করবেন (কড়া rate limit সহ), প্রতিটা পেমেন্ট নিজে execute করবেন, আর timeout হলে Query Payment দিয়ে মিলিয়ে নেবেন। Aggregator-গুলো অনেকটা "session বানাও, redirect করো, validate করো" ধরনের। সেটা সহজ, তবে আপনার কনফার্মেশন পুরোপুরি নির্ভর করে তাদের validation বা search API ঠিকমতো কল করার ওপর।
-- **কাজ শুরু করা কতটা সহজ?** aamarPay টেস্ট credential পাবলিক করে রেখেছে, SSLCommerz-এ নিজে sandbox রেজিস্ট্রেশন করা যায়, bKash বলছে sandbox সবার জন্য খোলা, আর Nagad-এর ম্যাটেরিয়াল আসে onboarding-এর মাধ্যমে। এতে বোঝা যায় টিম কত তাড়াতাড়ি কাজ শুরু করতে পারবে, গেটওয়ে কতটা ভালো তা না।
-- **অনেক প্রজেক্টে একাধিক গেটওয়ে লাগে।** সরাসরি bKash আর বাকি সবকিছুর জন্য একটা aggregator, এমন কম্বিনেশন খুবই সাধারণ। সেটা হওয়ার সম্ভাবনা থাকলে প্রথম দিন থেকেই `Payment` মডেল আর অর্ডার লজিক গেটওয়ে-নিরপেক্ষ রাখুন, আর প্রতিটা গেটওয়ের জন্য ছোট একটা adapter লিখুন।
+ফি, settlement-এর সময় আর কন্ট্রাক্ট হলো ব্যবসায়িক শর্ত, তাই এগুলো প্রতিটা প্রোভাইডারের কাছ থেকে লিখিতভাবে নিন।
 
-ফি, সেটেলমেন্টের সময় আর চুক্তির বিষয়গুলো এখানে নেই। এগুলো বাণিজ্যিক শর্ত, প্রতিটা প্রোভাইডারের কাছ থেকে লিখিতভাবে নিয়ে নিন।
+## Golden rules
 
-## যে নিয়মগুলো সব গেটওয়েতে খাটে
+1. **শুধু redirect দেখে কখনো অর্ডার paid করবেন না।** সবসময় আপনার server থেকে গেটওয়ের কাছে কনফার্ম করুন।
+2. **গেটওয়ে যে amount, currency আর order reference ফেরত দেয়,** সেটা আপনার প্রত্যাশার সাথে মিলিয়ে দেখুন।
+3. **অর্ডার ঠিক একবারই paid করুন।** কাস্টমার রিফ্রেশ করে, নোটিফিকেশন retry হয়, আর দুটো একসাথেও আসতে পারে। Django-তে `transaction.atomic`-এর ভেতরে `select_for_update` দিয়ে payment row lock করুন, আর আগেই paid হয়ে থাকলে skip করুন।
+4. **গেটওয়ের transaction ID সেভ রাখুন।** সাপোর্ট আর রিফান্ডে লাগবে।
+5. **Credential রাখুন server-এর environment variable-এ,** আর লগ থেকে দূরে রাখুন।
 
-- **শুধু redirect দেখে কখনো অর্ডার paid করবেন না।** প্রতিবার server-to-server কনফার্ম করুন (execute, validate বা search)।
-- **গেটওয়ে যা বলছে, তা আপনার প্রত্যাশার সাথে মিলিয়ে দেখুন:** amount, currency, আর আপনার নিজের অর্ডার বা ট্রানজ্যাকশন reference।
-- **"Paid মার্ক করা"-কে idempotent রাখুন।** Callback রিফ্রেশ হয়, IPN আবার আসে, আর দুটো একসাথেও পৌঁছাতে পারে। Payment row-টা লক করুন (Django-তে `transaction.atomic`-এর ভেতরে `select_for_update`), আর আগে থেকেই paid হলে কিছুই করবেন না।
-- **গেটওয়ের আইডিগুলো সেভ রাখুন:** bKash-এর `paymentId`/`trxId`, SSLCommerz-এর `tran_id`/`val_id`/`bank_tran_id`, aamarPay-এর `mer_txnid`/`pg_txnid`। সাপোর্ট আর রিফান্ডে এগুলো লাগবে।
-- **একটা reconciliation job চালান** pending অবস্থায় আটকে থাকা পেমেন্টের জন্য। কাস্টমার ট্যাব বন্ধ করে দেয়, নেটওয়ার্ক কেটে যায়।
-- **Credential রাখুন environment variable-এ**, শুধু সার্ভারে, আর লগের বাইরে।
-- **CSRF থেকে exempt করুন শুধু নির্দিষ্ট callback view-গুলো**, আর কনফার্ম না করে সেখানে আসা কোনো ডেটা বিশ্বাস করবেন না।
+## তথ্যের নির্ভুলতা নিয়ে
 
-## এরপর কী
+এখানকার সবকিছু প্রতিটা গেটওয়ের অফিশিয়াল পাবলিক ডকুমেন্টেশন থেকে নেওয়া, ৩ নভেম্বর ২০২৬ অনুযায়ী। গেটওয়েরা তাদের API বদলায়, তাই আসল টাকা নেওয়ার আগে লেটেস্ট ডক দেখে নিন আর sandbox-এ টেস্ট করুন।
 
-পরের লেখায় [Django-তে পুরো bKash Tokenized Checkout ইন্টিগ্রেশন](/bn/blog/bkash-tokenized-checkout-django) বানানো হয়েছে: টোকেন cache, create, callback, execute, query fallback, idempotent অর্ডার আপডেট, রিফান্ড আর go-live চেকলিস্ট। এরপর আসবে SSLCommerz আর aamarPay, আর অফিশিয়াল ডকুমেন্টেশন হাতে পেলে Nagad।
+**সিরিজের পরের লেখা:** সম্পূর্ণ [Django-তে bKash Tokenized Checkout ইন্টিগ্রেশন](/bn/blog/bkash-tokenized-checkout-django), তারপর SSLCommerz আর aamarPay। অফিশিয়াল ডকুমেন্টেশন থেকে কাজ করতে পারলে Nagad আসবে।

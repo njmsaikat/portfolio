@@ -7,8 +7,6 @@ export const metadata = {
   tags: ["Payments", "bKash", "Django", "Bangladesh"],
 };
 
-*বাংলায় পড়ুন: [এই লেখার বাংলা সংস্করণ](/bn/blog/bkash-tokenized-checkout-django)*
-
 This is the second post in my series on Bangladeshi payment gateways (the [overview is here](/blog/bangladesh-payment-gateways-for-developers)). It's a complete bKash Tokenized Checkout integration for a Django backend: one-time payments without a saved agreement, which is where most projects start.
 
 > **About accuracy.** The code follows bKash's official developer documentation at [developer.bka.sh](https://developer.bka.sh/docs/product-overview) as of the publish date, 3 November 2026. I wrote it from the documented request and response formats and haven't run this exact code against bKash's servers, so verify it against the latest docs and test it in the bKash sandbox before going live. Where the docs are ambiguous, the code handles both readings and the [ambiguities section](#where-the-docs-were-ambiguous) explains why.
