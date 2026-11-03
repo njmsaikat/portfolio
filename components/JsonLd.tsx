@@ -66,6 +66,54 @@ export function ProfilePageJsonLd() {
   );
 }
 
+export function AboutPageJsonLd() {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        "@id": `${site.url}/about#profilepage`,
+        url: `${site.url}/about`,
+        name: `About ${profile.name}`,
+        mainEntity: personSchema,
+      }}
+    />
+  );
+}
+
+export function SoftwareApplicationJsonLd({
+  name,
+  description,
+  url,
+  pageUrl,
+  operatingSystem,
+  applicationCategory = "WebApplication",
+}: {
+  name: string;
+  description: string;
+  url: string;
+  pageUrl: string;
+  operatingSystem: string;
+  applicationCategory?: string;
+}) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name,
+        description,
+        url,
+        mainEntityOfPage: pageUrl,
+        applicationCategory,
+        operatingSystem,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        author: { "@type": "Person", "@id": personId, name: profile.name, url: site.url },
+      }}
+    />
+  );
+}
+
 export function BlogPostingJsonLd({ post }: { post: Post }) {
   const url = `${site.url}/blog/${post.slug}`;
   return (
