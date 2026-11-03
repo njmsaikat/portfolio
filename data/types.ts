@@ -61,11 +61,16 @@ export interface ClientProject {
 // Saikat's own live products (side projects), linked by live URL only.
 export interface ProductProject {
   type: "product";
+  slug: string; // URL: /projects/<slug> — never rename once published
   name: string;
   description: string;
+  overview: string[]; // 2–3 paragraphs for the product page
+  features: string[];
   stack: string[];
   image: string;
   liveUrl: string;
+  repoUrl?: string; // public source repository, when there is one
+  platform?: "Web" | "Chrome"; // schema.org operatingSystem; defaults to "Web"
   featured?: boolean;
 }
 

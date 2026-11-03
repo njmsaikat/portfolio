@@ -1,0 +1,656 @@
+export const metadata = {
+  title: "Django-তে bKash Tokenized Checkout: অফিশিয়াল ডক ধরে ধাপে ধাপে ইন্টিগ্রেশন",
+  seoTitle: "Django-তে bKash Tokenized Checkout, ধাপে ধাপে",
+  description:
+    "Django 5-এ bKash Tokenized Checkout: টোকেন cache, create আর execute payment, callback, query fallback, idempotent অর্ডার আপডেট আর রিফান্ড।",
+  date: "2026-11-03",
+  tags: ["পেমেন্ট", "bKash", "Django", "বাংলাদেশ"],
+};
+
+বাংলাদেশের পেমেন্ট গেটওয়ে নিয়ে আমার সিরিজের এটা দ্বিতীয় লেখা ([ওভারভিউটা এখানে](/bn/blog/bangladesh-payment-gateways-for-developers))। এখানে Django ব্যাকএন্ডের জন্য একটা পূর্ণাঙ্গ bKash Tokenized Checkout ইন্টিগ্রেশন বানাব: সেভ করা agreement ছাড়া এককালীন পেমেন্ট, বেশিরভাগ প্রজেক্ট যেখান থেকে শুরু হয়।
+
+> **তথ্যের নির্ভুলতা নিয়ে।** কোডটা bKash-এর অফিশিয়াল ডেভেলপার ডকুমেন্টেশন ([developer.bka.sh](https://developer.bka.sh/docs/product-overview)) অনুসরণ করে লেখা, প্রকাশের তারিখ ৩ নভেম্বর ২০২৬ অনুযায়ী। ডকে দেওয়া request আর response ফরম্যাট দেখে লিখেছি; হুবহু এই কোডটা bKash-এর সার্ভারের বিরুদ্ধে চালিয়ে দেখিনি। তাই লাইভে যাওয়ার আগে লেটেস্ট ডক মিলিয়ে নিন আর bKash sandbox-এ টেস্ট করুন। ডক যেখানে অস্পষ্ট, কোড দুই রকম ব্যাখ্যাই সামলায়; কেন, তা নিচে "ডকে যেখানে অস্পষ্টতা ছিল" অংশে আছে।
+
+## পুরো ফ্লো
+
+bKash-এর [Tokenized Without Agreement](https://developer.bka.sh/docs/tokenized-without-agreement) গাইড অনুযায়ী:
+
+1. আপনার সার্ভার একটা **id_token** নেয় ([Grant Token](https://developer.bka.sh/docs/grant-token)) আর সেটা সবসময় তাজা রাখে ([Refresh Token](https://developer.bka.sh/docs/refresh-token))।
+2. কাস্টমার "Pay with bKash" ক্লিক করলে আপনার সার্ভার **[Create Payment](https://developer.bka.sh/docs/create-payment-3)** কল করে, আর পায় একটা `paymentId` ও একটা `bkashURL`।
+3. কাস্টমারকে `bkashURL`-এ redirect করেন। bKash-এর পেজে সে ওয়ালেট নম্বর, OTP আর PIN দেয়।
+4. bKash কাস্টমারকে আপনার **callback URL**-এ ফেরত পাঠায়, query string-এ `paymentID`, `status` আর `signature` সহ।
+5. Status `success` হলে আপনার সার্ভার **[Execute Payment](https://developer.bka.sh/docs/execute-payment-4)** কল করে। উত্তরে `transactionStatus: "Completed"` আর একটা `trxId` এলে পেমেন্ট সম্পন্ন।
+6. Execute উত্তর না দিলে **[Query Payment](https://developer.bka.sh/docs/query-payment)** কল করুন। `Completed` মানে পেমেন্ট হয়েছে; `Initiated` মানে হয়নি, কাস্টমার নতুন করে পেমেন্ট শুরু করবে।
+
+ডকের দুটো নিয়ম পুরো ডিজাইনটা ঠিক করে দেয়। প্রথমত, "a successful callback only means it's time to call Execute Payment"। দ্বিতীয়ত, একটা `paymentId` "cannot be reused after an execute attempt, regardless of the result"। মানে একই পেমেন্টে কোনোভাবেই দুইবার Execute কল করা যাবে না।
+
+## bKash-এর কাছ থেকে যা লাগবে
+
+চারটা credential: মার্চেন্ট **username** আর **password**, এবং **app_key** আর **app_secret**। [প্রোডাক্ট ওভারভিউ](https://developer.bka.sh/docs/product-overview) বলছে onboarding শেষ হওয়ার আগেও sandbox সবার জন্য খোলা; তবে যে পেজগুলো পড়েছি সেখানে নিজে নিজে সাইন-আপের উপায় দেখিনি, তাই sandbox credential bKash-এর কাছে চেয়ে নিন। Production credential আসে মার্চেন্ট onboarding (KYC আর চুক্তি) শেষ হলে। bKash শুধু TLS 1.2 বা তার নতুন ভার্সন নেয়।
+
+## Settings আর environment variable
+
+সব গোপন তথ্য environment-এ রাখুন:
+
+```bash
+# .env (never commit this)
+BKASH_BASE_URL=https://tokenized.sandbox.bka.sh/v2/tokenized-checkout
+BKASH_USERNAME=your-sandbox-username
+BKASH_PASSWORD=your-sandbox-password
+BKASH_APP_KEY=your-sandbox-app-key
+BKASH_APP_SECRET=your-sandbox-app-secret
+REDIS_URL=redis://localhost:6379/1
+```
+
+```python
+# settings.py
+import os
+
+BKASH = {
+    # Sandbox base URL from the API reference pages. Production hosts follow the
+    # documented https://<service-name>.pay.bka.sh pattern; confirm the exact
+    # URL with bKash when they issue your production credentials.
+    "BASE_URL": os.environ["BKASH_BASE_URL"],
+    "USERNAME": os.environ["BKASH_USERNAME"],
+    "PASSWORD": os.environ["BKASH_PASSWORD"],
+    "APP_KEY": os.environ["BKASH_APP_KEY"],
+    "APP_SECRET": os.environ["BKASH_APP_SECRET"],
+}
+
+# The bKash token must be shared by every worker process (see "Tokens" below),
+# so use a shared cache, not the default per-process LocMemCache.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ["REDIS_URL"],
+    }
+}
+```
+
+`.get()` না লিখে `os.environ[...]` লিখেছি ইচ্ছা করেই: কোনো credential না থাকলে অ্যাপ স্টার্টআপেই থেমে যাক, কাস্টমারের প্রথম পেমেন্টে গিয়ে ফেল না করুক।
+
+## Payment মডেল
+
+প্রতিটা পেমেন্ট চেষ্টার জন্য একটা row। একটা অর্ডারে একাধিক চেষ্টা থাকতে পারে (একবার cancel, তারপর আবার চেষ্টা), আর প্রতিটা চেষ্টার আলাদা bKash `paymentId` থাকে।
+
+```python
+# payments/models.py
+from django.db import models
+
+
+class Payment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending"            # row created, bKash not called yet
+        INITIATED = "initiated"        # Create Payment succeeded, customer sent to bKash
+        EXECUTING = "executing"        # success callback received, Execute in flight
+        COMPLETED = "completed"        # confirmed by Execute or Query Payment
+        FAILED = "failed"
+        CANCELLED = "cancelled"
+        NEEDS_REVIEW = "needs_review"  # bKash says Completed, but details don't match
+
+    order = models.ForeignKey("shop.Order", on_delete=models.PROTECT, related_name="payments")
+    invoice_number = models.CharField(max_length=255, unique=True)  # sent as merchantInvoiceNumber
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=Status, default=Status.PENDING)
+
+    bkash_payment_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    bkash_signature = models.CharField(max_length=255, blank=True)
+    bkash_trx_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    last_response = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "updated_at"])]
+```
+
+`shop.Order` হলো আপনার প্রজেক্টের অর্ডার মডেলের জায়গায় একটা উদাহরণ। নিচের view-গুলো ধরে নিয়েছে এতে `user`, `total`, `is_paid` আর একটা `mark_paid()` মেথড আছে; নিজের মডেল অনুযায়ী নামগুলো বদলে নিন। `choices=`-এ সরাসরি enum ক্লাস দেওয়া যায় Django 5.0 থেকে। `bkash_payment_id` আর `bkash_trx_id`-এর unique constraint একটা সস্তা শেষ সুরক্ষা, যাতে একই bKash পেমেন্ট দুইবার রেকর্ড না হয়।
+
+## ছোট একটা bKash ক্লায়েন্ট
+
+সাধারণ `requests` আর Django-র cache দিয়েই হয়ে যায়, কোনো SDK লাগে না।
+
+```python
+# payments/bkash.py
+import time
+
+import requests
+from django.conf import settings
+from django.core.cache import cache
+
+ID_TOKEN_KEY = "bkash:id_token"
+REFRESH_TOKEN_KEY = "bkash:refresh_token"
+TOKEN_LOCK_KEY = "bkash:token_lock"
+
+# bKash documents a 30-second timeout on its APIs. Wait slightly longer than
+# that, so we don't abandon a call bKash is still processing.
+TIMEOUT = (5, 35)  # (connect, read) seconds
+
+
+class BkashError(Exception):
+    def __init__(self, message, code=None, payload=None):
+        super().__init__(message)
+        self.code = code
+        self.payload = payload or {}
+
+
+class BkashTimeout(BkashError):
+    """No response. The outcome is unknown, not failed."""
+
+
+class BkashClient:
+    def __init__(self):
+        conf = settings.BKASH
+        self.base_url = conf["BASE_URL"].rstrip("/")
+        self.username = conf["USERNAME"]
+        self.password = conf["PASSWORD"]
+        self.app_key = conf["APP_KEY"]
+        self.app_secret = conf["APP_SECRET"]
+        self.session = requests.Session()
+
+    # ---- transport -------------------------------------------------------
+
+    def _post(self, path, payload, headers):
+        try:
+            response = self.session.post(
+                self.base_url + path, json=payload, headers=headers, timeout=TIMEOUT
+            )
+        except requests.Timeout as exc:
+            raise BkashTimeout(f"bKash timed out on {path}") from exc
+        except requests.RequestException as exc:
+            raise BkashError(f"bKash request failed on {path}: {exc}") from exc
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise BkashError(
+                f"Non-JSON response from {path} (HTTP {response.status_code})"
+            ) from exc
+
+    # ---- tokens ----------------------------------------------------------
+
+    def _token_headers(self):
+        return {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "username": self.username,
+            "password": self.password,
+        }
+
+    def _save_tokens(self, data):
+        if "id_token" not in data:
+            # Token APIs report errors as statusCode / statusMessage.
+            raise BkashError(
+                data.get("statusMessage") or "bKash token request failed",
+                code=data.get("statusCode"),
+                payload=data,
+            )
+        lifetime = int(data.get("expires_in") or 3600)
+        # Expire our copy 10 minutes early, so we refresh around the 50th
+        # minute as the docs recommend.
+        cache.set(ID_TOKEN_KEY, data["id_token"], timeout=max(lifetime - 600, 60))
+        # The refresh_token is valid for 30 days; keep it a day less.
+        cache.set(REFRESH_TOKEN_KEY, data["refresh_token"], timeout=29 * 24 * 3600)
+        return data["id_token"]
+
+    def _grant_token(self):
+        data = self._post(
+            "/auth/grant-token",
+            {"app_key": self.app_key, "app_secret": self.app_secret},
+            self._token_headers(),
+        )
+        return self._save_tokens(data)
+
+    def _refresh_token(self, refresh_token):
+        data = self._post(
+            "/auth/refresh-token",
+            {
+                "app_key": self.app_key,
+                "app_secret": self.app_secret,
+                "refresh_token": refresh_token,
+            },
+            self._token_headers(),
+        )
+        return self._save_tokens(data)
+
+    def id_token(self):
+        token = cache.get(ID_TOKEN_KEY)
+        if token:
+            return token
+        # bKash allows at most two Grant/Refresh calls per hour, so only one
+        # process may fetch a token at a time. The others wait for its result.
+        if not cache.add(TOKEN_LOCK_KEY, "1", timeout=60):
+            for _ in range(40):
+                time.sleep(0.5)
+                token = cache.get(ID_TOKEN_KEY)
+                if token:
+                    return token
+            raise BkashError("Timed out waiting for another process to fetch a bKash token")
+        try:
+            token = cache.get(ID_TOKEN_KEY)
+            if token:
+                return token
+            refresh_token = cache.get(REFRESH_TOKEN_KEY)
+            if refresh_token:
+                try:
+                    return self._refresh_token(refresh_token)
+                except BkashTimeout:
+                    raise
+                except BkashError:
+                    pass  # refresh rejected: fall back to a fresh grant
+            return self._grant_token()
+        finally:
+            cache.delete(TOKEN_LOCK_KEY)
+
+    # ---- payment APIs ----------------------------------------------------
+
+    def _call(self, path, payload):
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            # The docs' curl samples send the raw id_token here, with no
+            # "Bearer " prefix. See "Where the docs were ambiguous".
+            "Authorization": self.id_token(),
+            "X-App-Key": self.app_key,
+        }
+        data = self._post(path, payload, headers)
+        if "externalCode" in data:
+            # Payment APIs report errors as externalCode / errorMessageEn.
+            raise BkashError(
+                data.get("errorMessageEn") or "bKash returned an error",
+                code=data["externalCode"],
+                payload=data,
+            )
+        return data
+
+    @staticmethod
+    def redirect_url(data):
+        # The field table spells it bKashURL; the sample response uses bkashURL.
+        return data.get("bkashURL") or data.get("bKashURL")
+
+    def create_payment(self, *, amount, invoice_number, payer_reference, callback_url):
+        data = self._call(
+            "/payment/create",
+            {
+                "payerReference": payer_reference,
+                "callbackURL": callback_url,
+                "amount": f"{amount:.2f}",
+                "currency": "BDT",
+                "intent": "sale",
+                "merchantInvoiceNumber": invoice_number,
+            },
+        )
+        if not data.get("paymentId") or not self.redirect_url(data):
+            raise BkashError("Create Payment response has no paymentId or bKash URL", payload=data)
+        return data
+
+    def execute_payment(self, payment_id):
+        return self._call("/payment/execute", {"paymentId": payment_id})
+
+    def query_payment(self, payment_id):
+        return self._call("/query/payment", {"paymentId": payment_id})
+
+    def refund(self, *, payment_id, trx_id, amount, sku, reason):
+        return self._call(
+            "/refund/payment/transaction",
+            {
+                "paymentId": payment_id,
+                "trxId": trx_id,
+                "refundAmount": f"{amount:.2f}",
+                "sku": sku,
+                "reason": reason,
+            },
+        )
+
+    def refund_status(self, *, payment_id, trx_id):
+        return self._call("/refund/payment/status", {"paymentId": payment_id, "trxId": trx_id})
+```
+
+ক্লায়েন্ট নিয়ে কয়েকটা কথা:
+
+- **টোকেন।** `id_token`-এর ডিফল্ট মেয়াদ ৩৬০০ সেকেন্ড, আর ডক বলছে ৫০ থেকে ৫৫ মিনিটের মধ্যে refresh করতে। আসল নিয়মটা আছে [token management পেজে](https://developer.bka.sh/docs/token-managment-v2): ঘণ্টায় দুইবারের বেশি Grant বা Refresh কল করা যাবে না, করলে এক ঘণ্টার জন্য টোকেন কল ব্লক। চারটা Gunicorn worker আর প্রতি প্রসেসে আলাদা cache থাকলে শুধু একটা deploy-তেই এই কোটা শেষ হয়ে যেতে পারে। সেজন্যই shared cache আর lock।
+- **Error ধরা হয় HTTP status দেখে না।** ডকে error body-র বর্ণনা আছে (টোকেনের জন্য `statusCode`/`statusMessage`, পেমেন্ট API-র জন্য `externalCode`/`errorMessageEn`), কিন্তু সাথে কোন HTTP status code আসে তা বলা নেই। তাই ক্লায়েন্ট প্রতিবার body পড়ে।
+- **`errorMessageEn` কাস্টমারকে দেখানোর জন্য।** [Error codes পেজ](https://developer.bka.sh/docs/error-codes) বলছে error চিনতে `externalCode` ব্যবহার করতে, আর কাস্টমারকে `errorMessageEn` দেখাতে।
+- **Amount** যায় দুই দশমিক ঘরসহ string হিসেবে, ডকের স্যাম্পলের মতো (`"2.90"`)। `f"{amount:.2f}"` `Decimal`-এ কাজ করে, আর টাকার হিসাব সবসময় `Decimal`-এই হওয়া উচিত।
+
+## ধাপ ১: পেমেন্ট শুরু
+
+```python
+# payments/views.py
+import secrets
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST
+
+from shop.models import Order
+
+from .bkash import BkashClient, BkashError
+from .models import Payment
+from .services import apply_bkash_result
+
+
+@login_required
+@require_POST
+def bkash_start(request, order_id):
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    if order.is_paid:
+        return redirect("shop:order-detail", pk=order.pk)
+
+    payment = Payment.objects.create(
+        order=order,
+        amount=order.total,
+        invoice_number=f"ORD{order.pk}-{secrets.token_hex(4)}",
+    )
+    client = BkashClient()
+    try:
+        data = client.create_payment(
+            amount=payment.amount,
+            invoice_number=payment.invoice_number,
+            payer_reference=str(order.pk),
+            callback_url=request.build_absolute_uri(reverse("payments:bkash-callback")),
+        )
+    except BkashError as exc:
+        payment.status = Payment.Status.FAILED
+        payment.last_response = exc.payload
+        payment.save(update_fields=["status", "last_response", "updated_at"])
+        messages.error(
+            request, exc.payload.get("errorMessageEn") or "Couldn't reach bKash. Please try again."
+        )
+        return redirect("shop:order-detail", pk=order.pk)
+
+    payment.bkash_payment_id = data["paymentId"]
+    payment.bkash_signature = data.get("signature", "")
+    payment.status = Payment.Status.INITIATED
+    payment.last_response = data
+    payment.save(
+        update_fields=["bkash_payment_id", "bkash_signature", "status", "last_response", "updated_at"]
+    )
+    # Always use the URL bKash returned. Never build it yourself.
+    return redirect(BkashClient.redirect_url(data))
+```
+
+- এটা POST, যাতে কোনো crawler বা prefetch ভুল করে পেমেন্ট শুরু করে না দেয়।
+- `payerReference` বাধ্যতামূলক। ডক বলছে এখানে ওয়ালেট নম্বর দিলে bKash পেজে সেটা আগে থেকে বসানো থাকে; নাহলে `<`, `>` বা `&` ছাড়া যেকোনো মান চলবে। আমি অর্ডার আইডি দিই।
+- `merchantInvoiceNumber`-ও বাধ্যতামূলক। bKash এটা ইউনিক হতে হবে বলে enforce করে কি না, ডকে বলা নেই, তাই প্রতিটা চেষ্টার জন্য আলাদা একটা বানাই। এতে প্রতিটা callback, execute আর query-র উত্তর ঠিক একটা row-এর সাথেই মেলে।
+- `build_absolute_uri` থেকে আপনার পাবলিক HTTPS URL-টাই আসতে হবে। Reverse proxy-র পেছনে থাকলে `SECURE_PROXY_SSL_HEADER` আর `ALLOWED_HOSTS` ঠিকমতো সেট করুন, অথবা পাবলিক callback URL-টা environment variable-এ রেখে দিন।
+
+## ধাপ ২: callback
+
+bKash আপনার `callbackURL` থেকে callback URL-গুলো বানায়। Create Payment-এর স্যাম্পলে সেগুলো দেখতে `?paymentID=...&status=success&signature=...` এরকম (`failure` আর `cancel`-এর জন্যও একই রকম)। ডক অনুযায়ী এরপর কাস্টমার আপনার স্টোরে ফিরে আসে, তাই এটা কাস্টমারের ব্রাউজারের একটা সাধারণ GET রিকোয়েস্ট, আর এটাকে বিশ্বাস করা যায় না।
+
+```python
+@require_GET
+def bkash_callback(request):
+    payment_id = request.GET.get("paymentID", "")
+    status = request.GET.get("status", "")
+    payment = get_object_or_404(Payment, bkash_payment_id=payment_id)
+    result_url = reverse("payments:result", args=[payment.pk])
+
+    # Cheap sanity check against the signature from Create Payment. It is not
+    # proof of payment: only Execute or Query Payment is.
+    signature = request.GET.get("signature", "").encode()
+    if payment.bkash_signature and not secrets.compare_digest(
+        signature, payment.bkash_signature.encode()
+    ):
+        return redirect(result_url)  # the reconciliation job will settle it
+
+    if status in ("failure", "cancel"):
+        new_status = Payment.Status.CANCELLED if status == "cancel" else Payment.Status.FAILED
+        Payment.objects.filter(pk=payment.pk, status=Payment.Status.INITIATED).update(
+            status=new_status, updated_at=timezone.now()
+        )
+        return redirect(result_url)
+
+    if status != "success":
+        return HttpResponseBadRequest("Unknown status")
+
+    # Claim the payment: exactly one request may call Execute. A refreshed or
+    # duplicated callback finds it already claimed and just shows the result.
+    claimed = Payment.objects.filter(pk=payment.pk, status=Payment.Status.INITIATED).update(
+        status=Payment.Status.EXECUTING, updated_at=timezone.now()
+    )
+    if not claimed:
+        return redirect(result_url)
+
+    client = BkashClient()
+    try:
+        data = client.execute_payment(payment_id)
+    except BkashError:
+        data = None  # timeout or error: ask bKash what actually happened
+
+    if not data or data.get("transactionStatus") != "Completed":
+        try:
+            data = client.query_payment(payment_id)
+        except BkashError:
+            # Still unknown. Leave it EXECUTING for the reconciliation job.
+            return redirect(result_url)
+
+    apply_bkash_result(payment.pk, data)
+    return redirect(result_url)
+
+
+@login_required
+def payment_result(request, pk):
+    payment = get_object_or_404(Payment, pk=pk, order__user=request.user)
+    return render(request, "payments/result.html", {"payment": payment})
+```
+
+সবচেয়ে গুরুত্বপূর্ণ অংশ হলো **claim**। `filter(status=INITIATED).update(status=EXECUTING)` একটাই atomic `UPDATE ... WHERE` স্টেটমেন্ট। তাই কাস্টমার ডাবল-ক্লিক বা রিফ্রেশ করলেও শুধু একটা রিকোয়েস্ট `claimed == 1` পায়। এভাবেই একসাথে অনেক রিকোয়েস্ট এলেও "কখনো দুইবার execute না" নিয়মটা টিকে থাকে, আর ৩০ সেকেন্ডের HTTP কলের পুরো সময় ডাটাবেস lock ধরে রাখতে হয় না।
+
+Execute ফেল করলে বা timeout হলে view হাল ছেড়ে না দিয়ে Query Payment কল করে। এতে ডকে বলা timeout কেস তো কভার হয়ই, `2062` ("The payment has already been completed")-এর মতো error-ও কভার হয়, যেখানে আসলে পেমেন্টটা হয়ে গেছে।
+
+Callback view-এ `@login_required` নেই। সাধারণত redirect-এর পর কাস্টমারের session cookie থেকে যায় (Django-র ডিফল্ট `SameSite=Lax` top-level GET navigation-এ কুকি পাঠায়), কিন্তু পেমেন্টের লজিক এর ওপর নির্ভর করা ঠিক না। Result পেজে লগইন লাগে, আর কাস্টমার শুধু নিজের পেমেন্টই দেখতে পায়।
+
+```python
+# payments/urls.py
+from django.urls import path
+
+from . import views
+
+app_name = "payments"
+
+urlpatterns = [
+    path("orders/<int:order_id>/pay/bkash/", views.bkash_start, name="bkash-start"),
+    path("payments/bkash/callback/", views.bkash_callback, name="bkash-callback"),
+    path("payments/<int:pk>/", views.payment_result, name="result"),
+]
+```
+
+## ধাপ ৩: অর্ডার paid করা, ঠিক একবার
+
+Callback আর reconciliation job দুটোই শেষে এখানে আসে, এমনকি একই মুহূর্তেও আসতে পারে। তাই ফাংশনটা payment row লক করে, আর আগে থেকেই completed হলে কিছু করে না:
+
+```python
+# payments/services.py
+from decimal import Decimal
+
+from django.db import transaction
+
+from .models import Payment
+
+
+def apply_bkash_result(payment_pk, data):
+    """Record an Execute/Query Payment response. Safe to call any number of times."""
+    with transaction.atomic():
+        payment = Payment.objects.select_for_update().get(pk=payment_pk)
+        if payment.status == Payment.Status.COMPLETED:
+            return payment  # already recorded: never mark paid twice
+
+        payment.last_response = data
+        if data.get("transactionStatus") == "Completed":
+            # Execute echoes merchantInvoiceNumber; Query Payment calls it merchantInvoice.
+            invoice = data.get("merchantInvoiceNumber") or data.get("merchantInvoice")
+            matches = (
+                data.get("paymentId") == payment.bkash_payment_id
+                and Decimal(str(data.get("amount") or "0")) == payment.amount
+                and data.get("currency") == "BDT"
+                and invoice in (None, payment.invoice_number)
+            )
+            if matches:
+                payment.status = Payment.Status.COMPLETED
+                payment.bkash_trx_id = data.get("trxId")
+                payment.save(update_fields=["status", "bkash_trx_id", "last_response", "updated_at"])
+                payment.order.mark_paid(payment)  # your order logic, in the same transaction
+                return payment
+            payment.status = Payment.Status.NEEDS_REVIEW
+        else:
+            # Query Payment reports "Initiated" for cancelled or failed verification.
+            payment.status = Payment.Status.FAILED
+
+        payment.save(update_fields=["status", "last_response", "updated_at"])
+        return payment
+```
+
+- `transaction.atomic()`-এর ভেতরে `select_for_update()` থাকায় দ্বিতীয় কলারকে প্রথমটা commit হওয়া পর্যন্ত অপেক্ষা করতে হয়। তারপর সে `COMPLETED` দেখে ফিরে যায়। এর জন্য row lock সাপোর্ট করে এমন ডাটাবেস লাগবে, যেমন PostgreSQL বা MySQL; SQLite এটা উপেক্ষা করে।
+- অর্ডার আপডেট হয় **একই transaction-এ**, তাই payment আর order কখনো আলাদা কথা বলে না। `mark_paid` আপনার নিজের কোড। একটা অর্ডার যদি একাধিক সফল চেষ্টায় পেমেন্ট পেয়ে যেতে পারে (যেমন দুটো ট্যাব থেকে), তাহলে দ্বিতীয়টার কী হবে সেটা ওখানেই ঠিক করুন, সাধারণত রিফান্ড।
+- `Completed` কিন্তু তথ্য মেলে না (amount ভুল, invoice আলাদা), এমন পেমেন্ট `COMPLETED` বা `FAILED` না হয়ে `NEEDS_REVIEW`-এ যায়। টাকা কেটেছে, তাই একজন মানুষের দেখা দরকার।
+- আগের যেকোনো status থেকে, এমনকি `FAILED` বা `CANCELLED` থেকেও, `COMPLETED`-এ যাওয়া যায়। bKash যদি বলে টাকা কেটেছে, অর্ডার paid।
+
+## ধাপ ৪: যেগুলো ফাঁক গলে বেরিয়ে যায়, সেগুলো মেলানো
+
+কাস্টমার bKash পেজে ট্যাব বন্ধ করে দেয়, callback হারিয়ে যায়, আর মাঝে মাঝে Execute timeout হয় *এবং* তার পরের query-ও ফেল করে। একটা ছোট management command cron বা Celery beat দিয়ে কয়েক মিনিট পরপর চালালে এই পেমেন্টগুলোর হিসাব মিটে যায়:
+
+```python
+# payments/management/commands/reconcile_bkash.py
+from datetime import timedelta
+
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+
+from payments.bkash import BkashClient, BkashError
+from payments.models import Payment
+from payments.services import apply_bkash_result
+
+
+class Command(BaseCommand):
+    help = "Settle bKash payments whose callback or Execute call never finished."
+
+    def handle(self, *args, **options):
+        now = timezone.now()
+        stuck = Payment.objects.filter(
+            status__in=[Payment.Status.INITIATED, Payment.Status.EXECUTING],
+            bkash_payment_id__isnull=False,
+            updated_at__lt=now - timedelta(minutes=15),
+        )
+        client = BkashClient()
+        for payment in stuck.iterator():
+            try:
+                data = client.query_payment(payment.bkash_payment_id)
+            except BkashError as exc:
+                self.stderr.write(f"payment {payment.pk}: {exc}")
+                continue
+
+            completed = data.get("transactionStatus") == "Completed"
+            executed = payment.status == Payment.Status.EXECUTING
+            # A paymentId is valid for 24 hours; after that it can never complete.
+            expired = payment.created_at < now - timedelta(hours=24)
+            if completed or executed or expired:
+                apply_bkash_result(payment.pk, data)
+```
+
+যে `INITIATED` পেমেন্ট bKash-এ এখনো `Initiated` আর বয়স ২৪ ঘণ্টার কম, সেটা যেমন আছে তেমন থাকে: কাস্টমার হয়তো এখনো bKash পেজেই আছে। আর `EXECUTING` পেমেন্টের একমাত্র Execute চেষ্টা আগেই হয়ে গেছে, তাই Query Payment এখন যা বলবে সেটাই চূড়ান্ত।
+
+## রিফান্ড
+
+[Refund API](https://developer.bka.sh/docs/refund-transaction)-এর নিয়ম, সরাসরি ডক থেকে: full বা partial রিফান্ড; একটা ট্রানজ্যাকশনে সর্বোচ্চ ১০টা রিফান্ড; পেমেন্টের ৬০ দিনের মধ্যে; মোট রিফান্ড `maxRefundableAmount`-এর বেশি হবে না (এটা Execute আর Query Payment-এর উত্তরে আসে, আর কুপন ব্যবহার হলে পেইড amount-এর চেয়ে কম হয়); আর ১০ মিনিটের মধ্যে duplicate রিফান্ড চলবে না।
+
+```python
+# payments/models.py (continued)
+class Refund(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending"
+        COMPLETED = "completed"
+        FAILED = "failed"
+        UNKNOWN = "unknown"  # no response: check Refund Status before retrying
+
+    payment = models.ForeignKey(Payment, on_delete=models.PROTECT, related_name="refunds")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    sku = models.CharField(max_length=255)
+    reason = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=Status, default=Status.PENDING)
+    bkash_refund_trx_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    last_response = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+```
+
+```python
+# payments/services.py (continued; move these imports to the top of the file)
+from .bkash import BkashClient, BkashError, BkashTimeout
+from .models import Refund
+
+
+def refund_bkash_payment(payment, *, amount, sku, reason):
+    if payment.status != Payment.Status.COMPLETED:
+        raise ValueError("Only completed payments can be refunded")
+
+    refund = Refund.objects.create(payment=payment, amount=amount, sku=sku, reason=reason)
+    try:
+        data = BkashClient().refund(
+            payment_id=payment.bkash_payment_id,
+            trx_id=payment.bkash_trx_id,
+            amount=amount,
+            sku=sku,
+            reason=reason,
+        )
+    except BkashTimeout:
+        refund.status = Refund.Status.UNKNOWN
+        refund.save(update_fields=["status"])
+        return refund
+    except BkashError as exc:
+        refund.status = Refund.Status.FAILED
+        refund.last_response = exc.payload
+        refund.save(update_fields=["status", "last_response"])
+        raise
+
+    refund.last_response = data
+    if data.get("refundTransactionStatus") == "Completed":
+        refund.status = Refund.Status.COMPLETED
+        refund.bkash_refund_trx_id = data.get("refundTrxId")
+    else:
+        refund.status = Refund.Status.UNKNOWN
+    refund.save(update_fields=["status", "bkash_refund_trx_id", "last_response"])
+    return refund
+```
+
+`UNKNOWN` স্টেটটাই আসল। ডক বলছে Refund ৩০ সেকেন্ডের মধ্যে উত্তর না দিলে [Refund Status](https://developer.bka.sh/docs/refund-status) কল করতে, আর "for that specific time and amount" কোনো সফল রিফান্ড না পেলে তবেই আবার রিফান্ড করতে। তাই `UNKNOWN` row-এ কাউকে দ্বিতীয়বার "Refund" চাপতে দেবেন না। আগে `refund_status()` দেখুন, আর এর `refundTransactions` লিস্ট (প্রতিটা এন্ট্রিতে `refundTrxId`, `refundTransactionStatus`, `refundAmount` আর `completedTime` থাকে) আপনার row-এর সাথে মিলিয়ে নিন।
+
+bKash নিজেও লিমিটগুলো enforce করে (যেমন error `2072`, "Refund amount not valid"), তবু অ্যাডমিনেও চেক রাখুন, যাতে স্টাফরা bKash-এর error code না দেখে পরিষ্কার একটা মেসেজ পায়।
+
+## ডকে যেখানে অস্পষ্টতা ছিল
+
+চুপচাপ অনুমান করার চেয়ে এগুলো লিখে রাখাই ভালো মনে করি। ওপরের কোডে প্রতিটাই সাবধানে সামলানো হয়েছে:
+
+1. **`Authorization` header।** Header টেবিলে লেখা "Bearer token from Grant Token API", কিন্তু প্রতিটা curl স্যাম্পলে শুধু `id_token` পাঠানো হয়েছে (`--header 'authorization: id_token'`)। কোড স্যাম্পল অনুসরণ করে। Sandbox রিজেক্ট করলে সামনে `Bearer ` লাগিয়ে দেখুন।
+2. **নামের বানানে অমিল।** Create Payment-এর ফিল্ড টেবিলে `bKashURL`, স্যাম্পলে `bkashURL`, তাই ক্লায়েন্ট দুটোই নেয়। API-গুলোতে `paymentId`, অথচ callback-এর query string-এ `paymentID`; কোড প্রতিটা ঠিক যেখানে ডকুমেন্টেড সেখান থেকেই পড়ে।
+3. **`merchantInvoiceNumber` বনাম `merchantInvoice`।** Execute Payment প্রথমটা ফেরত দেয়, Query Payment দ্বিতীয়টা। কোড যেটা থাকে সেটাই চেক করে।
+4. **`expires_in`।** টেবিলে string, স্যাম্পলে number। `int()` দুটোই সামলায়।
+5. **পেমেন্ট সফল হলে `statusCode` নেই।** Create আর Execute-এর v2 স্যাম্পলে কোনো success code নেই। তাই কোড সফলতা চেনে ফিল্ড দেখে (`paymentId` আর URL, `transactionStatus == "Completed"`), আর error চেনে `externalCode` দেখে।
+6. **Callback-এর `signature`।** ডকে এটাকে বলা হয়েছে "unique value for validation", কিন্তু validate করার পদ্ধতি দেওয়া নেই। Create Payment থেকে পাওয়া মানের সাথে মিলিয়ে দেখা একটা sanity check মাত্র; আসল প্রমাণ Execute বা Query Payment।
+7. **Production base URL।** API পেজগুলোতে শুধু sandbox URL আছে। প্রোডাক্ট ওভারভিউতে production-এর প্যাটার্ন `https://<service-name>.pay.bka.sh`, সেই হিসাবে URL হওয়ার কথা `https://tokenized.pay.bka.sh/v2/tokenized-checkout`। bKash-এর সাথে কনফার্ম করে নিন; এজন্যই এটা environment variable।
+8. **Refund Status-এর `trxId`।** বর্ণনায় বলা "unique refund request ID per payment ID", কিন্তু স্যাম্পলে মূল পেমেন্টের `trxId` পাঠানো হয়েছে। কোড স্যাম্পল অনুসরণ করে।
+9. **রিকোয়েস্টের মাঝখানে টোকেনের মেয়াদ শেষ।** যে পেজগুলো পড়েছি সেখানে "token expired"-এর আলাদা কোনো error code নেই। দশ মিনিট আগে refresh করলে এটা হওয়ার কথা না; কখনো authorization error দেখলে cache থেকে `id_token` মুছে দিন, পরের কলে নতুনটা আসবে।
+
+## Go-live চেকলিস্ট
+
+- [ ] bKash থেকে production credential পেয়েছেন, আর production base URL তাদের সাথে কনফার্ম করেছেন।
+- [ ] চারটা credential-ই শুধু সার্ভারের environment variable-এ। রিপোজিটরি, ফ্রন্টএন্ড বা লগে নেই। Response লগ করুন, request header কখনো না।
+- [ ] টোকেনের জন্য shared cache (Redis বা এমন কিছু), যাতে সব worker আর deploy মিলিয়েও Grant/Refresh ঘণ্টায় দুইবারের মধ্যে থাকে।
+- [ ] Callback URL পাবলিক HTTPS, আর proxy-র পেছনেও ঠিকমতো তৈরি হচ্ছে। সার্ভার TLS 1.2 বা নতুন সাপোর্ট করে।
+- [ ] অর্ডার paid হয় শুধু Execute বা Query `Completed` হলে, amount, currency, `paymentId` আর invoice যাচাই করে।
+- [ ] Callback পেজ রিফ্রেশ করলে Execute দুইবার কল হয় না। টেস্ট করুন: sandbox-এ একটা পেমেন্ট শেষ করে callback URL রিলোড দিন।
+- [ ] Cancel আর failure-এর পথ টেস্ট করেছেন, bKash পেজে ট্যাব বন্ধ করে দেওয়াটাও।
+- [ ] Reconciliation command শিডিউল করা আছে আর error হলে alert দেয়। `NEEDS_REVIEW` পেমেন্ট কেউ একজন দেখে।
+- [ ] কাস্টমারকে error দেখানো হয় `errorMessageEn` দিয়ে, কাঁচা code দিয়ে না।
+- [ ] রিফান্ড টুলিং ৬০ দিনের সীমা, ১০টা রিফান্ডের লিমিট, `maxRefundableAmount` আর "আবার চেষ্টার আগে status দেখো" নিয়ম মানে।
+- [ ] bKash-এর [webhook](https://developer.bka.sh/page/instant-payment-notification) বাড়তি সিগন্যাল হিসেবে চাইলে মনে রাখুন: এটা bKash সাপোর্টের মাধ্যমে চালু হয়, signed Amazon SNS মেসেজ ব্যবহার করে (subscription কনফার্ম আর signature ভেরিফাই করতে হবে), আর শুধু সফল পেমেন্টে আসে। Reconciliation-এ কাজে লাগে, কিন্তু Execute-এর বিকল্প না।
+
+## শেষ কথা
+
+bKash-নির্দিষ্ট কোড খুবই ছোট: পাঁচটা POST রিকোয়েস্ট আর একটা টোকেন cache। আসল কাজ সেই অংশগুলোতে, যেগুলো নিয়ে ডক নিজেই সতর্ক করে: callback মানে কনফার্মেশন না, Execute ঠিক একবার চলবে, timeout মানে "ব্যর্থ" না বরং "অজানা", আর টোকেন endpoint-এ rate limit আছে। শুরু থেকেই এই চারটা ডিজাইনে রাখলে নেটওয়ার্ক বেঁকে বসলেও ইন্টিগ্রেশন ঠিক থাকে।
+
+সিরিজের পরের লেখা: Django-তে SSLCommerz। চারটা গেটওয়ের ওভারভিউ [এখানে](/bn/blog/bangladesh-payment-gateways-for-developers)।

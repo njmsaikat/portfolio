@@ -18,7 +18,7 @@ export function Section({
   return (
     <section id={id} className={`border-t border-[var(--color-border)] py-20 sm:py-28 ${className}`}>
       <div className="mx-auto max-w-6xl px-6">
-        <div className="max-w-2xl">
+        <div className="reveal max-w-2xl">
           {eyebrow && <p className="eyebrow">{eyebrow}</p>}
           <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
           {description && <p className="mt-3 text-[var(--color-text-muted)]">{description}</p>}

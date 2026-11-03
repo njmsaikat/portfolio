@@ -17,7 +17,7 @@ export function Resume() {
           <h3 className="font-[family-name:var(--font-technical)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             Work Experience
           </h3>
-          <ol className="mt-6 space-y-8 border-l border-[var(--color-border)] pl-6">
+          <ol className="reveal-items mt-6 space-y-8 border-l border-[var(--color-border)] pl-6">
             {experience.map((entry) => (
               <li key={entry.company} className="relative">
                 <span

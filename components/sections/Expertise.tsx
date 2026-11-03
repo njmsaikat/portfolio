@@ -11,7 +11,7 @@ export function Expertise() {
       title="Software that keeps real businesses running"
       description="Vending machines, laundry rooms and online stores have one thing in common: when the backend is down, nobody gets served. That's the work I specialise in."
     >
-      <div className="grid gap-5 md:grid-cols-3">
+      <div className="reveal-items grid gap-5 md:grid-cols-3">
         {focusAreas.map((area) => {
           const external = area.href?.startsWith("http");
           return (

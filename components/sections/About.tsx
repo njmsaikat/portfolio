@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { profile } from "@/data/profile";
 
@@ -19,7 +20,7 @@ export function About() {
       description="Backend-leaning, full stack, and comfortable owning a project end to end."
       className="bg-[var(--color-bg-elevated)]"
     >
-      <div className="grid gap-10 md:grid-cols-2">
+      <div className="reveal-items grid gap-10 md:grid-cols-2">
         <div className="space-y-4 text-[var(--color-text-muted)]">
           {profile.bio.map((paragraph) => (
             <p key={paragraph.slice(0, 24)}>{paragraph}</p>
@@ -45,6 +46,9 @@ export function About() {
           ))}
         </dl>
       </div>
+      <Link href="/about" className="mt-8 inline-flex text-sm font-semibold text-[var(--color-accent)] hover:underline">
+        More about me &rarr;
+      </Link>
     </Section>
   );
 }

@@ -2,10 +2,10 @@ import { SocialLink } from "./types";
 
 export const site = {
   name: "Saikat Roy",
-  title: "Saikat Roy | Django Backend Engineer for Commerce Platforms",
+  title: "Saikat Roy | Senior Backend Engineer, Django & Commerce",
   url: "https://saikatroy.netlify.app",
   description:
-    "Saikat Roy is a Dhaka-based software engineer building Django and REST API backends for real-world commerce: smart vending machines, campus laundry and e-commerce platforms, plus Shopify and WordPress stores for clients worldwide.",
+    "Senior Backend Engineer in Dhaka building Django and REST API backends for real-world commerce: smart vending, campus laundry and e-commerce platforms.",
   gaMeasurementId: "G-1HEC9Z70SZ",
 };
 

@@ -3,7 +3,7 @@ import Script from "next/script";
 import { ViewTransition } from "react";
 import "./globals.css";
 import { bodyFont, technicalFont } from "@/lib/fonts";
-import { noFlashThemeScript } from "@/components/theme/theme-script";
+import { ThemeScript } from "@/components/theme/ThemeScript";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -21,7 +21,11 @@ export const metadata: Metadata = {
   description: site.description,
   authors: [{ name: site.name, url: site.url }],
   alternates: {
-    types: { "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }] },
+    types: {
+      "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }],
+      // llms.txt convention: machine-readable site summary for AI assistants.
+      "text/markdown": [{ url: "/llms.txt", title: "llms.txt" }],
+    },
   },
   openGraph: {
     title: site.title,
@@ -42,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
+        <ThemeScript />
         <SiteJsonLd />
       </head>
       <body className={`${bodyFont.variable} ${technicalFont.variable} font-sans antialiased`}>

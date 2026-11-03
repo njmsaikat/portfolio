@@ -1,0 +1,110 @@
+export const metadata = {
+  title: "bKash, Nagad, SSLCommerz or aamarPay? A developer's guide to Bangladesh payment gateways",
+  seoTitle: "bKash, Nagad, SSLCommerz, aamarPay: a developer comparison",
+  description:
+    "How bKash, Nagad, SSLCommerz and aamarPay integrations work, how they differ, and how to pick one for your Django or Python backend.",
+  date: "2026-11-03",
+  tags: ["Payments", "bKash", "Nagad", "SSLCommerz", "aamarPay", "Bangladesh"],
+};
+
+If you're building an app or online store in Bangladesh, sooner or later someone asks: "Can customers pay with bKash?" Then: "What about cards?" I've integrated bKash, Nagad, SSLCommerz and aamarPay into Django backends. This post is the short guide I wish I'd had the first time.
+
+> **The quick answer**
+>
+> - **Your customers mostly pay with bKash?** Integrate bKash directly.
+> - **You need cards, internet banking and wallets in one go?** Use an aggregator: SSLCommerz or aamarPay.
+> - **You need to issue refunds from your own admin panel?** bKash and SSLCommerz have refund APIs in their public docs.
+> - **Plenty of projects use two:** bKash directly, plus an aggregator for everything else.
+
+## How every gateway works
+
+Strip away the names and all four follow the same five steps:
+
+1. **Your server creates a payment** and gets back a link to the gateway's payment page.
+2. **The customer pays on the gateway's page**, never on your site, so card numbers and PINs never touch your server.
+3. **The customer is sent back** to your site with a result.
+4. **Your server double-checks the result with the gateway** before marking the order paid.
+5. **Optionally, the gateway also notifies your server directly**, in case the customer never makes it back.
+
+**Step 4 is where integrations go wrong.** The result in step 3 arrives through the customer's browser, so anyone can fake it. Every gateway's documentation says the same thing in its own words: confirm it server-to-server.
+
+## bKash
+
+**Best for:** customers who pay from their bKash wallet. It only takes bKash.
+
+**How it works:** bKash's recommended flow is **Tokenized Checkout**. Your server gets an access token, creates a payment, and redirects the customer to bKash to enter their wallet number, OTP and PIN. When they come back, your server calls **Execute Payment** to finish it. There are also options for saved wallets (later payments need only a PIN) and for authorizing now and capturing later.
+
+**Watch out for:**
+
+- **The token is rate-limited.** bKash allows only two token requests an hour, so cache the token and share it between your servers.
+- **A "success" on the way back isn't payment yet.** Only a successful Execute Payment (or a "Completed" status when you query the payment) means you've been paid.
+
+**Refunds:** supported, full or partial, within 60 days. **Docs:** [developer.bka.sh](https://developer.bka.sh/docs/product-overview)
+
+Step-by-step guide: [bKash Tokenized Checkout in Django](/blog/bkash-tokenized-checkout-django).
+
+## Nagad
+
+**Best for:** customers who pay from their Nagad wallet.
+
+**The honest part:** I couldn't find merchant API documentation that Nagad publishes openly. What turns up online is community-written code, not anything official, and this series only uses official sources. So there's no step-by-step here yet.
+
+**If you're integrating Nagad:** ask Nagad for the integration specification and sandbox access during merchant onboarding, and build against that. Treat community packages as unofficial: read their code before you give them your merchant keys. The golden rules below still apply.
+
+## SSLCommerz
+
+**Best for:** offering many payment methods through one integration: cards, mobile banking (including bKash) and internet banking.
+
+**How it works:** Your server creates a payment session and redirects the customer to the SSLCommerz page (or opens their checkout popup). The customer picks a method and pays. SSLCommerz then notifies your server, and your server confirms the payment with their **Validation API**.
+
+**Watch out for:**
+
+- **Validate every payment.** Only a "VALID" or "VALIDATED" answer from the Validation API counts, and check that the amount matches your order.
+- **Refunds need setup.** Refunds are supported, but on the live system your server's public IP must be registered with SSLCommerz.
+
+**Sandbox:** you can sign up for a test account yourself. **Docs:** [developer.sslcommerz.com](https://developer.sslcommerz.com/doc/v4/)
+
+## aamarPay
+
+**Best for:** another all-in-one option covering cards, mobile banking, and local and international wallets.
+
+**How it works:** Your server starts a payment and redirects the customer to aamarPay. When they finish, aamarPay sends the result back to your site, and your server confirms it with their **Search Transaction** API.
+
+**Watch out for:**
+
+- **No refund API** in the public docs. Ask aamarPay before you build on refunds.
+- **Django's CSRF check will block the callback**, because the result is posted from aamarPay's site. Exempt just that view, which makes the server-side confirmation even more important.
+
+**Sandbox:** the docs share public test credentials, so you can start right away. **Docs:** [aamarpay.readme.io](https://aamarpay.readme.io/reference/overview)
+
+## Side by side
+
+| | bKash | Nagad | SSLCommerz | aamarPay |
+| --- | --- | --- | --- | --- |
+| **Payment methods** | bKash wallet | Nagad wallet | Cards, banks, wallets | Cards, banks, wallets |
+| **Confirm payment with** | Execute Payment | From Nagad's spec | Validation API | Search Transaction |
+| **Refund API (public docs)** | Yes | Unknown | Yes | No |
+| **Start testing** | Ask bKash | Ask Nagad | Self sign-up | Public test account |
+
+## Which should you pick?
+
+- **Most customers pay with bKash:** go direct to bKash. You get the smoothest wallet experience, including saved wallets.
+- **You need cards as well:** pick an aggregator. One integration gives you most payment methods on one page.
+- **Support staff will issue refunds from your admin panel:** choose a gateway with a refund API (bKash or SSLCommerz).
+- **You might add a second gateway later:** design for it now. Keep one `Payment` table and your order logic gateway-agnostic, with a small adapter per gateway.
+
+Fees, settlement times and contracts are commercial terms, so get them from each provider in writing.
+
+## The golden rules
+
+1. **Never mark an order paid from the redirect alone.** Always confirm with the gateway from your server.
+2. **Check the amount, currency and order reference** the gateway returns against what you expected.
+3. **Mark orders paid exactly once.** Customers refresh, notifications retry, and two can arrive at the same time. In Django, lock the payment row with `select_for_update` inside `transaction.atomic` and skip it if it's already paid.
+4. **Save the gateway's transaction IDs.** You'll need them for support and refunds.
+5. **Keep credentials in environment variables** on the server, and out of your logs.
+
+## A note on accuracy
+
+Everything here comes from each gateway's official public documentation as of 3 November 2026. Gateways change their APIs, so check the latest docs and test in the sandbox before you take real money.
+
+**Next in the series:** a complete [bKash Tokenized Checkout integration in Django](/blog/bkash-tokenized-checkout-django), then SSLCommerz and aamarPay. Nagad will follow once I can work from official documentation.

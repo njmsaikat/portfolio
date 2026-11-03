@@ -10,7 +10,7 @@ import { certifications, education, experience } from "@/data/experience";
 export const metadata: Metadata = {
   title: "Résumé",
   description:
-    "Résumé of Saikat Roy, Software Engineer at YOUR Campus in Dhaka: Django and REST API backends, DevOps for smart vending and campus commerce platforms, and Shopify/WordPress development.",
+    "Résumé of Saikat Roy, Senior Backend Engineer at YOUR Campus in Dhaka: Django and REST APIs, smart vending and commerce platforms, Shopify and WordPress.",
   alternates: { canonical: "/resume" },
   openGraph: {
     title: "Résumé | Saikat Roy",
@@ -41,7 +41,7 @@ export default function ResumePage() {
       />
       <ProfilePageJsonLd />
 
-      <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16 print:max-w-none print:p-0">
+      <div className="mx-auto max-w-4xl px-6 pb-12 pt-28 sm:pb-16 sm:pt-32 print:max-w-none print:p-0">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <p className="text-sm text-[var(--color-text-muted)]">
             Tip: &ldquo;Download PDF&rdquo; opens the print dialog. Choose &ldquo;Save as PDF&rdquo;.

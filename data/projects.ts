@@ -1,4 +1,4 @@
-import { Project } from "./types";
+import { ProductProject, Project } from "./types";
 
 // Manual snapshot of Saikat's live products, public GitHub repositories and
 // real client work (repos captured 2026-08-07, products added 2026-11).
@@ -7,29 +7,100 @@ import { Project } from "./types";
 export const projects: Project[] = [
   {
     type: "product",
+    slug: "hisabbd",
     name: "HisabBD",
     description:
       "Free English & Bangla calculators for everyday life in Bangladesh, covering loans, VAT, savings, exam GPA, land units and more. Everything runs in the browser, so nothing you type leaves your device.",
+    overview: [
+      "HisabBD is a set of 40+ free online calculators built for Bangladesh, in English and Bangla. It covers everyday questions such as loans (EMI), VAT, savings (Sanchayapatra, DPS, FDR), salary, land units, exam results (SSC/HSC GPA and CGPA), age and BMI.",
+      "It is a static, client-side site with no backend, database or paid APIs. Calculator inputs stay in the browser; the only thing stored is an optional calculation history, which can be turned off or cleared.",
+      "Every calculator has its own page, grouped into categories and searchable, with Bangla versions generated automatically. It is tested with Vitest and Playwright and deployed on Vercel.",
+    ],
+    features: [
+      "40+ calculators, including EMI, VAT, Sanchayapatra, DPS and FDR, salary, overtime and leave, land units, SSC/HSC GPA, CGPA, age, BMI and zakat",
+      "English and Bangla versions of every page",
+      "Configurable grading scale, including the Bangladesh UGC 4.00 scale",
+      "Search, categories and related-calculator links",
+      "Optional calculation history that can be turned off or cleared",
+      "Copy and share actions for results",
+      "Runs entirely in the browser: no backend, database or paid APIs",
+    ],
     stack: ["Next.js", "TypeScript", "Tailwind", "Vitest", "Playwright"],
     image: "/images/projects/hisabbd.jpg",
     liveUrl: "https://bd-hisab.vercel.app",
+    repoUrl: "https://github.com/saikatnjm/hisabbd",
     featured: true,
   },
   {
     type: "product",
+    slug: "hottogol",
     name: "Hottogol",
     description:
       "Short, funny simulators and games about everyday life in Bangladesh, from a Dhaka CNG ride to marbles. Bilingual, no sign-up, and results you can share with friends.",
+    overview: [
+      "Hottogol is a collection of short interactive simulators, each taking about a minute and ending somewhere unexpected. Its tagline is \"Tiny simulators for everyday chaos\", and the seven experiences include Dhaka CNG, Food Delivery, Dhaka Bus, Job Resignation, Fake Shopping and House Rent.",
+      "Alongside them are four regional-language games about Bengali dialects: a word map, a region guesser, a dialect quiz and a personality test. The site is bilingual, needs no accounts and has no database or backend server.",
+      "Results are deterministic, and a shareable result link carries the result data itself, so the same choices and seed give the same outcome on any device. Share-preview cards are generated with next/og.",
+    ],
+    features: [
+      "7 short simulators: Dhaka CNG, Food Delivery, Dhaka Bus, Job Resignation, Fake Shopping, House Rent and Random Life Decision",
+      "4 regional-language games: Word Map, Which Region, Dialect Quiz and Personality Test",
+      "English and Bangla, with no sign-up",
+      "Shareable result links with generated preview cards",
+      "No database or backend server",
+      "District map built from geoBoundaries data (CC BY 3.0 IGO)",
+    ],
     stack: ["Next.js", "TypeScript", "Tailwind", "Motion"],
     image: "/images/projects/hottogol.jpg",
     liveUrl: "https://hottogol.vercel.app",
+    repoUrl: "https://github.com/saikatnjm/dopamine-site",
     featured: true,
   },
   {
     type: "product",
+    slug: "bd-rail-ticket-alarm",
+    name: "BD Rail Ticket Alarm",
+    description:
+      "A free Brave/Chrome extension that rings an alarm the moment Bangladesh Railway tickets go on sale, then points you to BOOK NOW and the best seats. English & Bangla. It never books or pays for you.",
+    overview: [
+      "BD Rail Ticket Alarm is a free, open-source (MIT) extension for Brave, Chrome and Edge on a computer. It watches for your Bangladesh Railway train's tickets to go on sale at eticket.railway.gov.bd and sounds an alarm when seats open, so you can book quickly.",
+      "You pick a journey date, and the extension works out the opening day (10 days before travel) and checks at the release time. When seats appear it plays an alarm, shows a notification, scrolls to your train and highlights the BOOK NOW button, then outlines suggested seats in the seat map.",
+      "It never logs in for you, enters OTP codes, makes payments or interacts with the site's bot check: you click and pay yourself. It is an independent project, not affiliated with Bangladesh Railway or Shohoz, and does not guarantee a ticket.",
+    ],
+    features: [
+      "Calculates the ticket opening day from your journey date, with a countdown and reminders one day and one hour before release",
+      "Checks for your train about once a second at release time, backing off if the server rate-limits it",
+      "Loud alarm, notification, automatic scroll to your train and a glowing BOOK NOW button",
+      "Seat-map highlighting for preferred coaches and seats, with forward or backward direction hints (a rule of thumb, not official data)",
+      "Saved trips and an English and Bangla interface",
+      "Never logs in, enters OTP, pays or bypasses the bot check",
+    ],
+    stack: ["JavaScript", "Chrome Extension", "Manifest V3", "GitHub Pages"],
+    image: "/images/projects/bd-rail-ticket-alarm.jpg",
+    liveUrl: "https://saikatnjm.github.io/bd-rail-ticket-alarm/",
+    repoUrl: "https://github.com/saikatnjm/bd-rail-ticket-alarm",
+    platform: "Chrome",
+    featured: true,
+  },
+  {
+    type: "product",
+    slug: "bangladesh-healthcare-search",
     name: "Bangladesh Healthcare Search",
     description:
       "Search 36,328 DGDA-registered medicines and thousands of hospitals, clinics and pharmacies across Bangladesh, built from open-data pipelines.",
+    overview: [
+      "Bangladesh Healthcare Search is a free directory for finding medicines, hospitals, clinics and pharmacies across Bangladesh. Visitors can search by name or location, browse by specialty and popular locations, and use an optional nearby lookup that asks for browser permission only when the button is pressed and does not store the position.",
+      "The directory lists 36,328 medicine products from the DGDA register of drug products, plus 3,362 hospital and clinic listings and 3,751 pharmacy listings. Hospital, clinic and pharmacy data is community-mapped OpenStreetMap data and has not been verified, so the site tells visitors to call ahead.",
+      "Area boundaries come from geoBoundaries. Doctor profiles are shown only from identified, verifiable sources, and none are listed yet. The site provides general medicine information only and is not medical advice.",
+    ],
+    features: [
+      "Search 36,328 DGDA-registered medicine products",
+      "3,362 hospital and clinic listings and 3,751 pharmacy listings",
+      "Browse by specialty and by location",
+      "Optional nearby search, sorted by distance; location is used only when you press the button",
+      "Saved items",
+      "Data sources stated on the site: DGDA, OpenStreetMap contributors and geoBoundaries",
+    ],
     stack: ["Next.js", "TypeScript", "Node.js data pipelines"],
     image: "/images/projects/bd-health-search.jpg",
     liveUrl: "https://bdhealthsearch.vercel.app",
@@ -37,12 +108,28 @@ export const projects: Project[] = [
   },
   {
     type: "product",
+    slug: "pujo-guide",
     name: "Pujo Guide",
     description:
       "A free bilingual guide to Durga Puja and Bengali festivals, with a pandal map, festival dates in Kolkata and Dhaka time, and a live crowd board. Every date is sourced.",
+    overview: [
+      "Pujo Guide is a free, bilingual (Bangla and English) guide to Durga Puja and other Bengali Hindu festivals, for West Bengal, Bangladesh and Bengalis elsewhere. Its first principle is sourced facts only: each date, time and claim links to its origin, and pages say so when something is not known.",
+      "It has a pandal guide with a map, festival date pages with tithi and muhurat times shown in Kolkata and Dhaka time side by side, panjika lists, a Bengali calendar, and a live crowd board where visitors report how crowded a pandal is.",
+      "There are no accounts and no ads, and photos and locations stay on the user's device. The site runs on free tiers (Vercel, Supabase and GitHub Actions), with Supabase used for the live board, games and visitor-added pandals.",
+    ],
+    features: [
+      "Sourced pandal directory with a map, themes and directions",
+      "Festival date pages for Durga Puja, Kali Puja, Saraswati Puja, Dol, Rath Yatra, Janmashtami, Diwali and more",
+      "Kolkata and Dhaka times side by side",
+      "Panjika lists (Ekadashi, Purnima, Amavasya and more), shubh dates and a Bengali calendar",
+      "Live crowd board for pandals",
+      "Shareable wishes, postcards, quiz results and a pandal passport",
+      "Bangla and English versions, with no accounts or ads",
+    ],
     stack: ["Next.js", "React", "TypeScript", "Supabase", "Leaflet"],
     image: "/images/projects/pujo-guide.jpg",
     liveUrl: "https://pujoguide.vercel.app",
+    repoUrl: "https://github.com/saikatnjm/festival-atlas",
     featured: true,
   },
   {
@@ -196,3 +283,5 @@ export const projects: Project[] = [
 ];
 
 export const featuredProjects = projects.filter((p) => p.featured);
+
+export const productProjects = projects.filter((p): p is ProductProject => p.type === "product");

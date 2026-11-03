@@ -7,7 +7,7 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "your-campus",
     title: "YOUR Campus: the backend behind a smart-campus platform for 135,000+ students",
-    metaTitle: "YOUR Campus Case Study: IoT Campus Platform Backend | Saikat Roy",
+    metaTitle: "YOUR Campus Case Study: IoT Platform Backend | Saikat Roy",
     metaDescription:
       "How Saikat Roy built the backend of YOUR Campus from day zero: smart laundry, smart vending and campus commerce for 135,000+ students across 21 universities.",
     company: "YOUR Campus",
@@ -132,7 +132,7 @@ export const caseStudies: CaseStudy[] = [
     title: "Freelance web development: Shopify, WordPress and frontend work for clients worldwide",
     metaTitle: "Freelance Shopify & WordPress Case Study | Saikat Roy",
     metaDescription:
-      "Freelance work on Upwork and Fiverr since 2021: WordPress redesigns, Shopify theme customization, data migrations and responsive frontend fixes for clients worldwide.",
+      "Freelance work since 2021: WordPress redesigns, Shopify theme customization, data migrations and responsive frontend fixes for clients worldwide.",
     company: "Upwork & Fiverr",
     role: "Freelance Web Developer",
     period: "May 2021 – present · alongside full-time engineering",

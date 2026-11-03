@@ -2,6 +2,8 @@
 
 > Senior Backend Engineer at YOUR Campus in Dhaka, Bangladesh, on the core team since day zero. Builds the backends behind real-world commerce: Django and REST API backends for smart vending, campus laundry and e-commerce platforms, plus Shopify and WordPress stores for freelance clients. Backend-leaning full stack: pairs Django with React and Next.js frontends.
 
+Machine-readable summaries: this file (/llms.txt) and the full text of the site in Markdown at https://saikatroy.netlify.app/llms-full.txt
+
 ## Core skills
 
 Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework, Next.js, React, REST API Design, PostgreSQL, MySQL, MongoDB, Redis, AWS, DigitalOcean, Docker, Nginx, Linux, Git & CI/CD, WordPress, Shopify.
@@ -17,6 +19,7 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 
 - HisabBD — free English & Bangla calculators for Bangladesh: https://bd-hisab.vercel.app
 - Hottogol — funny Bangladeshi simulators and games: https://hottogol.vercel.app
+- BD Rail Ticket Alarm — Brave/Chrome extension that alerts you when Bangladesh Railway tickets open: https://saikatnjm.github.io/bd-rail-ticket-alarm/
 - Bangladesh Healthcare Search — medicines, hospitals, clinics and pharmacies: https://bdhealthsearch.vercel.app
 - Pujo Guide — bilingual Durga Puja and Bengali festival guide: https://pujoguide.vercel.app
 
@@ -26,6 +29,8 @@ Most production work (current employer and freelance clients) lives in private r
 
 ## Services
 
+- Services overview: https://saikatroy.netlify.app/services
+- Payment gateway integration in Bangladesh (bKash, Nagad, SSLCommerz, aamarPay): https://saikatroy.netlify.app/services/payment-gateway-integration-bangladesh
 - Django & REST API development: https://saikatroy.netlify.app/services/django-rest-api-development
 - Docker, DevOps & cloud deployment: https://saikatroy.netlify.app/services/docker-devops-deployment
 - Shopify development: https://saikatroy.netlify.app/services/shopify-development
@@ -34,9 +39,14 @@ Most production work (current employer and freelance clients) lives in private r
 
 ## Links
 
+- About Saikat Roy (canonical profile page): https://saikatroy.netlify.app/about
+- Product pages: https://saikatroy.netlify.app/projects/hisabbd, /projects/hottogol, /projects/bd-rail-ticket-alarm, /projects/bangladesh-healthcare-search, /projects/pujo-guide
 - Portfolio: https://saikatroy.netlify.app
 - GitHub: https://github.com/njmsaikat
 - LinkedIn: https://www.linkedin.com/in/njmsaikat/
 - Résumé (HTML, printable to PDF): https://saikatroy.netlify.app/resume
-- Blog: https://saikatroy.netlify.app/blog (RSS: https://saikatroy.netlify.app/rss.xml)
+- Blog (English): https://saikatroy.netlify.app/blog (RSS: https://saikatroy.netlify.app/rss.xml). Each post also has a Markdown version at /blog/<slug>/index.md
+- Blog (Bangla): https://saikatroy.netlify.app/bn/blog (RSS: https://saikatroy.netlify.app/bn/rss.xml)
+- Latest post: Django + PostgreSQL with Docker Compose, and the volume typo that loses data: https://saikatroy.netlify.app/blog/django-postgres-docker-compose
+- Full text of this site for LLMs: https://saikatroy.netlify.app/llms-full.txt
 - All projects: https://saikatroy.netlify.app/portfolio-page
