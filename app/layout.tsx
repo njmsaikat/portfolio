@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   },
   description: site.description,
   authors: [{ name: site.name, url: site.url }],
+  // Search Console meta-tag verification (previously injected by an old Netlify snippet).
+  verification: { google: "74b1a42JKUMwYgE7egYhAQGe3ap-7yYM2YTmdnORm0k" },
   alternates: {
     types: {
       "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }],
@@ -45,11 +47,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      {/* No children in <head>: React hydrates head scripts by position, and
+          Netlify's edge injects a newline + comment into <head> on every page,
+          which would shift them and fail hydration (React error #418).
+          The theme script still runs before first paint as the first thing in <body>. */}
+      <body className={`${bodyFont.variable} ${technicalFont.variable} font-sans antialiased`}>
         <ThemeScript />
         <SiteJsonLd />
-      </head>
-      <body className={`${bodyFont.variable} ${technicalFont.variable} font-sans antialiased`}>
         <ThemeProvider>
           <a
             href="#main"

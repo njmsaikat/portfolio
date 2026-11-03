@@ -41,6 +41,8 @@ There is no test suite. `npx serve out` previews the exact static build Netlify 
 - Custom CSS in `app/globals.css` belongs in `@layer base`/`@layer components` — unlayered rules override every Tailwind utility (this previously broke card hover borders and print styles).
 - Confidentiality rules from Saikat: case studies stay high-level (products, public numbers, role, high-level architecture, stack — no internal design/infra/security/partner detail); payments are "payment gateway integration", never a "wallet"; **never name freelance clients** anywhere (text, card titles, image filenames, links); no big platform numbers in the hero.
 - `AGENTS.md` is the tool-agnostic version of this guidance; keep the two in sync.
+- **Keep `<head>` free of React-rendered children** (`app/layout.tsx` renders `ThemeScript` and `SiteJsonLd` at the start of `<body>`). Netlify's edge injects a newline + promotional HTML comment into `<head>` on every page (no documented opt-out); React hydrates head `<script>`s by position, so anything there fails hydration (React #418) and resets the theme. Metadata (`metadata` exports) is safe because React matches meta/link tags by key.
+- Google Search Console is verified two ways: `metadata.verification.google` in `app/layout.tsx` and the file below — keep both.
 - `public/googlee86a7ed265752fd7.html` is a Google Search Console verification file — must stay byte-for-byte unmodified.
 
 <!-- BEGIN:nextjs-agent-rules -->

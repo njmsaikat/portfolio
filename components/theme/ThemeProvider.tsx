@@ -29,6 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // build/SSR time and doing so would cause a server/client hydration mismatch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setThemeState(initial);
+    applyTheme(initial);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
