@@ -1,13 +1,11 @@
-"use client";
-
 import { noFlashThemeScript } from "./theme-script";
 
-// Server-render only. The browser runs this inline script from the initial
-// HTML, before first paint (no flash of the wrong theme). On the client we
-// render nothing: a <script> created by React never executes and makes React 19
-// warn ("Encountered a script tag while rendering React component"), and
-// React 19 hydration skips the leftover <script> node in <head> without a mismatch.
+// Inline blocking script that sets the theme class before first paint (no
+// flash of the wrong theme). It must render identically on the server and the
+// client so hydration reuses the server's <script> node: rendering it on the
+// server only shifts every later <head> child and causes a hydration mismatch.
+// (React may still log "Encountered a script tag" in dev if a hot reload forces
+// it to re-create the element; that copy never runs and is harmless.)
 export function ThemeScript() {
-  if (typeof window !== "undefined") return null;
-  return <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />;
+  return <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />;
 }
