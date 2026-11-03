@@ -11,7 +11,14 @@ import { LatestPosts } from "@/components/sections/LatestPosts";
 import { Contact } from "@/components/sections/Contact";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  // Page-level `alternates` replaces the root layout's, so the feed/llms.txt links are repeated here.
+  alternates: {
+    canonical: "/",
+    types: {
+      "application/rss+xml": [{ url: "/rss.xml", title: "Saikat Roy · Blog" }],
+      "text/markdown": [{ url: "/llms.txt", title: "llms.txt" }],
+    },
+  },
 };
 
 export default function HomePage() {

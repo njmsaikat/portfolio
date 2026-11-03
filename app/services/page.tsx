@@ -35,6 +35,16 @@ export default function ServicesPage() {
             From the backend that runs your business to the storefront your customers see. Pick the one closest to your
             project, or get in touch and we&apos;ll work out what you need.
           </p>
+          <p className="mt-3 text-[var(--color-text-muted)]">
+            I&apos;m a Senior Backend Engineer in Dhaka, Bangladesh, working with clients worldwide. The core of my work
+            is Django and Django REST Framework backends on PostgreSQL, deployed with Docker and cloud hosting. I also
+            build and customize Shopify and WordPress stores. Each service below has its own page with what you get,
+            the stack I use, related work and answers to common questions, and the{" "}
+            <Link href="/work/your-campus" className="text-[var(--color-accent)] hover:underline">
+              case studies
+            </Link>{" "}
+            show the same skills applied to real commerce platforms.
+          </p>
         </div>
 
         <ul className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

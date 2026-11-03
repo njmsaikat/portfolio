@@ -13,39 +13,75 @@ export interface PostMeta {
   tags: string[];
 }
 
+export type Lang = "en" | "bn";
+
 export interface Post extends PostMeta {
   slug: string;
   readingMinutes: number;
+  lang: Lang;
 }
 
-const POSTS_DIR = path.join(process.cwd(), "content/blog");
+// English posts: content/blog/<slug>.mdx. Bangla posts: content/blog-bn/<slug>.mdx
+// (same slug as the English original; either may exist without the other).
+const DIRS: Record<Lang, string> = {
+  en: path.join(process.cwd(), "content/blog"),
+  bn: path.join(process.cwd(), "content/blog-bn"),
+};
 
-export function getPostSlugs(): string[] {
-  if (!fs.existsSync(POSTS_DIR)) return [];
+export function getPostSlugs(lang: Lang = "en"): string[] {
+  const dir = DIRS[lang];
+  if (!fs.existsSync(dir)) return [];
   return fs
-    .readdirSync(POSTS_DIR)
-    .filter((file) => file.endsWith(".mdx"))
+    .readdirSync(dir)
+    .filter((file) => file.endsWith(".mdx") && !file.startsWith("_"))
     .map((file) => file.replace(/\.mdx$/, ""));
 }
 
-function readingMinutes(slug: string): number {
-  const source = fs.readFileSync(path.join(POSTS_DIR, `${slug}.mdx`), "utf8");
-  const words = source.split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 220));
+/** Raw MDX source of a post, including the `export const metadata` block. */
+export function getPostSource(slug: string, lang: Lang = "en"): string {
+  return fs.readFileSync(path.join(DIRS[lang], `${slug}.mdx`), "utf8");
 }
 
-export async function getPost(slug: string): Promise<Post> {
-  const { metadata } = (await import(`@/content/blog/${slug}.mdx`)) as { metadata: PostMeta };
-  return { ...metadata, slug, readingMinutes: readingMinutes(slug) };
+/** MDX body with the leading `export const metadata = {...};` block removed (for Markdown mirrors). */
+export function getPostBody(slug: string, lang: Lang = "en"): string {
+  const source = getPostSource(slug, lang);
+  const end = source.search(/^};?\s*$/m);
+  return (source.startsWith("export const metadata") && end !== -1
+    ? source.slice(source.indexOf("\n", end) + 1)
+    : source
+  ).trim();
 }
 
-export async function getAllPosts(): Promise<Post[]> {
-  const posts = await Promise.all(getPostSlugs().map(getPost));
+export function hasPost(slug: string, lang: Lang): boolean {
+  return fs.existsSync(path.join(DIRS[lang], `${slug}.mdx`));
+}
+
+function readingMinutes(slug: string, lang: Lang): number {
+  const words = getPostSource(slug, lang).split(/\s+/).filter(Boolean).length;
+  // Bangla reads a little slower per word than English.
+  return Math.max(1, Math.round(words / (lang === "bn" ? 180 : 220)));
+}
+
+/** English post (kept single-argument so it stays safe to pass to `.map`). */
+export function getPost(slug: string): Promise<Post> {
+  return getLocalizedPost(slug, "en");
+}
+
+export async function getLocalizedPost(slug: string, lang: Lang): Promise<Post> {
+  const { metadata } =
+    lang === "bn"
+      ? ((await import(`@/content/blog-bn/${slug}.mdx`)) as { metadata: PostMeta })
+      : ((await import(`@/content/blog/${slug}.mdx`)) as { metadata: PostMeta });
+  return { ...metadata, slug, lang, readingMinutes: readingMinutes(slug, lang) };
+}
+
+export async function getAllPosts(lang: Lang = "en"): Promise<Post[]> {
+  const posts = await Promise.all(getPostSlugs(lang).map((slug) => getLocalizedPost(slug, lang)));
   return posts.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-export function formatDate(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+export function formatDate(iso: string, lang: Lang = "en"): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",

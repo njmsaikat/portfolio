@@ -66,7 +66,7 @@ export default async function ProductPage({ params }: Props) {
       <section className="relative overflow-hidden border-b border-[var(--color-border)]">
         <div aria-hidden className="grid-bg mask-fade absolute inset-0" />
         <div aria-hidden className="hero-glow absolute inset-0" />
-        <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:items-center">
+        <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pb-16 pt-28 sm:pb-24 sm:pt-32 lg:grid-cols-2 lg:items-center">
           <div>
             <nav aria-label="Breadcrumb" className="text-sm text-[var(--color-text-muted)]">
               <Link href="/portfolio-page" className="hover:text-[var(--color-accent)]">

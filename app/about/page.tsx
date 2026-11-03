@@ -45,7 +45,7 @@ export default function AboutPage() {
       <section className="relative overflow-hidden border-b border-[var(--color-border)]">
         <div aria-hidden className="grid-bg mask-fade absolute inset-0" />
         <div aria-hidden className="hero-glow absolute inset-0" />
-        <div className="relative mx-auto max-w-6xl px-6 py-16 sm:py-24">
+        <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-28 sm:pb-24 sm:pt-32">
           <nav aria-label="Breadcrumb" className="text-sm text-[var(--color-text-muted)]">
             <Link href="/" className="hover:text-[var(--color-accent)]">
               Home
