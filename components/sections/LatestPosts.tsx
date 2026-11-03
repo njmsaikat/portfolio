@@ -14,7 +14,7 @@ export async function LatestPosts() {
       description="Practical notes from building and running backends."
       className="bg-[var(--color-bg-elevated)]"
     >
-      <div className="grid gap-5 md:grid-cols-3">
+      <div className="reveal-items grid gap-5 md:grid-cols-3">
         {posts.map((post) => (
           <Link
             key={post.slug}

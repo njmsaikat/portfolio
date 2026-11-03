@@ -13,7 +13,7 @@ export function Portfolio() {
       title="Featured work"
       description="Case studies from the platforms I build professionally, and products I've designed and shipped on my own."
     >
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal-items grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {caseStudies.map((study) => (
           <CaseStudyCard key={study.slug} study={study} />
         ))}
@@ -22,7 +22,7 @@ export function Portfolio() {
       <h3 className="mt-16 font-[family-name:var(--font-technical)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
         Products I&apos;ve built
       </h3>
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal-items mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {featuredProjects.map((project) => (
           <ProjectCard key={project.name} project={project} />
         ))}

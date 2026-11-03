@@ -55,7 +55,7 @@ export default async function PostPage({ params }: Props) {
       />
       <BlogPostingJsonLd post={post} />
 
-      <article className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+      <article className="mx-auto max-w-3xl px-6 pb-16 pt-28 sm:pb-24 sm:pt-32">
         <Link href="/blog" className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
           &larr; All posts
         </Link>

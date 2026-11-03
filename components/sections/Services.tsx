@@ -14,7 +14,7 @@ export function Services() {
       description="From backend architecture to deployed infrastructure."
       className="bg-[var(--color-bg-elevated)]"
     >
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal-items grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((service) => (
           <Card key={service.title} className="flex h-full flex-col">
             <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)]">

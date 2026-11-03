@@ -19,7 +19,7 @@ export function About() {
       description="Backend-leaning, full stack, and comfortable owning a project end to end."
       className="bg-[var(--color-bg-elevated)]"
     >
-      <div className="grid gap-10 md:grid-cols-2">
+      <div className="reveal-items grid gap-10 md:grid-cols-2">
         <div className="space-y-4 text-[var(--color-text-muted)]">
           {profile.bio.map((paragraph) => (
             <p key={paragraph.slice(0, 24)}>{paragraph}</p>
