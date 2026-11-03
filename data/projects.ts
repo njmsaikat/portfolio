@@ -27,6 +27,16 @@ export const projects: Project[] = [
   },
   {
     type: "product",
+    name: "BD Rail Ticket Alarm",
+    description:
+      "A free Brave/Chrome extension that rings an alarm the moment Bangladesh Railway tickets go on sale, then points you to BOOK NOW and the best seats. English & Bangla. It never books or pays for you.",
+    stack: ["JavaScript", "Chrome Extension", "Manifest V3", "GitHub Pages"],
+    image: "/images/projects/bd-rail-ticket-alarm.jpg",
+    liveUrl: "https://saikatnjm.github.io/bd-rail-ticket-alarm/",
+    featured: true,
+  },
+  {
+    type: "product",
     name: "Bangladesh Healthcare Search",
     description:
       "Search 36,328 DGDA-registered medicines and thousands of hospitals, clinics and pharmacies across Bangladesh, built from open-data pipelines.",

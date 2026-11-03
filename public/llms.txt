@@ -17,6 +17,7 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 
 - HisabBD — free English & Bangla calculators for Bangladesh: https://bd-hisab.vercel.app
 - Hottogol — funny Bangladeshi simulators and games: https://hottogol.vercel.app
+- BD Rail Ticket Alarm — Brave/Chrome extension that alerts you when Bangladesh Railway tickets open: https://saikatnjm.github.io/bd-rail-ticket-alarm/
 - Bangladesh Healthcare Search — medicines, hospitals, clinics and pharmacies: https://bdhealthsearch.vercel.app
 - Pujo Guide — bilingual Durga Puja and Bengali festival guide: https://pujoguide.vercel.app
 
