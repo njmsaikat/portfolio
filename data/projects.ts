@@ -92,7 +92,7 @@ export const projects: Project[] = [
     overview: [
       "Bangladesh Healthcare Search is a free directory for finding medicines, hospitals, clinics and pharmacies across Bangladesh. Visitors can search by name or location, browse by specialty and popular locations, and use an optional nearby lookup that asks for browser permission only when the button is pressed and does not store the position.",
       "The directory lists 36,328 medicine products from the DGDA register of drug products, plus 3,362 hospital and clinic listings and 3,751 pharmacy listings. Hospital, clinic and pharmacy data is community-mapped OpenStreetMap data and has not been verified, so the site tells visitors to call ahead.",
-      "Area boundaries come from geoBoundaries. Doctor profiles are shown only from identified, verifiable sources, and none are listed yet. The site provides general medicine information only and is not medical advice.",
+      "Area boundaries come from geoBoundaries. Doctor profiles are shown only from identified, verifiable sources, and none are listed yet. The site is available in English and Bangla, and provides general medicine information only, not medical advice.",
     ],
     features: [
       "Search 36,328 DGDA-registered medicine products",
@@ -100,6 +100,8 @@ export const projects: Project[] = [
       "Browse by specialty and by location",
       "Optional nearby search, sorted by distance; location is used only when you press the button",
       "Saved items",
+      "25 guides on medicines, DGDA registration and healthcare, in English and Bangla",
+      "Emergency page: Bangladesh's 999 number and hospitals that list emergency services, by division",
       "Data sources stated on the site: DGDA, OpenStreetMap contributors and geoBoundaries",
     ],
     stack: ["Next.js", "TypeScript", "Node.js data pipelines"],
