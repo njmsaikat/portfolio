@@ -14,7 +14,7 @@ export const about = {
     "Django and Django REST Framework backends and REST APIs, with PostgreSQL and containerized deployments.",
     "Payment gateway integration (bKash, Nagad, SSLCommerz and aamarPay) and IoT device integration for smart vending and laundry.",
     "Shopify and WordPress storefronts for clients worldwide, through Upwork since 2021.",
-    "Free web products: HisabBD, Hottogol, Bangladesh Healthcare Search, Pujo Guide and BD Rail Ticket Alarm.",
+    "Free products: HisabBD, Hottogol, Bangladesh Healthcare Search, Pujo Guide, BD Rail Ticket Alarm and BD Price Compare.",
   ],
   faqs: [
     {
