@@ -133,6 +133,33 @@ export const projects: Project[] = [
     featured: true,
   },
   {
+    type: "product",
+    slug: "bd-price-compare",
+    name: "BD Price Compare",
+    description:
+      "A free Chrome extension that searches Bangladeshi online stores in one go, from Shwapno and Meena Bazar to Daraz and Star Tech, and ranks results by real per-kg or per-litre price. English & Bangla.",
+    overview: [
+      "BD Price Compare is a free, open-source (MIT) Chrome extension for shopping in Bangladesh. You search for a product once and see prices side by side from up to 15 Bangladeshi online stores, ranked by unit price (per kg or per litre) so the real best deal is obvious, in English or Bangla.",
+      "Searches are category-aware: groceries (Shwapno, Meena Bazar, Pandamart, Chaldal), electronics (Star Tech, Ryans, Daraz and more) and medicine prices (Arogga, MedEasy). It also keeps a local price history, so it can flag the lowest price in 30 days and warn when a crossed-out \"old price\" was never actually charged.",
+      "Everything runs locally in your browser with your own store logins, and nothing is sent anywhere. Login and payment always stay in your hands.",
+    ],
+    features: [
+      "Compares up to 15 Bangladeshi stores at once, ranked by per-kg or per-litre unit price",
+      "Category-aware search for groceries, electronics and medicine prices",
+      "Daily Bazar: today's prices of 13 staples, with day-over-day change and a 7-day trend",
+      "Local 30-day price history with \"lowest in 30 days\" and fake-discount warnings",
+      "Price watch with a notification when a price drops below your target",
+      "Share a comparison as an image, or compare straight from any shop's product page",
+      "English and Bangla interface; runs locally with your own logins and sends nothing anywhere",
+    ],
+    stack: ["JavaScript", "Chrome Extension", "Manifest V3", "GitHub Pages"],
+    image: "/images/projects/bd-price-compare.jpg",
+    liveUrl: "https://saikatnjm.github.io/bd-price-compare/",
+    repoUrl: "https://github.com/saikatnjm/bd-price-compare",
+    platform: "Chrome",
+    featured: true,
+  },
+  {
     type: "github",
     name: "django-api-cookiecutter",
     description:
