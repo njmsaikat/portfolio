@@ -87,7 +87,8 @@ Notes:
 - Profile photos: `public/images/saikat-roy.jpg` (4:5, 960×1200) keeps the **same filename as the old photo** because that URL is indexed; `saikat-roy-square.jpg` (600×600) is for avatars, OG images and JSON-LD. Strip EXIF/GPS metadata from any new photo.
 - `profile.yearsExperience` is a hard-coded string. It isn't computed from `softwareSinceYear`.
 - **`public/llms.txt` duplicates profile, skills and experience content by hand.** When you change those `data/` files, update `llms.txt` to match.
-- New images go under `public/images/...`. `next/image` runs with `unoptimized: true` (static export has no resizing), so resize and compress images *before* adding them. Keep them roughly under 200 KB.
+- New images go under `public/images/...` as **WebP** (resize first; aim for under ~60 KB). `next/image` runs with `unoptimized: true` (static export has no resizing). Exceptions: `saikat-roy.jpg` / `saikat-roy-square.jpg` stay JPG (indexed URL; `lib/og.tsx` can't read WebP).
+- Netlify runs `npm run build`, whose `postbuild` step (`scripts/optimize-og.mjs`) palette-compresses the generated OG images in `out/` (~300 KB → ~70 KB each). Keep the build command as `npm run build`.
 
 ## Hard constraints (don't break these)
 

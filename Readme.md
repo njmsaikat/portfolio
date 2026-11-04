@@ -44,7 +44,9 @@ All real content lives under [`data/`](data) as plain TypeScript objects/arrays 
 | `data/testimonials.ts` | Client review screenshots |
 | `data/site.ts` | Site-wide metadata, social links, GA ID |
 
-To add or swap an image, drop the file under `public/images/...` and reference its path (e.g. `/images/projects/my-project.png`) from the relevant entry in `data/projects.ts`.
+To add or swap an image, convert it to WebP first (aim for under ~60 KB; e.g. 960×600 at quality ~78), drop it under `public/images/...` and reference its path (e.g. `/images/projects/my-project.webp`) from the relevant entry in `data/projects.ts`. Images aren't resized at build time. Exception: `public/images/saikat-roy.jpg` and `saikat-roy-square.jpg` stay JPG (an indexed URL, and the OG image renderer can't read WebP).
+
+The generated social images (`opengraph-image`) are shrunk automatically after every build by `scripts/optimize-og.mjs` (the npm `postbuild` step; Netlify runs `npm run build`).
 
 ### Writing a blog post
 

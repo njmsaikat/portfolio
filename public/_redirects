@@ -4,3 +4,6 @@
 /portfolio-details.html   /portfolio-page  301
 /portfolio-details        /portfolio-page  301
 /work                     /portfolio-page  301
+# Old images from the previous site, removed to save space; keep any old links working.
+/images/saikat-profile.png  /images/saikat-roy-square.jpg  301
+/og/default.png             /opengraph-image               301

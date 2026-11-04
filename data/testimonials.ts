@@ -7,17 +7,17 @@ import { Testimonial } from "./types";
 export const testimonials: Testimonial[] = [
   {
     platform: "Upwork",
-    image: "/images/testimonials/client-1.jpg",
+    image: "/images/testimonials/client-1.webp",
     alt: "Client review screenshot from Upwork",
   },
   {
     platform: "Fiverr",
-    image: "/images/testimonials/client-2.jpg",
+    image: "/images/testimonials/client-2.webp",
     alt: "Client review screenshot from Fiverr",
   },
   {
     platform: "Upwork",
-    image: "/images/testimonials/client-3.jpg",
+    image: "/images/testimonials/client-3.webp",
     alt: "Client review screenshot from Upwork",
   },
 ];
