@@ -68,6 +68,7 @@ export interface ProductProject {
   features: string[];
   stack: string[];
   image: string;
+  imageDark?: string; // optional dark-mode screenshot; shown when the site is in dark mode
   liveUrl: string;
   repoUrl?: string; // public source repository, when there is one
   platform?: "Web" | "Chrome"; // schema.org operatingSystem; defaults to "Web"

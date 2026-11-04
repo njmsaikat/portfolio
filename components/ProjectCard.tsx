@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ThemedImage } from "@/components/ui/ThemedImage";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -49,12 +49,11 @@ export function ProjectCard({ project }: { project: Project }) {
         className="spotlight-overlay pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
       />
       <div className="relative h-44 w-full border-b border-[var(--color-border)]">
-        <Image
+        <ThemedImage
           src={project.image}
+          darkSrc={project.type === "product" ? project.imageDark : undefined}
           alt={`${project.name} screenshot`}
-          fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover"
         />
       </div>
       <div className="relative flex flex-1 flex-col p-6">
