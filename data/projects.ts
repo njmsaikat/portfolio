@@ -27,6 +27,7 @@ export const projects: Project[] = [
     ],
     stack: ["Next.js", "TypeScript", "Tailwind", "Vitest", "Playwright"],
     image: "/images/projects/hisabbd.webp",
+    imageDark: "/images/projects/hisabbd-dark.webp",
     liveUrl: "https://bd-hisab.vercel.app",
     repoUrl: "https://github.com/saikatnjm/hisabbd",
     featured: true,

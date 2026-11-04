@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ThemedImage } from "@/components/ui/ThemedImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BreadcrumbJsonLd, SoftwareApplicationJsonLd } from "@/components/JsonLd";
@@ -88,13 +88,12 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </div>
           <div className="surface-panel relative aspect-[8/5] overflow-hidden rounded-xl">
-            <Image
+            <ThemedImage
               src={product.image}
+              darkSrc={product.imageDark}
               alt={`${product.name} screenshot`}
-              fill
-              priority
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
+              eager
             />
           </div>
         </div>
