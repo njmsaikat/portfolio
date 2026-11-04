@@ -30,7 +30,7 @@ There is no test suite. `npx serve out` previews the exact static build Netlify 
 - **No animation library.** Only CSS transitions/hover states, native `scroll-behavior: smooth`, and React's built-in `<ViewTransition>` route cross-fade (all respecting `prefers-reduced-motion`). A prior scroll-reveal (IntersectionObserver-based fade-in) was removed after it was found to leave content permanently invisible whenever JavaScript failed to hydrate in time — don't reintroduce a pattern that hides real content by default pre-JS.
 - **Contact form** (`components/sections/Contact.tsx`) relies on Netlify Forms' static-HTML detection: the `<form name="contact" data-netlify="true">` must always render unconditionally in the exported HTML (never behind a client-only mount gate), or Netlify's post-build crawler won't register it.
 - **Fonts** load via `next/font/google` (`lib/fonts.ts`) with only the weights actually used, self-hosted at build time — don't add the full Google Fonts weight range back.
-- **Images** use `next/image` with `unoptimized: true` (required under static export — there's no on-demand resizing), so source images under `public/images/` should already be reasonably sized before adding them.
+- **Images** use `next/image` with `unoptimized: true` (required under static export — there's no on-demand resizing), so source images under `public/images/` should already be resized and saved as WebP before adding them (the two portrait JPGs are the exception). Netlify runs `npm run build`; its `postbuild` (`scripts/optimize-og.mjs`) shrinks the generated OG PNGs.
 - `next.config.ts` sets `trailingSlash: false` — keep it that way, changing it would alter every route's URL (e.g. `/portfolio-page` → `/portfolio-page/`).
 
 ## Conventions

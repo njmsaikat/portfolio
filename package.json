@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/optimize-og.mjs",
     "start": "next start",
     "lint": "eslint"
   },
