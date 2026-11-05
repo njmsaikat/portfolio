@@ -1,0 +1,159 @@
+export const metadata = {
+  title: "Docker Compose-এ Django + PostgreSQL: আমার স্টার্টার সেটআপ, আর এক অক্ষরের যে বাগ আপনার ডেটা মুছে দেয়",
+  seoTitle: "Django + PostgreSQL Docker Compose: volume-এর বানান ভুলের বাগ",
+  description:
+    "আমার Django + PostgreSQL Docker Compose স্টার্টার, কেন এটা ডাটাবেসের জন্য অপেক্ষা করে, আর volume path-এর যে বানান ভুল প্রতিবার compose down-এ চুপচাপ ডেটা মুছে দিত।",
+  date: "2026-11-02",
+  tags: ["Django", "PostgreSQL", "Docker"],
+};
+
+প্রায় প্রতিটা Django ব্যাকএন্ড শুরু করতে আমার একই কয়েকটা জিনিস লাগে: SQLite-এর বদলে PostgreSQL, সব মেশিনে একই environment, আর এক কমান্ডে পুরোটা চালু করা। এই সেটআপটা আমি একটা template repository হিসেবে রাখি, [django-postgres-setup-docker-compose](https://github.com/njmsaikat/django-postgres-setup-docker-compose), যাতে নতুন প্রজেক্ট খালি ফোল্ডার থেকে না, বরং চালু একটা stack থেকে শুরু হয়।
+
+সম্প্রতি আবার পড়তে গিয়ে একটা বাগ পেলাম, যেটা প্রথম commit থেকেই ছিল। কখনো কোনো error মেসেজ দেয়নি। শুধু চুপচাপ ডাটাবেসটা ফেলে দিত। এই লেখায় আগে template-টা দেখাব, তারপর সেই বাগটা, কারণ ভুলটা করা খুব সহজ।
+
+## সেটআপ
+
+দুটো service: Django অ্যাপ আর PostgreSQL, একই network-এ। দরকারি অংশটুকু রেখে বাকিটা ছেঁটে দিলে এরকম:
+
+```yaml
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    command: >
+      sh -c "cd /app/backend &&
+             python manage.py wait_for_db &&
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.env/dev.env
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - pgdata:/var/lib/posgresql/data
+
+volumes:
+  pgdata:
+```
+
+Django তার ডাটাবেস settings (`DB_HOST=db`, `DB_NAME`, `DB_USER`, …) পড়ে `.env/dev.env` থেকে। Compose network-এর ভেতরে `db` hostname মানে Postgres container, তাই টিমের সবার জন্য একই settings কাজ করে।
+
+## কেন `depends_on` যথেষ্ট না
+
+`depends_on: [db]` শুধু **চালু হওয়ার ক্রম** ঠিক করে। Compose আগে Postgres container চালু করে, কিন্তু "container চালু হয়েছে" মানে "ডাটাবেস connection নিতে তৈরি" না। ঠান্ডা অবস্থা থেকে চালু হতে Postgres-এর কয়েক সেকেন্ড লাগে, আর সেই ফাঁকে Django `migrate` চালালে `OperationalError: could not connect to server` দিয়ে crash করে।
+
+Template এটা সামলায় একটা ছোট management command দিয়ে, যেটা ডাটাবেস সাড়া না দেওয়া পর্যন্ত বারবার চেষ্টা করে:
+
+```python
+import time
+
+from psycopg2 import OperationalError as Psycopg2OpError
+from django.core.management.base import BaseCommand
+from django.db.utils import OperationalError
+
+
+class Command(BaseCommand):
+    """Django command to wait for database."""
+
+    def handle(self, *args, **options):
+        self.stdout.write("Waiting for database...")
+        db_up = False
+        while db_up is False:
+            try:
+                self.check(databases=["default"])
+                db_up = True
+            except (Psycopg2OpError, OperationalError):
+                self.stdout.write("Database unavailable, waiting 1 second...")
+                time.sleep(1)
+
+        self.stdout.write(self.style.SUCCESS("Database available!"))
+```
+
+`self.check(databases=["default"])` ডাটাবেসের বিরুদ্ধে Django-র system check চালায়, তাতে সত্যিকারের একটা connection খুলতে হয়। Postgres চালু না হওয়া পর্যন্ত এটা exception দেয়, আর loop এক সেকেন্ড ঘুমিয়ে আবার চেষ্টা করে।
+
+## বাগটা: volume path-টা খেয়াল করে দেখুন
+
+```yaml
+volumes:
+  - pgdata:/var/lib/posgresql/data
+```
+
+লেখা `posgresql`, `postgresql` না। একটা অক্ষর কম।
+
+কেন চোখে পড়ার মতো কিছুই ভাঙেনি:
+
+- Named volume `pgdata` mount হয়েছিল এমন একটা path-এ, যেটা **Postgres কখনো ব্যবহার করে না**। সেই ফোল্ডারটা খালিই থেকে গেছে।
+- অফিশিয়াল `postgres` image তার data directory-কে `VOLUME` হিসেবে ঘোষণা করে। আসল path-এ কোনো mount না থাকায় Docker চুপচাপ ওই path-এর জন্য একটা **anonymous volume** বানিয়ে নেয়।
+- `docker compose stop`/`start`, এমনকি `docker compose up` দিয়ে container নতুন করে বানালেও সেই anonymous volume থেকে যায়। তাই রোজকার ডেভেলপমেন্টে মনে হতো ডেটা টিকে আছে।
+- কিন্তু `docker compose down` container মুছে ফেলে। পরের `up` নতুন container বানায়, সাথে একদম **নতুন, খালি** একটা anonymous volume। সব টেবিল, সব টেস্ট ইউজার, সব migration: উধাও। পুরনো ডেটা আসলে একটা র‍্যান্ডম hash নামের অনাথ volume-এ পড়ে থাকে, আর এজন্যই কেউ খেয়াল করে না যে ডেটা "মুছে যায়নি", "হারিয়ে গেছে"।
+
+দুটো কমান্ডেই ধরা যায়:
+
+```bash
+# The named volume is empty: Postgres never wrote to it
+docker compose exec db ls -la /var/lib/posgresql/data
+
+# Orphaned anonymous volumes pile up with hash names
+docker volume ls --filter dangling=true
+```
+
+## সমাধান, আর তার পেছনে লুকানো দ্বিতীয় ফাঁদ
+
+সহজ সমাধান হলো বানানটা ঠিক করা। কিন্তু template-এ **version pin না করা** `image: postgres`-ও আছে, যেটা এখন PostgreSQL 18 বা তার নতুন ভার্সন টানে, আর অফিশিয়াল image 18-এ এসে তার লেআউট বদলেছে:
+
+| Image | ডিফল্ট data directory (`PGDATA`) | Volume mount করবেন যেখানে |
+| --- | --- | --- |
+| `postgres:17` ও পুরনো | `/var/lib/postgresql/data` | `/var/lib/postgresql/data` |
+| `postgres:18` ও নতুন | `/var/lib/postgresql/18/docker` | `/var/lib/postgresql` |
+
+তাই version pin না থাকলে path "ঠিক করে" `/var/lib/postgresql/data` করলে 18+-এ container চালুই হতে চায় না। আসল সমাধান দুটো পরিবর্তন: **major version pin করুন**, আর সেই ভার্সনের জন্য ডকুমেন্টেড path-এ mount করুন।
+
+```yaml
+db:
+  image: postgres:17
+  volumes:
+    - pgdata:/var/lib/postgresql/data
+```
+
+Pin করাটা শুধু এই বাগের জন্য জরুরি না। PostgreSQL-এর এক major version আরেকটার data file পড়তে পারে না, `pg_upgrade` বা dump আর restore লাগে। তাই ভাসমান `latest` tag থাকলে পরের বার কেউ pull করলেই চালু একটা ডাটাবেস ভেঙে যেতে পারে।
+
+## আজ হলে আর কী বদলাতাম
+
+Template-টা লেখা হয়েছিল Python 3.8 আর Django 3.2-এর জন্য, দুটোরই এখন end of life। ২০২৬-এ নতুন করে শুরু করলে:
+
+- **Wait command-এর বদলে (বা সাথে) healthcheck ব্যবহার করুন।** Compose নিজেই Postgres-এর জন্য অপেক্ষা করতে পারে:
+
+  ```yaml
+  db:
+    image: postgres:17
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d mydb"]
+      interval: 2s
+      retries: 15
+
+  backend:
+    depends_on:
+      db:
+        condition: service_healthy
+  ```
+
+- **Container চালুর সময় `makemigrations` চালাবেন না।** Migration-ও কোড: ভেবেচিন্তে বানান, review করুন, commit করুন। চালুর সময় শুধু `migrate` চলবে।
+- **Runtime আপগ্রেড করুন**: হালনাগাদ Python 3 image আর সাপোর্টেড একটা Django LTS রিলিজ।
+- **Credential env file-এ রাখুন**, `docker-compose.yml`-এ সরাসরি লিখে না, যাতে ডাটাবেস আর Django একই জায়গা থেকে পড়ে।
+
+## শেষ কথা
+
+Docker volume চুপচাপ ব্যর্থ হয়। ভুল mount path-ও একটা বৈধ mount path, আর image-এর anonymous volume ঠিক সেই দিন পর্যন্ত আপনাকে বাঁচিয়ে রাখবে, যেদিন আপনি `docker compose down` চালাবেন। আপনার লোকাল ডাটাবেস যদি কখনো "নিজে নিজে রিসেট" হয়ে থাকে, volume path-এর বানানটা দেখুন, তারপর Postgres version pin করুন।
