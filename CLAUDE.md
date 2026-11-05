@@ -13,9 +13,10 @@ npm install
 npm run dev      # dev server at localhost:3000
 npm run build    # static export to out/ (what Netlify deploys)
 npm run lint     # eslint
+npm run check-links  # after a build: every internal link and #anchor in out/ resolves
 ```
 
-There is no test suite. `npx serve out` previews the exact static build Netlify will serve.
+There is no test suite. CI (`.github/workflows/ci.yml`) runs lint, build and check-links on every branch push and PR — master deploys immediately, so a red check means don't merge. `npx serve out` previews the exact static build Netlify will serve.
 
 ## Architecture
 

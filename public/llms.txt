@@ -48,6 +48,10 @@ Most production work (current employer and freelance clients) lives in private r
 - Résumé (HTML, printable to PDF): https://saikatroy.netlify.app/resume
 - Blog (English): https://saikatroy.netlify.app/blog (RSS: https://saikatroy.netlify.app/rss.xml). Each post also has a Markdown version at /blog/<slug>/index.md
 - Blog (Bangla): https://saikatroy.netlify.app/bn/blog (RSS: https://saikatroy.netlify.app/bn/rss.xml)
-- Latest post: Django + PostgreSQL with Docker Compose, and the volume typo that loses data: https://saikatroy.netlify.app/blog/django-postgres-docker-compose
+- Series, Bangladesh payment gateways for developers:
+  1. bKash, Nagad, SSLCommerz or aamarPay? A developer's guide: https://saikatroy.netlify.app/blog/bangladesh-payment-gateways-for-developers
+  2. bKash Tokenized Checkout in Django, step by step: https://saikatroy.netlify.app/blog/bkash-tokenized-checkout-django
+  3. SSLCommerz in Django, step by step: https://saikatroy.netlify.app/blog/sslcommerz-django-integration
+- Django + PostgreSQL with Docker Compose, and the volume typo that loses data: https://saikatroy.netlify.app/blog/django-postgres-docker-compose
 - Full text of this site for LLMs: https://saikatroy.netlify.app/llms-full.txt
 - All projects: https://saikatroy.netlify.app/portfolio-page

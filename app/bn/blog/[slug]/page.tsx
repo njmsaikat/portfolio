@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { BreadcrumbJsonLd } from "@/components/JsonLd";
+import { SeriesNav } from "@/components/SeriesNav";
 import { formatDate, getLocalizedPost, getPostSlugs, hasPost } from "@/lib/posts";
 import { bn } from "@/lib/bn";
 import { notFound } from "next/navigation";
@@ -107,6 +108,8 @@ export default async function BanglaPostPage({ params }: Props) {
         <div className="prose mt-10">
           <Content />
         </div>
+
+        <SeriesNav post={post} />
 
         <footer className="surface-panel mt-10 flex items-center gap-4 rounded-xl p-5">
           <Image src={profile.photoSquare} alt="" width={56} height={56} className="h-14 w-14 rounded-full object-cover" />

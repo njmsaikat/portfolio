@@ -5,6 +5,7 @@ export const metadata = {
     "How bKash, Nagad, SSLCommerz and aamarPay integrations work, how they differ, and how to pick one for your Django or Python backend.",
   date: "2026-11-03",
   tags: ["Payments", "bKash", "Nagad", "SSLCommerz", "aamarPay", "Bangladesh"],
+  series: { id: "bd-payment-gateways", part: 1 },
 };
 
 If you're building an app or online store in Bangladesh, sooner or later someone asks: "Can customers pay with bKash?" Then: "What about cards?" I've integrated bKash, Nagad, SSLCommerz and aamarPay into Django backends. This post is the short guide I wish I'd had the first time.
@@ -107,4 +108,4 @@ Fees, settlement times and contracts are commercial terms, so get them from each
 
 Everything here comes from each gateway's official public documentation as of 3 November 2026. Gateways change their APIs, so check the latest docs and test in the sandbox before you take real money.
 
-**Next in the series:** a complete [bKash Tokenized Checkout integration in Django](/blog/bkash-tokenized-checkout-django), then SSLCommerz and aamarPay. Nagad will follow once I can work from official documentation.
+**Next in the series:** a complete [bKash Tokenized Checkout integration in Django](/blog/bkash-tokenized-checkout-django), then [SSLCommerz in Django](/blog/sslcommerz-django-integration) and aamarPay. Nagad will follow once I can work from official documentation.

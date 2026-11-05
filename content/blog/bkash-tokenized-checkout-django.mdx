@@ -5,6 +5,7 @@ export const metadata = {
     "Integrate bKash Tokenized Checkout in Django 5: token caching, create and execute payment, callbacks, query fallback, idempotent order updates and refunds.",
   date: "2026-11-03",
   tags: ["Payments", "bKash", "Django", "Bangladesh"],
+  series: { id: "bd-payment-gateways", part: 2 },
 };
 
 This is the second post in my series on Bangladeshi payment gateways (the [overview is here](/blog/bangladesh-payment-gateways-for-developers)). It's a complete bKash Tokenized Checkout integration for a Django backend: one-time payments without a saved agreement, which is where most projects start.
@@ -653,4 +654,4 @@ I'd rather list these than guess quietly. Each is handled defensively in the cod
 
 The bKash-specific code is small: five POST requests and a token cache. Most of the work is in the parts the docs warn about: the callback isn't confirmation, Execute runs exactly once, a timeout means "unknown" rather than "failed", and the token endpoints are rate-limited. Build those four into the design from the start and the integration stays correct when the network doesn't cooperate.
 
-Next in the series: SSLCommerz in Django. The overview of all four gateways is [here](/blog/bangladesh-payment-gateways-for-developers).
+Next in the series: [SSLCommerz in Django](/blog/sslcommerz-django-integration). The overview of all four gateways is [here](/blog/bangladesh-payment-gateways-for-developers).

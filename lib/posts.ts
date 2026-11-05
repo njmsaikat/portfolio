@@ -11,7 +11,19 @@ export interface PostMeta {
   date: string; // ISO yyyy-mm-dd
   updated?: string;
   tags: string[];
+  // Part of a multi-post series (ids in SERIES below); drives the series box under the post.
+  series?: { id: SeriesId; part: number };
 }
+
+// Series titles per language. A post joins a series via `metadata.series`, so
+// the box listing every part updates itself when a new part is added.
+export const SERIES = {
+  "bd-payment-gateways": {
+    en: "Bangladesh payment gateways for developers",
+    bn: "ডেভেলপারদের জন্য বাংলাদেশের পেমেন্ট গেটওয়ে",
+  },
+} as const;
+export type SeriesId = keyof typeof SERIES;
 
 export type Lang = "en" | "bn";
 
@@ -88,3 +100,13 @@ export function formatDate(iso: string, lang: Lang = "en"): string {
     timeZone: "UTC",
   });
 }
+
+/** Every published part of the post's series in the same language, in order (empty if not in a series). */
+export async function getSeriesParts(post: Post): Promise<Post[]> {
+  if (!post.series) return [];
+  const id = post.series.id;
+  return (await getAllPosts(post.lang))
+    .filter((p) => p.series?.id === id)
+    .sort((a, b) => a.series!.part - b.series!.part);
+}
+
