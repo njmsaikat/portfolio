@@ -6,6 +6,12 @@ import { profile } from "@/data/profile";
 import { site, socialLinks } from "@/data/site";
 import { skillGroups } from "@/data/skills";
 import { certifications, education, experience } from "@/data/experience";
+import { projects } from "@/data/projects";
+
+// Live products, one line each: the first sentence of the approved description.
+const products = projects.flatMap((p) =>
+  p.type === "product" ? [{ ...p, summary: p.description.split(/(?<=\.)\s/)[0] }] : [],
+);
 
 export const metadata: Metadata = {
   title: "Résumé",
@@ -24,7 +30,7 @@ const resumeLinks = socialLinks.filter((l) => ["github", "linkedin", "stackoverf
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="border-b border-[var(--color-border)] pb-2 font-[family-name:var(--font-technical)] text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)]">
+    <h2 className="break-after-avoid border-b border-[var(--color-border)] pb-2 font-[family-name:var(--font-technical)] text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)]">
       {children}
     </h2>
   );
@@ -91,16 +97,16 @@ export default function ResumePage() {
             </div>
           </header>
 
-          <section className="mt-10 print:mt-6">
+          <section className="mt-10 print:mt-5">
             <Heading>Summary</Heading>
             <p className="mt-4 text-[var(--color-text-muted)]">
               {profile.headline} {profile.bio[0]}
             </p>
           </section>
 
-          <section className="mt-10 print:mt-6">
+          <section className="mt-10 print:mt-5">
             <Heading>Experience</Heading>
-            <ol className="mt-4 space-y-6">
+            <ol className="mt-4 space-y-6 print:space-y-4">
               {experience.map((entry) => (
                 <li key={entry.company} className="break-inside-avoid">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4">
@@ -124,7 +130,32 @@ export default function ResumePage() {
             </ol>
           </section>
 
-          <section className="mt-10 print:mt-6">
+          <section className="mt-10 print:mt-5">
+            <Heading>Products</Heading>
+            {/* In print: one compact line per product (name + summary, no stack) to keep the PDF short. */}
+            <ul className="mt-4 space-y-3 print:space-y-1">
+              {products.map((p) => (
+                <li key={p.slug} className="break-inside-avoid print:text-sm">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 print:inline">
+                    <h3 className="font-semibold print:inline">
+                      <a href={p.liveUrl} className="text-[var(--color-accent)] hover:underline">
+                        {p.name}
+                      </a>
+                    </h3>
+                    <p className="font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)] print:hidden">
+                      {p.stack.join(" · ")}
+                    </p>
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)] print:mt-0 print:inline">
+                    <span className="hidden print:inline"> · </span>
+                    {p.summary}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="mt-10 print:mt-5">
             <Heading>Skills</Heading>
             <dl className="mt-4 grid gap-3 sm:grid-cols-[10rem_1fr]">
               {skillGroups.map((group) => (
@@ -136,7 +167,7 @@ export default function ResumePage() {
             </dl>
           </section>
 
-          <div className="mt-10 grid gap-10 sm:grid-cols-2 print:mt-6 print:gap-6">
+          <div className="mt-10 grid gap-10 sm:grid-cols-2 print:mt-5 print:gap-6">
             <section className="break-inside-avoid">
               <Heading>Education</Heading>
               <p className="mt-4 font-semibold">{education.degree}</p>
@@ -163,7 +194,7 @@ export default function ResumePage() {
             </section>
           </div>
 
-          <section className="mt-10 break-inside-avoid print:mt-6">
+          <section className="mt-10 break-inside-avoid print:mt-5">
             <Heading>Certifications</Heading>
             <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
               {certifications.map((cert) => (
@@ -180,7 +211,7 @@ export default function ResumePage() {
             </ul>
           </section>
 
-          <section className="mt-10 break-inside-avoid print:mt-6">
+          <section className="mt-10 break-inside-avoid print:mt-5">
             <Heading>Publications</Heading>
             <ul className="mt-4 space-y-1 text-sm text-[var(--color-text-muted)]">
               {education.publications.map((p) => (
