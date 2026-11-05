@@ -117,7 +117,7 @@ export default async function BanglaPostPage({ params }: Props) {
             <p className="font-semibold">{profile.name}</p>
             <p className="text-sm text-[var(--color-text-muted)]">
               {bn.authorNote}{" "}
-              <Link href="/#contact" className="text-[var(--color-accent)] hover:underline">
+              <Link href="/#contact" className="text-[var(--color-accent)] underline underline-offset-2">
                 {bn.contact}
               </Link>
               .

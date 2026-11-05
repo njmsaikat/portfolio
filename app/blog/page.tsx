@@ -36,7 +36,7 @@ export default async function BlogPage() {
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Notes from the backend</h1>
         <p className="mt-3 text-[var(--color-text-muted)]">
           Practical write-ups on Django, PostgreSQL, Docker and keeping production systems running. Subscribe via{" "}
-          <a href="/rss.xml" className="text-[var(--color-accent)] hover:underline">
+          <a href="/rss.xml" className="text-[var(--color-accent)] underline underline-offset-2">
             RSS
           </a>
           .
@@ -45,7 +45,7 @@ export default async function BlogPage() {
           I write about what I run into while building backends for commerce platforms: Django and Django REST
           Framework, PostgreSQL, Docker-based setups, deployment, and integrating Bangladeshi payment gateways such as
           bKash, Nagad, SSLCommerz and aamarPay. Posts are written in English, with Bangla versions where they exist (
-          <Link href="/bn/blog" lang="bn" className="text-[var(--color-accent)] hover:underline">
+          <Link href="/bn/blog" lang="bn" className="text-[var(--color-accent)] underline underline-offset-2">
             বাংলা ব্লগ
           </Link>
           ).

@@ -40,7 +40,7 @@ export default function ServicesPage() {
             is Django and Django REST Framework backends on PostgreSQL, deployed with Docker and cloud hosting. I also
             build and customize Shopify and WordPress stores. Each service below has its own page with what you get,
             the stack I use, related work and answers to common questions, and the{" "}
-            <Link href="/work/your-campus" className="text-[var(--color-accent)] hover:underline">
+            <Link href="/work/your-campus" className="text-[var(--color-accent)] underline underline-offset-2">
               case studies
             </Link>{" "}
             show the same skills applied to real commerce platforms.
