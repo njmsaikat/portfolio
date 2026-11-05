@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { BreadcrumbJsonLd, BlogPostingJsonLd } from "@/components/JsonLd";
+import { SeriesNav } from "@/components/SeriesNav";
 import { formatDate, getPost, getPostSlugs, hasPost } from "@/lib/posts";
 import { profile } from "@/data/profile";
 import { site } from "@/data/site";
@@ -83,6 +84,8 @@ export default async function PostPage({ params }: Props) {
         <div className="prose mt-10">
           <Content />
         </div>
+
+        <SeriesNav post={post} />
 
         {relatedServices.length > 0 && (
           <aside className="mt-16 rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-accent-soft)] p-5">
