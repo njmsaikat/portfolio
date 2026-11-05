@@ -1,0 +1,457 @@
+export const metadata = {
+  title: "Django-তে aamarPay: অফিশিয়াল ডক ধরে ধাপে ধাপে ইন্টিগ্রেশন",
+  seoTitle: "Django-তে aamarPay, ধাপে ধাপে",
+  description:
+    "Django 5-এ aamarPay: পেমেন্ট শুরু করা, success, fail আর cancel callback সামলানো, Search Transaction দিয়ে কনফার্মেশন, আর ফাঁক গলে যাওয়া পেমেন্টের reconciliation।",
+  date: "2026-11-05",
+  tags: ["পেমেন্ট", "aamarPay", "Django", "বাংলাদেশ"],
+  series: { id: "bd-payment-gateways", part: 4 },
+};
+
+বাংলাদেশের পেমেন্ট গেটওয়ে নিয়ে আমার সিরিজের এটা চতুর্থ লেখা ([ওভারভিউটা এখানে](/bn/blog/bangladesh-payment-gateways-for-developers))। এখানে Django ব্যাকএন্ডের জন্য একটা পূর্ণাঙ্গ aamarPay ইন্টিগ্রেশন বানাব: কাস্টমার aamarPay-এর hosted পেজে পেমেন্ট করে, আর আপনার সার্ভার প্রতিটা পেমেন্ট aamarPay-এর Search Transaction API দিয়ে কনফার্ম করে।
+
+> **তথ্যের নির্ভুলতা নিয়ে।** কোডটা aamarPay-এর অফিশিয়াল [API ডকুমেন্টেশন](https://aamarpay.readme.io/reference/overview) (ভার্সন 3.0, যেটা stable) অনুসরণ করে লেখা, প্রকাশের তারিখ ৫ নভেম্বর ২০২৬ অনুযায়ী। ডক যেখানে কিছু বলে না, সেখানে [তাদের GitHub](https://github.com/aamarpay-dev)-এ aamarPay-এর নিজের স্যাম্পল কোড দেখেছি, আর প্রতিবার সেটা উল্লেখ করেছি। কয়েকটা তথ্য, যেখানে "sandbox-এ" লেখা আছে, এসেছে সেই তারিখে aamarPay-এর পাবলিক sandbox-এ কল করে, কারণ ডকে সেগুলো লেখা নেই। কোডটা একটা Django 5.2 প্রজেক্টে ডকুমেন্টেড আর sandbox-এর response-এর আদলে বানানো নকল response দিয়ে টেস্ট করেছি, কিন্তু সত্যিকারের কোনো পেমেন্টে না। তাই লাইভে যাওয়ার আগে sandbox-এ টেস্ট করুন। যা যা নিজে ব্যাখ্যা করে নিতে হয়েছে, তার তালিকা শেষের দিকে "ডকে যেখানে অস্পষ্টতা ছিল" অংশে আছে।
+
+## পুরো ফ্লো
+
+[Initiate Payment (JSON)](https://aamarpay.readme.io/reference/initiate-payment-json) আর [Search Transaction](https://aamarpay.readme.io/reference/search-transaction) পেজ অনুযায়ী:
+
+1. আপনার সার্ভার amount, আপনার তৈরি করা একটা `tran_id` আর তিনটা callback URL **Initiate Payment**-এ পাঠায়। উত্তরে পায় একটা `payment_url`।
+2. কাস্টমারকে `payment_url`-এ redirect করেন। সে aamarPay-এর পেজে পেমেন্ট করে।
+3. aamarPay কাস্টমারের ব্রাউজারকে আপনার `success_url` বা `fail_url`-এ একটা POST দিয়ে ফেরত পাঠায়, সাথে থাকে `mer_txnid` (আপনার `tran_id`), `pay_status`, `status_code`, `amount` আর আরও কিছু। কাস্টমার বাতিল করলে সে যায় আপনার `cancel_url`-এ।
+4. আপনার সার্ভার `tran_id` দিয়ে **Search Transaction** কল করে। `status_code` `2` আর ঠিক amount থাকলে পেমেন্ট সম্পন্ন।
+
+ডক দুটো পেজেই নিয়মটা সরাসরি লিখে দিয়েছে: "Check The "status_code" field and "amount" field", আর "it is preferred that in your success endpoint, you utilize our search transaction API"। এই গাইডে এটা শুধু পছন্দের ব্যাপার না: callback হলো ব্রাউজারের একটা POST, যেটা যে কেউ জাল করতে পারে। তাই আপনার সার্ভার নিজে aamarPay-কে জিজ্ঞেস না করা পর্যন্ত ডাটাবেসে কিছুই বদলায় না।
+
+Status code-গুলোর সংজ্ঞা initiate পেজে দেওয়া: "**0** signifies an initiated transaction, **2** indicates a successful transaction, **3** represents an expired transaction, and **7** indicates a failed transaction."
+
+## aamarPay-এর কাছ থেকে যা লাগবে
+
+দুটো credential: একটা **`store_id`** আর একটা **`signature_key`**। নামে signature থাকলেও signature key আসলে একটা স্থির গোপন মান, যেটা হুবহু পাঠাতে হয়; কিছুই sign বা hash করা হয় না।
+
+- **Sandbox:** aamarPay তাদের [Sandbox Credentials পেজে](https://aamarpay.readme.io/reference/sandbox-credentials-1) একটা টেস্ট store ID আর signature key প্রকাশ করে রেখেছে, তাই সাইন-আপ ছাড়াই শুরু করা যায়। aamarPay-এর স্যাম্পল README-গুলো বলছে sandbox-এ পেমেন্ট মেথড হিসেবে শুধু bKash পাওয়া যায়, আর ডকে কোনো টেস্ট কার্ড দেওয়া নেই।
+- **লাইভ:** aamarPay-এর সাথে যোগাযোগ করুন (support@aamarpay.com)। তাদের [FAQ](https://aamarpay.com/index.php/faq) কাগজপত্রের তালিকা দেয় (ট্রেড লাইসেন্স, TIN, NID আর আরও কিছু, সাথে আপনার ডোমেইন নাম আর হোস্টিং IP), বলে প্রতিটা ওয়েবসাইটের জন্য আলাদা MID দেওয়া হয়, আর সার্ভিসটা "only offered to Bangladeshi and registered companies in Bangladesh"।
+
+[Common Issues পেজ](https://aamarpay.readme.io/reference/common-issues) সবচেয়ে বিভ্রান্তিকর error-টার ব্যাখ্যা দেয়: credential ঠিক থাকলেও "Invalid Store ID" আসা মানে আপনি ভুল host-এ কল করছেন। Sandbox credential কাজ করে শুধু sandbox host-এ, আর লাইভ credential শুধু লাইভ host-এ।
+
+`aamarpay` নামে একটা অফিশিয়াল Python প্যাকেজ আছে, কিন্তু এর শেষ রিলিজ ২০২২-এ, এটা শুধু পেমেন্ট শুরু করে (যাচাই করে না), আর BDT হার্ড-কোড করা। সাধারণ `requests` দিয়েই কাজ হয়ে যায়।
+
+> **কপি-পেস্ট সতর্কতা।** JSON initiate পেজের PHP আর Python স্যাম্পলে (আর অফিশিয়াল Postman collection ও Laravel স্যাম্পলেও) endpoint URL-এর ভেতরে `sandbox`-এর দুই পাশে দুটো অদৃশ্য zero-width space (U+200B) লুকানো আছে। হুবহু কপি করলে রিকোয়েস্ট এমনভাবে ফেল করে যে কারণ বোঝা কঠিন। host-টা নিজে টাইপ করুন, অথবা পেজের ওপরের endpoint বক্স থেকে নিন, ওটা পরিষ্কার।
+
+## Settings আর environment variable
+
+```bash
+# .env (never commit this)
+AAMARPAY_BASE_URL=https://sandbox.aamarpay.com
+AAMARPAY_STORE_ID=the-sandbox-store-id-from-the-docs
+AAMARPAY_SIGNATURE_KEY=the-sandbox-signature-key-from-the-docs
+```
+
+```python
+# settings.py
+import os
+
+AAMARPAY = {
+    # Sandbox: https://sandbox.aamarpay.com
+    # Live:    https://secure.aamarpay.com
+    "BASE_URL": os.environ["AAMARPAY_BASE_URL"],
+    "STORE_ID": os.environ["AAMARPAY_STORE_ID"],
+    "SIGNATURE_KEY": os.environ["AAMARPAY_SIGNATURE_KEY"],
+}
+```
+
+দুটো host আর নিচের দুটো API path-ই ডক থেকে নেওয়া। তাই লাইভে যাওয়া মানে base URL আর দুটো credential বদলানো।
+
+## Payment মডেল
+
+প্রতিটা পেমেন্ট চেষ্টার জন্য একটা row, প্রতিটার নিজের `tran_id`।
+
+```python
+# payments/models.py
+from django.db import models
+
+
+class Payment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending"            # row created, aamarPay not called yet
+        INITIATED = "initiated"        # payment_url received, customer sent to aamarPay
+        COMPLETED = "completed"        # confirmed by Search Transaction
+        ON_HOLD = "on_hold"            # paid, but aamarPay reported a risk level
+        FAILED = "failed"
+        CANCELLED = "cancelled"
+        NEEDS_REVIEW = "needs_review"  # aamarPay says paid, but details don't match
+
+    order = models.ForeignKey("shop.Order", on_delete=models.PROTECT, related_name="payments")
+    tran_id = models.CharField(max_length=32, unique=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=Status, default=Status.PENDING)
+
+    pg_txnid = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    last_response = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "updated_at"])]
+```
+
+`shop.Order` হলো আপনার অর্ডার মডেলের জায়গায় একটা উদাহরণ। নিচের কোড ধরে নিয়েছে এতে `user`, `total`, `is_paid`, `phone`, `address`, `city` আর একটা `mark_paid()` মেথড আছে; নিজের মডেল অনুযায়ী নামগুলো বদলে নিন। ডক বলছে `tran_id` সর্বোচ্চ ৩২ অক্ষর আর এটা "is unique for each payment transaction", কিন্তু sandbox-এ aamarPay একই `tran_id` আবার নিতে কোনো আপত্তি করেনি, আর তারপর Search Transaction শুধু সবচেয়ে নতুন চেষ্টাটার খবর দিয়েছে। তাই ইউনিক রাখার দায়িত্ব আপনার, আর সেজন্যই `unique=True` আর প্রতিটা চেষ্টায় নতুন ID। `pg_txnid` হলো aamarPay-এর নিজের ট্রানজ্যাকশন ID; ডকে এর দৈর্ঘ্য দেওয়া নেই, তাই ৬৪ আমার বেছে নেওয়া।
+
+## ছোট একটা aamarPay ক্লায়েন্ট
+
+```python
+# payments/aamarpay.py
+import requests
+from django.conf import settings
+
+# The docs don't specify timeouts. These are my own choice.
+TIMEOUT = (5, 30)  # (connect, read) seconds
+
+INITIATE_PATH = "/jsonpost.php"
+SEARCH_PATH = "/api/v1/trxcheck/request.php"
+
+
+class AamarpayError(Exception):
+    def __init__(self, message, payload=None):
+        super().__init__(message)
+        self.payload = payload or {}
+
+
+class AamarpayClient:
+    def __init__(self):
+        conf = settings.AAMARPAY
+        self.base_url = conf["BASE_URL"].rstrip("/")
+        self.credentials = {
+            "store_id": conf["STORE_ID"],
+            "signature_key": conf["SIGNATURE_KEY"],
+        }
+
+    def _call(self, method, path, **kwargs):
+        try:
+            resp = requests.request(method, self.base_url + path, timeout=TIMEOUT, **kwargs)
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            # Not str(exc): for GET calls it contains the URL, and the URL
+            # contains your signature key. `from None` keeps it out of tracebacks.
+            raise AamarpayError(f"{path}: {type(exc).__name__}") from None
+        try:
+            # JSON, even though aamarPay labels some responses text/html.
+            return resp.json()
+        except ValueError:
+            # e.g. a wrong key returns plain text: "Store_id & signature key not matched"
+            raise AamarpayError(f"{path}: {resp.text[:100]}") from None
+
+    def initiate(self, **fields):
+        body = {**self.credentials, **fields, "type": "json"}
+        data = self._call("POST", INITIATE_PATH, json=body)
+        # Success is documented as {"result": "true", "payment_url": "..."} with
+        # "true" as a string. Errors aren't documented and come in several shapes.
+        if data.get("result") != "true" or not data.get("payment_url"):
+            reason = data.get("message") or data.get("errors") or data
+            raise AamarpayError(f"Payment not initiated: {reason}", data)
+        return data
+
+    def search_transaction(self, tran_id):
+        # Documented as a GET with the signature key in the query string.
+        params = {**self.credentials, "request_id": tran_id, "type": "json"}
+        return self._call("GET", SEARCH_PATH, params=params)
+```
+
+aamarPay পাশাপাশি দুটো initiate endpoint ডকুমেন্ট করেছে: `index.php` form field নেয়, আর `jsonpost.php` নেয় JSON। দুটোই একই JSON response দেয়, কোনোটাই deprecated না; এই গাইড JSON-টা ব্যবহার করে, ডকে যেটা বেশি বিস্তারিত। দুটোতেই `type` "is always "json""।
+
+Error-এর ধরনগুলো জানা দরকার, কারণ এগুলো ডকুমেন্টেড না। Sandbox-এ প্রতিটা error এসেছে HTTP 200 হিসেবে: `{"result": false, "message": "Invalid Signature Key"}`, `{"result": false, "errors": ["desc is required."]}`, অথবা currency code ছোট হাতের অক্ষরে দিলে `{"currency": "Invalid Currecny Code."}`, যেখানে `result`-ই নেই। খেয়াল করুন, ব্যর্থ হলে boolean `false`, অথচ সফল হলে string `"true"`। হুবহু `"true"` আর একটা `payment_url` আছে কি না চেক করলে সবগুলোই সামলানো যায়।
+
+SSLCommerz-এর মতো এখানেও Search Transaction একটা GET, আর আপনার গোপন key থাকে query string-এ। এটা aamarPay-এর ডিজাইন, তাই খেয়াল রাখুন আপনার দিকে কোনো কিছু যেন এই URL-গুলো লগ না করে।
+
+## ধাপ ১: পেমেন্ট শুরু করা
+
+```python
+# payments/views.py
+import json
+import secrets
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+
+from shop.models import Order
+
+from .aamarpay import AamarpayClient, AamarpayError
+from .models import Payment
+from .services import verify_payment
+
+
+@login_required
+@require_POST
+def aamarpay_start(request, order_id):
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    if order.is_paid:
+        return redirect("shop:order-detail", pk=order.pk)
+
+    payment = Payment.objects.create(
+        order=order,
+        amount=order.total,
+        tran_id=f"ORD{order.pk}-{secrets.token_hex(4)}",
+    )
+
+    def url(name, *args):
+        return request.build_absolute_uri(reverse(f"payments:aamarpay-{name}", args=args))
+
+    try:
+        data = AamarpayClient().initiate(
+            tran_id=payment.tran_id,
+            amount=f"{payment.amount:.2f}",
+            currency="BDT",
+            desc=f"Order {order.pk}",
+            cus_name=request.user.get_full_name() or request.user.get_username(),
+            cus_email=request.user.email,
+            cus_phone=order.phone,
+            cus_add1=order.address,
+            cus_city=order.city,
+            cus_country="Bangladesh",
+            success_url=url("success"),
+            fail_url=url("fail"),
+            # aamarPay posts nothing to cancel_url, so put the tran_id in the path.
+            cancel_url=url("cancel", payment.tran_id),
+        )
+    except AamarpayError as exc:
+        payment.status = Payment.Status.FAILED
+        payment.last_response = exc.payload
+        payment.save(update_fields=["status", "last_response", "updated_at"])
+        messages.error(request, "Couldn't start the payment. Please try again.")
+        return redirect("shop:order-detail", pk=order.pk)
+
+    payment.status = Payment.Status.INITIATED
+    payment.last_response = data
+    payment.save(update_fields=["status", "last_response", "updated_at"])
+    # Always use the URL aamarPay returned. Never build it yourself.
+    return redirect(data["payment_url"])
+```
+
+- এটা POST, যাতে কোনো crawler বা prefetch পেমেন্ট শুরু করে দিতে না পারে। প্রতিটা চেষ্টায় নতুন `tran_id` থাকায় প্রতিটা callback আর query ঠিক একটা row-এর সাথে মেলে।
+- ডক অনুযায়ী বাধ্যতামূলক ফিল্ড হলো `store_id`, `signature_key`, `tran_id`, `amount`, `currency`, `desc`, `cus_name`, `cus_email`, `cus_phone`, তিনটা URL আর `type`। ঠিকানার ফিল্ডগুলো ঐচ্ছিক, আর `opt_a` থেকে `opt_d` হলো ফাঁকা ফিল্ড যেগুলো aamarPay হুবহু ফেরত দেয়, নিজের কোনো ID সাথে রাখতে চাইলে কাজে লাগে।
+- `amount`-এ কোনো currency চিহ্ন বা কমা থাকবে না, দশমিক বিভাজক হবে period। Currency code বড় হাতের অক্ষরে হতে হবে।
+- ডকে সর্বনিম্ন বা সর্বোচ্চ amount নেই, currency-র তালিকাও নেই; উদাহরণ শুধু "USD" বা "BDT"। aamarPay-এর নিজের Laravel স্যাম্পলে লেখা "10 taka is the minimum amount for show card option"। এই গাইড শুধু BDT-তে চার্জ করে।
+- **Cancel URL-এ `tran_id` থাকে।** aamarPay-এর Node আর ASP.NET স্যাম্পল README বলছে "We do not submit any data in cancel_url", আর তাদের Laravel স্যাম্পল cancel-কে GET হিসেবে route করে। তাই *কোন* পেমেন্ট বাতিল হলো, তা জানার একমাত্র উপায় URL-এ সেটা নিজে বসিয়ে দেওয়া।
+- `build_absolute_uri`-কে আপনার পাবলিক HTTPS URL বানাতে হবে। Reverse proxy-র পেছনে থাকলে তার মানে `SECURE_PROXY_SSL_HEADER` আর `ALLOWED_HOSTS` ঠিকমতো সেট করা, অথবা পাবলিক base URL একটা environment variable-এ রাখা।
+
+## ধাপ ২: callback
+
+ডক বলছে aamarPay "will initiate a POST request to the success_url" (`fail_url`-এর ক্ষেত্রেও একই)। ডকে payload দেখানো হয়েছে JSON হিসেবে, কিন্তু প্রতিটা অফিশিয়াল স্যাম্পল সাধারণ form field পড়ে, তাই view-গুলো দুটোই নেয়। দরকার শুধু একটা ফিল্ড, `mer_txnid`, কারণ বাকি সব aamarPay-এর কাছ থেকে আবার যাচাই করা হয়।
+
+```python
+def _posted_data(request):
+    # The docs show the callback as JSON; aamarPay's samples read form fields.
+    if request.content_type == "application/json":
+        try:
+            return json.loads(request.body)
+        except ValueError:
+            return {}
+    return request.POST
+
+
+def _callback(request, tran_id, if_not_paid):
+    payment = get_object_or_404(Payment, tran_id=tran_id)
+    try:
+        verify_payment(payment.pk, if_not_paid=if_not_paid)
+    except AamarpayError:
+        pass  # aamarPay unreachable: the reconciliation job will settle it
+    return redirect("payments:result", pk=payment.pk)
+
+
+@csrf_exempt
+@require_POST
+def aamarpay_success(request):
+    return _callback(request, _posted_data(request).get("mer_txnid", ""), if_not_paid=None)
+
+
+@csrf_exempt
+@require_POST
+def aamarpay_fail(request):
+    tran_id = _posted_data(request).get("mer_txnid", "")
+    return _callback(request, tran_id, if_not_paid=Payment.Status.FAILED)
+
+
+@require_GET
+def aamarpay_cancel(request, tran_id):
+    return _callback(request, tran_id, if_not_paid=Payment.Status.CANCELLED)
+
+
+@login_required
+def payment_result(request, pk):
+    payment = get_object_or_404(Payment, pk=pk, order__user=request.user)
+    return render(request, "payments/result.html", {"payment": payment})
+```
+
+`@csrf_exempt` লাগবেই, কারণ POST-টা আসে aamarPay-এর পেজ থেকে, আর তাতে আপনার CSRF token থাকতে পারে না। এখানে এটা নিরাপদও: পোস্ট করা ডেটা সার্ভারকে শুধু জানায় *কোন* পেমেন্ট খুঁজতে হবে। এর status আসে পরের ধাপে aamarPay-এর API থেকে, POST-এর `pay_status` থেকে কখনো না। (aamarPay-এর নিজের কিছু প্লাগইন আর স্যাম্পল পোস্ট করা `pay_status`-কে বিশ্বাস করে। সেটা কপি করবেন না।)
+
+Callback view-গুলোতে `@login_required` নেই। Django-র session cookie ডিফল্টভাবে `SameSite=Lax`, আর ব্রাউজার অন্য সাইট থেকে আসা POST-এর সাথে এই কুকি পাঠায় না। aamarPay-এর Common Issues পেজেও Laravel-এর জন্য একই সমস্যার কথা আছে ("Session Log Out Error"), আর সেখানে কুকির নিয়ম ঢিলা করার পরামর্শ দেওয়া; `tran_id` দিয়ে পেমেন্ট খুঁজলে session-এর দরকারই পড়ে না। Result পেজে লগইন লাগে, আর কাস্টমার শুধু নিজের পেমেন্টই দেখতে পায়। সেখানে একটা `INITIATED` পেমেন্টে লেখা থাকা উচিত "আপনার পেমেন্ট কনফার্ম করা হচ্ছে", "ব্যর্থ" না।
+
+```python
+# payments/urls.py
+from django.urls import path
+
+from . import views
+
+app_name = "payments"
+
+urlpatterns = [
+    path("orders/<int:order_id>/pay/aamarpay/", views.aamarpay_start, name="aamarpay-start"),
+    path("payments/aamarpay/success/", views.aamarpay_success, name="aamarpay-success"),
+    path("payments/aamarpay/fail/", views.aamarpay_fail, name="aamarpay-fail"),
+    path(
+        "payments/aamarpay/cancel/<str:tran_id>/", views.aamarpay_cancel, name="aamarpay-cancel"
+    ),
+    path("payments/<int:pk>/", views.payment_result, name="result"),
+]
+```
+
+## ধাপ ৩: Search Transaction দিয়ে কনফার্ম করা, ঠিক একবার
+
+প্রতিটা callback, আর নিচের reconciliation job, শেষে একটাই ফাংশনে আসে। এটা `tran_id` নিয়ে aamarPay-কে জিজ্ঞেস করে, তারপর payment row লক করে উত্তরটা রেকর্ড করে।
+
+```python
+# payments/services.py
+from decimal import Decimal
+
+from django.db import transaction
+
+from .aamarpay import AamarpayClient
+from .models import Payment
+
+PAID, EXPIRED, FAILED = "2", "3", "7"
+
+
+def verify_payment(payment_pk, if_not_paid=None):
+    """Ask aamarPay about this payment and record the answer. Safe to repeat."""
+    tran_id = Payment.objects.values_list("tran_id", flat=True).get(pk=payment_pk)
+    data = AamarpayClient().search_transaction(tran_id)  # network call outside the lock
+    code = str(data.get("status_code", ""))
+
+    with transaction.atomic():
+        payment = Payment.objects.select_for_update().get(pk=payment_pk)
+        if payment.status == Payment.Status.COMPLETED:
+            return payment  # already recorded: never mark paid twice
+
+        if code == PAID:
+            payment.pg_txnid = data.get("pg_txnid")
+            payment.last_response = data
+            matches = (
+                data.get("mer_txnid") == payment.tran_id
+                and Decimal(str(data.get("amount") or "0")) == payment.amount
+                and data.get("currency_merchant") == "BDT"
+            )
+            if not matches:
+                payment.status = Payment.Status.NEEDS_REVIEW
+            elif str(data.get("risk_level") or "0") != "0":
+                payment.status = Payment.Status.ON_HOLD
+            else:
+                payment.status = Payment.Status.COMPLETED
+            payment.save(update_fields=["status", "pg_txnid", "last_response", "updated_at"])
+            if payment.status == Payment.Status.COMPLETED:
+                payment.order.mark_paid(payment)  # your order logic, in the same transaction
+            return payment
+
+        if payment.status == Payment.Status.INITIATED:
+            if code in (EXPIRED, FAILED):
+                payment.status = Payment.Status.FAILED
+            elif if_not_paid:
+                payment.status = if_not_paid
+            if payment.status != Payment.Status.INITIATED:
+                payment.last_response = data
+                payment.save(update_fields=["status", "last_response", "updated_at"])
+        return payment
+```
+
+চেকগুলো কেন আছে:
+
+- **`status_code`-ই আসল সত্য।** Response-এ `pay_status` ("Successful"), `status_title`, `verify_status` আর `checkout_status`-ও থাকে। শেষ দুটো ডকুমেন্টেড না, আর ডকের নিজের *সফল* স্যাম্পলেই দেখা যাচ্ছে `"verify_status": "PENDING"` আর `"checkout_status": "Not-Paid-Yet"`, তাই এগুলো উপেক্ষা করুন।
+- **Amount, currency আর `tran_id` আসে আপনার ডাটাবেস থেকে।** ডক শুধু `status_code` আর `amount` চেক করতে বলে। আমি `mer_txnid` আর `currency_merchant` (আপনার পাঠানো currency)-ও চেক করি, কারণ যে চেক আপনি বাদ দেন সেটা আর কেউ করে না, আর aamarPay-এর নিজের দুটো প্লাগইন amount একেবারেই মেলায় না। এই গাইড BDT-তে চার্জ করে। কোন ফিল্ডে কী থাকে, সে ব্যাপারে ডকের USD স্যাম্পল নিজের সাথেই সাংঘর্ষিক, তাই USD-তে চার্জ করলে কোন ফিল্ড মেলাতে হবে তা aamarPay-এর সাথে কনফার্ম করে নিন।
+- **শূন্য ছাড়া যেকোনো risk level মানে hold।** ডক শুধু বলে "no risk = 0"। aamarPay-এর WooCommerce প্লাগইন risk level 1 হলে অর্ডার hold-এ রাখে, এই কোডও তাই করে। টাকা কেটেছে, তাই পেমেন্টটা তার `pg_txnid`-সহ রেকর্ড হয়, কিন্তু কেউ দেখে না নেওয়া পর্যন্ত অর্ডার paid হয় না।
+- **`select_for_update()`** একসাথে আসা কলারদের (দুইবার সাবমিট হওয়া callback, IPN, reconciliation job) পালা করে চলতে বাধ্য করে। দ্বিতীয়টা `COMPLETED` দেখে ফিরে যায়। এর জন্য PostgreSQL বা MySQL লাগবে; SQLite এটা উপেক্ষা করে। API কল হয় lock নেওয়ার আগে, তাই HTTP রিকোয়েস্ট চলার সময় কোনো ডাটাবেস lock ধরে রাখা হয় না।
+- **ব্যর্থতার জন্যও, বেশিরভাগ ক্ষেত্রে, aamarPay-এর কথা লাগে।** Status 3 বা 7 হলে পেমেন্ট failed হয়। Status 0 ("initiated") অবস্থায় fail বা cancel callback এলে পেমেন্ট failed বা cancelled হয়, কারণ কাস্টমার পেমেন্ট পেজ ছেড়ে চলে গেছে। পরে যদি aamarPay সেটা সফল বলে জানায়, পেমেন্ট তবুও `COMPLETED`-এ যায়: শুধু কনফার্ম হওয়া পেমেন্টই চূড়ান্ত।
+
+অজানা `tran_id` দিলে কোনো error আসে না। Sandbox-এ এটা ফেরত দিয়েছে `{"status": "Invalid-Data"}`, কোনো `status_code` ছাড়া, যেটাকে এই কোড "paid না" হিসেবে ধরে।
+
+## ধাপ ৪: যেগুলো ফাঁক গলে বেরিয়ে যায়, সেগুলো মেলানো
+
+কাস্টমার পেমেন্ট পেজে ট্যাব বন্ধ করে দেয়, callback হারিয়ে যায়, Search Transaction timeout হয়। একটা management command cron বা Celery beat দিয়ে কয়েক মিনিট পরপর চালালে এই পেমেন্টগুলোর হিসাব মিটে যায়:
+
+```python
+# payments/management/commands/reconcile_aamarpay.py
+from datetime import timedelta
+
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+
+from payments.aamarpay import AamarpayError
+from payments.models import Payment
+from payments.services import verify_payment
+
+
+class Command(BaseCommand):
+    help = "Settle aamarPay payments whose callback never arrived or couldn't be checked."
+
+    def handle(self, *args, **options):
+        now = timezone.now()
+        stuck = Payment.objects.filter(
+            status=Payment.Status.INITIATED,
+            updated_at__lt=now - timedelta(minutes=15),
+        )
+        for payment in stuck.iterator():
+            # The docs don't say when an unpaid payment expires. After a day, I
+            # treat "still not paid" as failed.
+            expired = payment.created_at < now - timedelta(hours=24)
+            if_not_paid = Payment.Status.FAILED if expired else None
+            try:
+                verify_payment(payment.pk, if_not_paid=if_not_paid)
+            except AamarpayError as exc:
+                self.stderr.write(f"payment {payment.pk}: {exc}")
+```
+
+aamarPay একটা [IPN](https://aamarpay.readme.io/reference/instant-payment-notification)-ও দেয়: সার্ভার থেকে সার্ভারে একটা POST, "exclusively for successfully completed payment transactions", Search Transaction-এর মতোই ফিল্ডসহ। এটা চালু করতে listener URL aamarPay-এর technical support-কে পাঠাতে হয়। ডক বলছে প্রতিটা মেসেজ "is signed by aamarPay", কিন্তু কীভাবে তা বলে না, তাই যাচাই করার কিছু নেই। চালু করলে এটাকে success callback-এর মতোই ধরুন: `mer_txnid` পড়ে `verify_payment` কল করুন। Reconciliation job এর ওপর নির্ভর না করেই একই কাজ করে।
+
+## রিফান্ড
+
+aamarPay-এর ডকুমেন্টেশনে কোনো refund API নেই। তাদের FAQ মার্চেন্টদের পাঠায় মার্চেন্ট প্যানেল (merchant.aamarpay.com) আর aamarPay Merchant অ্যাপে, "to monitor your online transactions, settlement, refunds, chargebacks"। তাই রিফান্ড হয় সেখানে, একজন মানুষের হাতে। নিজের সিস্টেমে স্টাফদের করা প্রতিটা রিফান্ড পেমেন্টের `pg_txnid`-এর সাথে রেকর্ড করে রাখুন, যাতে আপনার হিসাব আর aamarPay-এর হিসাব মেলে। আর কাস্টমারকে কথা দেওয়ার আগে আংশিক রিফান্ড আর সময়সীমা নিয়ে aamarPay-কে জিজ্ঞেস করে নিন।
+
+নিজের অ্যাডমিন থেকে রিফান্ড দেওয়াটা যদি জরুরি হয়, তাহলে সেটা bKash বা SSLCommerz বেছে নেওয়ার একটা কারণ, দুটোরই refund API আছে ([ওভারভিউ](/bn/blog/bangladesh-payment-gateways-for-developers) দেখুন)।
+
+## ডকে যেখানে অস্পষ্টতা ছিল
+
+চুপচাপ অনুমান করার চেয়ে এগুলো লিখে রাখাই ভালো মনে করি:
+
+1. **দুটো initiate endpoint।** Form data (`index.php`) আর JSON (`jsonpost.php`) পাশাপাশি ডকুমেন্টেড, একই প্যারামিটার আর response, কোনোটাই deprecated না। আমি JSON ব্যবহার করি।
+2. **Error response।** ডকুমেন্টেড না। Sandbox-এ সবগুলোই HTTP 200, অন্তত তিন রকম চেহারায়, যেখানে `result` হলো boolean `false`, অথচ সফল হলে string `"true"`।
+3. **Callback-এর encoding।** ডকে callback payload দেখানো JSON হিসেবে; প্রতিটা অফিশিয়াল স্যাম্পল form field পড়ে। View-গুলো দুটোই নেয়।
+4. **`cancel_url`।** ডক শুধু বলে এটা কাস্টমারকে "to return customers to your product page or home page"। স্যাম্পলগুলো বলে এতে কিছুই পোস্ট করা হয় না আর একে GET হিসেবে route করে, তাই path-এ `tran_id`।
+5. **কী মেলাতে হবে।** "Check the status_code field and amount field" বলে না কোন amount ফিল্ড (`amount`, `amount_bdt`, `amount_original` আর `amount_currency` আছে), বা currency আর `tran_id` চেক করতে হবে কি না। কোড মেলায় `amount`, `currency_merchant` আর `mer_txnid`, যা ডকের BDT স্যাম্পলের সাথে মেলে।
+6. **`tran_id`-এর ইউনিকনেস।** ডকে ইউনিক বলা, কিন্তু sandbox-এ সেটা enforce হয় না; একই ID আবার ব্যবহার করলে আগের চেষ্টাটা Search Transaction থেকে লুকিয়ে যায়। আপনার ডাটাবেসকেই এটা enforce করতে হবে।
+7. **ডকুমেন্টেড না এমন status ফিল্ড।** ডকের নিজের স্যাম্পলেই `verify_status` আর `checkout_status` `status_code`-এর সাথে সাংঘর্ষিক। কোড শুধু `status_code` ব্যবহার করে।
+8. **Risk level।** শুধু "no risk = 0" ডকুমেন্টেড। কোড বাকি সবকিছু hold-এ রাখে, যেমন aamarPay-এর WooCommerce প্লাগইন 1-এর ক্ষেত্রে করে।
+9. **IPN-এর signature।** উল্লেখ আছে, কিন্তু বিবরণ নেই। কোড এর বদলে Search Transaction দিয়ে যাচাই করে।
+10. **লিমিট, currency আর মেয়াদ।** সর্বনিম্ন বা সর্বোচ্চ amount, currency-র তালিকা বা পেমেন্ট লিংকের মেয়াদ, কোনোটাই ডকুমেন্টেড না। Status 3 মানে "expired", কিন্তু কতক্ষণ পরে তা বলা নেই; reconciliation job-এর ২৪ ঘণ্টার সীমাটা আমার বেছে নেওয়া।
+
+## Go-live চেকলিস্ট
+
+- [ ] aamarPay থেকে লাইভ `store_id` আর `signature_key` পেয়েছেন, আর `AAMARPAY_BASE_URL` বদলে `https://secure.aamarpay.com` করেছেন।
+- [ ] Credential শুধু সার্ভারের environment variable-এ। Search Transaction-এর URL কোনো কিছু লগ করে না, কারণ ওতে signature key থাকে।
+- [ ] TLS certificate verification চালু রাখা, আর Search Transaction কল হয় `https://`-এ। (কিছু অফিশিয়াল স্যাম্পল verification বন্ধ করে দেয় বা `http://` ব্যবহার করে। সেটা কপি করবেন না।)
+- [ ] আপনার endpoint URL-এ কোনো zero-width space নেই।
+- [ ] Success আর fail URL পাবলিক HTTPS, আর proxy-র পেছনেও ঠিকমতো তৈরি হচ্ছে; cancel URL-এ `tran_id` আছে।
+- [ ] অর্ডার paid হয় শুধু Search Transaction status `2` দিলে, amount, currency আর `tran_id` আপনার ডাটাবেসের সাথে মিলিয়ে।
+- [ ] Success callback আবার পোস্ট হলে অর্ডার দুইবার paid হয় না। Sandbox-এ টেস্ট করুন।
+- [ ] Fail আর cancel-এর পথ টেস্ট করেছেন, পেমেন্ট পেজে ট্যাব বন্ধ করে দেওয়াটাও।
+- [ ] Reconciliation command শিডিউল করা আছে আর error হলে alert দেয়। `ON_HOLD` আর `NEEDS_REVIEW` পেমেন্ট কেউ একজন দেখে।
+- [ ] স্টাফদের জন্য মার্চেন্ট প্যানেল দিয়ে রিফান্ড করার লিখিত প্রক্রিয়া, আর নিজের সিস্টেমে প্রতিটা রিফান্ডের রেকর্ড।
+
+## শেষ কথা
+
+aamarPay-এর API ছোট: পেমেন্ট শুরু করতে একটা কল, যাচাই করতে আরেকটা। তাই trust model-টাই আসল কাজ। Callback আপনাকে বলে কোন পেমেন্ট চেক করতে হবে, সেটা সফল হয়েছে কি না তা কখনো না; সেটা বলে Search Transaction-এর `status_code`, আপনার নিজের amount, currency আর transaction ID-র সাথে মিলিয়ে। এর সাথে একটা lock, যাতে duplicate callback দুটোই কাজ করে না বসে; যে callback কখনো আসে না তার জন্য একটা reconciliation job; আর রিফান্ডের একটা হাতে-করা প্রক্রিয়া। এগুলো থাকলে নেটওয়ার্ক বেঁকে বসলেও ইন্টিগ্রেশন ঠিক থাকে।
+
+আপাতত সিরিজ এখানেই শেষ: [ওভারভিউ](/bn/blog/bangladesh-payment-gateways-for-developers), [bKash](/bn/blog/bkash-tokenized-checkout-django), [SSLCommerz](/bn/blog/sslcommerz-django-integration) আর aamarPay। অফিশিয়াল ডকুমেন্টেশন থেকে কাজ করতে পারলে Nagad আসবে।

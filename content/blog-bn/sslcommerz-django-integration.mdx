@@ -593,4 +593,4 @@ def update_refund_status(refund):
 
 একদিক থেকে SSLCommerz bKash-এর চেয়ে সহজ: কোনো টোকেন নেই, প্রতিটা কলে শুধু দুটো credential। আসল কাজটা trust model-এ। IPN আর ব্রাউজার callback শুধু ইঙ্গিত; উত্তর দেয় Validation API, আর সেটা মেলানো হয় আপনার নিজের ডাটাবেসের transaction ID, amount আর currency-র সাথে। এর সাথে একটা lock, যাতে IPN আর callback দুটোই একসাথে কাজ করে না বসে; যে মেসেজ কখনো আসে না তার জন্য একটা reconciliation job; আর SSLCommerz যে পেমেন্টকে ঝুঁকিপূর্ণ বলে তার জন্য hold। এগুলো থাকলে নেটওয়ার্ক বেঁকে বসলেও ইন্টিগ্রেশন ঠিক থাকে।
 
-সিরিজের পরের লেখা: Django-তে aamarPay। চারটা গেটওয়ের ওভারভিউ [এখানে](/bn/blog/bangladesh-payment-gateways-for-developers)।
+সিরিজের পরের লেখা: [Django-তে aamarPay](/bn/blog/aamarpay-django-integration)। চারটা গেটওয়ের ওভারভিউ [এখানে](/bn/blog/bangladesh-payment-gateways-for-developers)।
