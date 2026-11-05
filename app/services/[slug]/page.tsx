@@ -5,6 +5,7 @@ import { BreadcrumbJsonLd, FaqJsonLd, ServiceJsonLd } from "@/components/JsonLd"
 import { ProjectCard } from "@/components/ProjectCard";
 import { ButtonLink } from "@/components/ui/Button";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
+import { contactHref } from "@/data/contact";
 import { servicePages } from "@/data/services";
 import { projects } from "@/data/projects";
 import { site } from "@/data/site";
@@ -85,7 +86,7 @@ export default async function ServicePage({ params }: Props) {
             ))}
           </div>
           <div className="mt-9 flex flex-wrap gap-3">
-            <ButtonLink href="/#contact">Discuss your project</ButtonLink>
+            <ButtonLink href={contactHref(page.projectType)}>Discuss your project</ButtonLink>
             <ButtonLink href="/resume" variant="secondary">
               View résumé
             </ButtonLink>
@@ -183,7 +184,7 @@ export default async function ServicePage({ params }: Props) {
               <h2 className="text-xl font-semibold tracking-tight">Have a project like this?</h2>
               <p className="mt-1 text-[var(--color-text-muted)]">Tell me what you&apos;re building and I&apos;ll get back to you.</p>
             </div>
-            <ButtonLink href="/#contact">Start a conversation</ButtonLink>
+            <ButtonLink href={contactHref(page.projectType)}>Start a conversation</ButtonLink>
           </div>
           <p className="mt-10 font-[family-name:var(--font-technical)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             Other services

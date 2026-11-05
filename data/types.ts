@@ -1,3 +1,5 @@
+import type { ProjectTypeKey } from "./contact";
+
 export interface SocialLink {
   label: string;
   href: string;
@@ -79,6 +81,7 @@ export type Project = GithubProject | ClientProject | ProductProject;
 
 export interface ServicePage {
   slug: string; // URL: /services/<slug> — never rename once published
+  projectType: ProjectTypeKey; // preselected in the contact form by this page's buttons
   metaTitle: string; // full <title>, ~60 chars (no " | Saikat Roy" suffix added)
   metaDescription: string; // ~155 chars
   headline: string; // H1
