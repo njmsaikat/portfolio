@@ -52,6 +52,7 @@ Most production work (current employer and freelance clients) lives in private r
   1. bKash, Nagad, SSLCommerz or aamarPay? A developer's guide: https://saikatroy.netlify.app/blog/bangladesh-payment-gateways-for-developers
   2. bKash Tokenized Checkout in Django, step by step: https://saikatroy.netlify.app/blog/bkash-tokenized-checkout-django
   3. SSLCommerz in Django, step by step: https://saikatroy.netlify.app/blog/sslcommerz-django-integration
+  4. aamarPay in Django, step by step: https://saikatroy.netlify.app/blog/aamarpay-django-integration
 - Django + PostgreSQL with Docker Compose, and the volume typo that loses data: https://saikatroy.netlify.app/blog/django-postgres-docker-compose
 - Full text of this site for LLMs: https://saikatroy.netlify.app/llms-full.txt
 - All projects: https://saikatroy.netlify.app/portfolio-page
