@@ -112,7 +112,7 @@ Notes:
 - **Fonts:** `lib/fonts.ts` via `next/font/google`. Load only the weights actually used, and don't switch to the Google Fonts CDN.
 - **Server components by default.** Add `"use client"` only to components that need state, effects or event handlers (currently the theme files, Contact, Header, PrintButton, and the spotlight-hover components Card/ProjectCard).
 - **Structured data:** JSON-LD comes from `components/JsonLd.tsx`, which is built from `data/` (Person, WebSite, ProfilePage, BlogPosting). Pages below the root add a `BreadcrumbJsonLd`.
-- **Third-party scripts:** only Google Analytics (`G-1HEC9Z70SZ`, in `app/layout.tsx`, `strategy="lazyOnload"`), carried over from the old site on purpose. The Facebook Messenger widget was removed because Meta shut down the Chat Plugin on 2024-05-09. Don't re-add it.
+- **Third-party scripts:** only Google Analytics (`G-1HEC9Z70SZ`, in `app/layout.tsx`, `strategy="lazyOnload"`), carried over from the old site on purpose. The Facebook Messenger widget was removed because Meta shut down the Chat Plugin on 2024-05-09. Don't re-add it. Custom events go through `trackEvent()` in `lib/analytics.ts` (it queues via the `dataLayer`, since gtag loads lazily): `generate_lead` on a successful contact submit (with `project_type`, no personal data) and `resume_download` on the résumé's PDF button.
 - Match the existing code style: functional components, named exports, TypeScript types from `data/types.ts`, and short comments that explain *why*, not *what*.
 
 ## Verifying a change

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Aurora } from "@/components/ui/Aurora";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { projectTypes } from "@/data/contact";
+import { trackEvent } from "@/lib/analytics";
 import { profile } from "@/data/profile";
 import { socialLinks } from "@/data/site";
 
@@ -81,6 +82,8 @@ export function Contact() {
         body: encode(payload),
       });
       if (!response.ok) throw new Error("Form submission failed");
+      // GA4's recommended lead event; no personal data, just which kind of project.
+      trackEvent("generate_lead", { form: "contact", project_type: payload.project_type ?? "" });
       setStatus("success");
       form.reset();
     } catch {
