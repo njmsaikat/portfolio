@@ -103,7 +103,7 @@ export const services: Service[] = [
       ],
       stack: ["Python", "Django", "Django REST Framework", "PostgreSQL", "bKash", "Nagad", "SSLCommerz", "aamarPay"],
       relatedProjects: [],
-      relatedPosts: ["bangladesh-payment-gateways-for-developers", "bkash-tokenized-checkout-django"],
+      relatedPosts: ["bangladesh-payment-gateways-for-developers", "bkash-tokenized-checkout-django", "sslcommerz-django-integration"],
       faqs: [
         {
           question: "Which payment gateways can you integrate?",
