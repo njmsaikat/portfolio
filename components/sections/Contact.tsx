@@ -1,15 +1,15 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
 import { Aurora } from "@/components/ui/Aurora";
 import { SocialIcon } from "@/components/ui/SocialIcon";
+import { projectTypes } from "@/data/contact";
 import { profile } from "@/data/profile";
 import { socialLinks } from "@/data/site";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-const projectTypes = ["Backend / API", "Shopify", "WordPress", "DevOps", "Something else"];
 const linkedin = socialLinks.find((s) => s.icon === "linkedin");
 
 function encode(data: Record<string, string>) {
@@ -32,8 +32,25 @@ function useDhakaTime() {
   return time;
 }
 
+// Links like /?project=payments#contact (from the service pages) preselect a
+// project type. The server snapshot is null, so the exported HTML (which
+// Netlify Forms crawls) always has the form with the first type checked; the
+// URL is read on the client after hydration. A visitor's own click wins.
+const noSubscribe = () => () => {};
+function usePreselectedProjectType() {
+  const key = useSyncExternalStore(
+    noSubscribe,
+    () => new URLSearchParams(window.location.search).get("project"),
+    () => null,
+  );
+  const [chosen, setChosen] = useState<string | null>(null);
+  const preselected = projectTypes.find((t) => t.key === key)?.label;
+  return [chosen ?? preselected ?? projectTypes[0].label, setChosen] as const;
+}
+
 export function Contact() {
   const [status, setStatus] = useState<Status>("idle");
+  const [projectType, setProjectType] = usePreselectedProjectType();
   const [copied, setCopied] = useState(false);
   const dhakaTime = useDhakaTime();
 
@@ -187,11 +204,18 @@ export function Contact() {
               <fieldset>
                 <legend className="text-sm font-medium">What do you need help with?</legend>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {projectTypes.map((type, i) => (
-                    <label key={type} className="cursor-pointer">
-                      <input type="radio" name="project_type" value={type} defaultChecked={i === 0} className="peer sr-only" />
+                  {projectTypes.map(({ label }) => (
+                    <label key={label} className="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="project_type"
+                        value={label}
+                        checked={projectType === label}
+                        onChange={() => setProjectType(label)}
+                        className="peer sr-only"
+                      />
                       <span className="inline-flex rounded-full border border-[var(--color-border)] px-3.5 py-1.5 text-sm text-[var(--color-text-muted)] transition-all peer-checked:border-[var(--color-accent)] peer-checked:bg-[var(--color-accent-soft)] peer-checked:text-[var(--color-accent)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-accent)] hover:border-[var(--color-accent)]">
-                        {type}
+                        {label}
                       </span>
                     </label>
                   ))}

@@ -15,6 +15,7 @@ export const services: Service[] = [
     icon: "server",
     page: {
       slug: "django-rest-api-development",
+      projectType: "backend",
       metaTitle: "Django & REST API Developer for Hire | Saikat Roy",
       metaDescription:
         "Django and Django REST Framework backends built for production: clean REST APIs, PostgreSQL data models and Docker deployments. Dhaka-based, working worldwide.",
@@ -71,6 +72,7 @@ export const services: Service[] = [
     icon: "shopping-bag",
     page: {
       slug: "payment-gateway-integration-bangladesh",
+      projectType: "payments",
       metaTitle: "Payment Gateway Integration in Bangladesh | Saikat Roy",
       metaDescription:
         "bKash, Nagad, SSLCommerz and aamarPay payment gateway integration for Django and Python backends: checkout, verification, refunds and go-live support.",
@@ -143,6 +145,7 @@ export const services: Service[] = [
     icon: "box",
     page: {
       slug: "docker-devops-deployment",
+      projectType: "devops",
       metaTitle: "Docker, DevOps & Cloud Deployment Services | Saikat Roy",
       metaDescription:
         "Dockerised deployments, Nginx, Linux servers and CI/CD on AWS and DigitalOcean, from an engineer who worked on keeping a smart vending network running 24/7.",
@@ -202,6 +205,7 @@ export const services: Service[] = [
     icon: "shopping-bag",
     page: {
       slug: "shopify-development",
+      projectType: "shopify",
       metaTitle: "Shopify Developer for Hire | Saikat Roy",
       metaDescription:
         "Shopify storefront development and theme customization: store builds, redesigns and migrations, from a developer building on Shopify since 2020.",
@@ -253,6 +257,7 @@ export const services: Service[] = [
     icon: "layout",
     page: {
       slug: "wordpress-development",
+      projectType: "wordpress",
       metaTitle: "WordPress Developer for Hire | Saikat Roy",
       metaDescription:
         "WordPress development: theme customization, plugins, WooCommerce, migrations and full site rebuilds, from a developer working with WordPress since 2020.",
