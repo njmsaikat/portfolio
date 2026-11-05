@@ -230,4 +230,69 @@ export const caseStudies: CaseStudy[] = [
       "Book launch website",
     ],
   },
+  {
+    // Grounded in the HisabBD repo (github.com/saikatnjm/hisabbd, main) and the
+    // approved entry in data/projects.ts. Counts are from src/calculators/registry.ts.
+    slug: "hisabbd",
+    title: "HisabBD: 40+ English and Bangla calculators for Bangladesh, with no backend",
+    metaTitle: "HisabBD Case Study: Client-Side Calculators | Saikat Roy",
+    metaDescription:
+      "How Saikat Roy built HisabBD: 40+ English and Bangla calculators for Bangladesh that run in the browser, with no backend, tested with Vitest and Playwright.",
+    company: "HisabBD",
+    companyUrl: "https://bd-hisab.vercel.app",
+    role: "Solo developer",
+    period: "Oct 2026 – present · my own product",
+    summary:
+      "Building 40+ free calculators for Bangladesh in English and Bangla, where every calculation runs in the browser.",
+    intro: [
+      "HisabBD is a free set of calculators for everyday life in Bangladesh: loan EMI, VAT, Sanchayapatra, DPS and FDR, salary, land units, SSC/HSC GPA, CGPA, age, BMI and more. Every page is in English and Bangla.",
+      "I built it on my own, from the first commit to deployment. The goal was a site that works well on low-end phones, needs no backend, database or paid APIs, and never sends what people type to a server.",
+    ],
+    metrics: [
+      { value: "40+", label: "Calculators" },
+      { value: "2", label: "Languages on every page" },
+      { value: "6", label: "Categories" },
+      { value: "0", label: "Backend servers or databases" },
+    ],
+    builtTitle: "What I built",
+    built: [
+      {
+        name: "Calculator registry",
+        description:
+          "One registry lists every calculator's metadata. The home page, search, category pages, related links, footer, sitemap and structured data are all built from it.",
+      },
+      {
+        name: "One folder per calculator",
+        description:
+          "Each calculator keeps its metadata, pure calculation logic, tests, browser widget and English and Bangla explanations together, so adding one follows the same steps every time.",
+      },
+      {
+        name: "Bangla pages from one route",
+        description:
+          "All Bangla calculator pages come from a single route over a page registry, so a new calculator gets its /bn page automatically.",
+      },
+      {
+        name: "Tests that guard the structure",
+        description:
+          "Vitest covers every calculator's logic and checks the registry itself: slugs, categories, related links, Bangla fields and that each route exists. Playwright opens every calculator in both languages in a real browser.",
+      },
+      {
+        name: "Privacy by design",
+        description:
+          "Inputs never leave the browser: not in URLs, analytics or network requests. The only typed values kept are an optional calculation history on the device, which can be turned off or cleared.",
+      },
+      {
+        name: "Made for Bangladesh",
+        description:
+          "Taka amounts with lakh and crore grouping, Bangla digits accepted in inputs, a Sunday to Thursday work week, and a configurable grading scale that includes the UGC 4.00 scale.",
+      },
+    ],
+    architecture:
+      "A Next.js site where every page is generated at build time, with no API routes, server actions or database. Pages and explanations are server components; only the calculator widgets, search and share actions run in the browser. Calculation logic is plain TypeScript, kept apart from the UI so it can be tested on its own. Analytics is optional, off by default, and limited to typed events that carry calculator names and counts, never values.",
+    roleDetail:
+      "It's my own product. I designed it, built the calculators with their English and Bangla content, and set up the tests and deployment. Development runs in Docker. Every pull request and push to main runs lint, type checks, unit tests, a production build and the browser tests on GitHub Actions, and the site deploys on Vercel.",
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Vitest", "Playwright", "GitHub Actions", "Docker", "Vercel"],
+    cta: { href: "/projects/hisabbd", label: "HisabBD product page" },
+    press: [],
+  },
 ];
