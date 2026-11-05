@@ -593,4 +593,4 @@ I'd rather list these than guess quietly:
 
 SSLCommerz is simpler than bKash in one way: no tokens, just two credentials on every call. The work is in the trust model. The IPN and the browser callback are hints; the Validation API is the answer, checked against your own database for the transaction ID, amount and currency. Add a lock so the IPN and callback can't both act, a reconciliation job for the messages that never arrive, and a hold for payments SSLCommerz flags as risky, and the integration stays correct when the network doesn't cooperate.
 
-Next in the series: aamarPay in Django. The overview of all four gateways is [here](/blog/bangladesh-payment-gateways-for-developers).
+Next in the series: [aamarPay in Django](/blog/aamarpay-django-integration). The overview of all four gateways is [here](/blog/bangladesh-payment-gateways-for-developers).

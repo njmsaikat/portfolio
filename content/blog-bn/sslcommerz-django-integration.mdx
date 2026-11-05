@@ -1,0 +1,596 @@
+export const metadata = {
+  title: "Django-তে SSLCommerz: অফিশিয়াল ডক ধরে ধাপে ধাপে ইন্টিগ্রেশন",
+  seoTitle: "Django-তে SSLCommerz, ধাপে ধাপে",
+  description:
+    "Django 5-এ SSLCommerz: session তৈরি, IPN আর ব্রাউজার callback, Validation API দিয়ে কনফার্মেশন, Transaction Query দিয়ে reconciliation আর রিফান্ড।",
+  date: "2026-11-05",
+  tags: ["পেমেন্ট", "SSLCommerz", "Django", "বাংলাদেশ"],
+  series: { id: "bd-payment-gateways", part: 3 },
+};
+
+বাংলাদেশের পেমেন্ট গেটওয়ে নিয়ে আমার সিরিজের এটা তৃতীয় লেখা ([ওভারভিউটা এখানে](/bn/blog/bangladesh-payment-gateways-for-developers))। এখানে Django ব্যাকএন্ডের জন্য একটা পূর্ণাঙ্গ SSLCommerz ইন্টিগ্রেশন বানাব: hosted checkout, যেখানে কাস্টমার SSLCommerz-এর পেজে কার্ড, ইন্টারনেট ব্যাংকিং বা মোবাইল ওয়ালেট দিয়ে পেমেন্ট করে।
+
+> **তথ্যের নির্ভুলতা নিয়ে।** কোডটা SSLCommerz-এর অফিশিয়াল [v4 ডেভেলপার ডকুমেন্টেশন](https://developer.sslcommerz.com/doc/v4/) অনুসরণ করে লেখা, প্রকাশের তারিখ ৫ নভেম্বর ২০২৬ অনুযায়ী। ডক যেখানে কিছু বলে না, সেখানে [তাদের GitHub](https://github.com/sslcommerz)-এ SSLCommerz-এর নিজের স্যাম্পল কোড দেখেছি, আর প্রতিবার সেটা উল্লেখ করেছি। কোডটা একটা Django 5.2 প্রজেক্টে SSLCommerz-এর নকল response দিয়ে টেস্ট করেছি (একই নোটিফিকেশন দুইবার, জাল callback, timeout), কিন্তু SSLCommerz-এর আসল সার্ভারে না। তাই লাইভে যাওয়ার আগে sandbox-এ টেস্ট করুন (sandbox অ্যাকাউন্ট নিজেই খুলে নেওয়া যায়)। যা যা নিজে ব্যাখ্যা করে নিতে হয়েছে, তার তালিকা নিচে "ডকে যেখানে অস্পষ্টতা ছিল" অংশে আছে।
+
+## পুরো ফ্লো
+
+[ইন্টিগ্রেশন ওভারভিউ](https://developer.sslcommerz.com/doc/v4/#technical-or-backend-integration-process) অনুযায়ী:
+
+1. আপনার সার্ভার amount, আপনার তৈরি করা একটা `tran_id` আর callback URL-গুলো দিয়ে **[Create Session](https://developer.sslcommerz.com/doc/v4/#initiate-payment)** কল করে। উত্তরে পায় একটা `GatewayPageURL` আর একটা `sessionkey`।
+2. কাস্টমারকে `GatewayPageURL`-এ redirect করেন। সে SSLCommerz-এর পেজে পেমেন্ট করে।
+3. SSLCommerz একটা **[IPN](https://developer.sslcommerz.com/doc/v4/#validate-payment-with-ipn)** (Instant Payment Notification) পাঠায়: আপনার listener-এ সার্ভার থেকে সার্ভারে একটা POST, ফলাফল আর একটা `val_id` সহ।
+4. কাস্টমারের ব্রাউজার ফিরে আসে আপনার `success_url`, `fail_url` বা `cancel_url`-এ।
+5. আপনার সার্ভার `val_id` দিয়ে **[Order Validation API](https://developer.sslcommerz.com/doc/v4/#order-validation-api)** কল করে। Status `VALID` (বা `VALIDATED`), সাথে ঠিক `tran_id`, amount আর currency থাকলে পেমেন্ট সম্পন্ন।
+6. যা ফাঁক গলে বেরিয়ে যায়, তার জন্য `tran_id` দিয়ে **[Transaction Query](https://developer.sslcommerz.com/doc/v4/#transaction-query-api)** প্রতিটা চেষ্টা আর তার status দেখায়।
+
+পুরো ডিজাইনটা যে নিয়ম ঠিক করে দেয়, সেটা IPN অংশে লেখা: "After receiving the message, you must validate the message with Transaction Validation API"। IPN বা ব্রাউজার callback, কোনোটাই একা পেমেন্টের প্রমাণ না। পাবলিক URL-এ যে কেউ POST পাঠাতে পারে; বিষয়টা মীমাংসা হয় কেবল আপনার সার্ভার থেকে SSLCommerz-এর সার্ভারে করা কলে।
+
+bKash-এর তুলনায় এখানে কোনো টোকেন সামলাতে হয় না। প্রতিটা কলে আপনার `store_id` আর `store_passwd` সাধারণ প্যারামিটার হিসেবে যায়।
+
+## SSLCommerz-এর কাছ থেকে যা লাগবে
+
+দুটো credential: **`store_id`** আর **`store_passwd`**। ডক বলছে "we provide separate store ID for live and test":
+
+- **Sandbox:** [ডেভেলপার রেজিস্ট্রেশন পেজ](https://developer.sslcommerz.com/registration/) থেকে নিজেই সাইন-আপ করুন।
+- **লাইভ:** [signup.sslcommerz.com](https://signup.sslcommerz.com/register)-এ রেজিস্টার করুন। লাইভ credential আসে onboarding শেষ হলে।
+
+Store password একটা API credential। SSLCommerz-এর অফিশিয়াল Laravel লাইব্রেরি সতর্ক করে দেয়, এখানে মার্চেন্ট প্যানেলের লগইন পাসওয়ার্ড দেবেন না। SSLCommerz শুধু TLS 1.2 বা তার নতুন ভার্সন নেয়, আর ডকে একটা ছোট চেক দেওয়া আছে: `curl "https://sandbox.sslcommerz.com/public/tls/" -v` চালালে "TLS is okay" আসা উচিত।
+
+SSLCommerz-এর একটা অফিশিয়াল Python লাইব্রেরি আছে, কিন্তু সেটা শেষ আপডেট হয়েছে ২০২১-এ, Python 2.7 থেকে 3.5 পর্যন্ত লিস্ট করে, আর রিফান্ড API-তে এখন যে `refund_trans_id` বাধ্যতামূলক সেটা পাঠায় না। সাধারণ `requests` দিয়েই কাজ হয়ে যায়, তাই এই লেখায় সেটাই ব্যবহার করেছি।
+
+## Settings আর environment variable
+
+```bash
+# .env (never commit this)
+SSLCOMMERZ_BASE_URL=https://sandbox.sslcommerz.com
+SSLCOMMERZ_STORE_ID=your-sandbox-store-id
+SSLCOMMERZ_STORE_PASSWD=your-sandbox-store-password
+```
+
+```python
+# settings.py
+import os
+
+SSLCOMMERZ = {
+    # Sandbox: https://sandbox.sslcommerz.com
+    # Live:    https://securepay.sslcommerz.com
+    "BASE_URL": os.environ["SSLCOMMERZ_BASE_URL"],
+    "STORE_ID": os.environ["SSLCOMMERZ_STORE_ID"],
+    "STORE_PASSWD": os.environ["SSLCOMMERZ_STORE_PASSWD"],
+}
+```
+
+দুটো host আর নিচের প্রতিটা API path ডক থেকে নেওয়া। তাই লাইভে যাওয়া মানে শুধু `SSLCOMMERZ_BASE_URL` আর দুটো credential বদলানো।
+
+## Payment মডেল
+
+প্রতিটা পেমেন্ট চেষ্টার জন্য একটা row। প্রতিটা চেষ্টা পায় নিজের `tran_id`, যেটা আপনি তৈরি করেন আর SSLCommerz সব জায়গায় ফেরত দেয়।
+
+```python
+# payments/models.py
+from django.db import models
+
+
+class Payment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending"            # row created, SSLCommerz not called yet
+        INITIATED = "initiated"        # session created, customer sent to SSLCommerz
+        COMPLETED = "completed"        # confirmed by the Validation API
+        ON_HOLD = "on_hold"            # paid, but SSLCommerz flagged it as risky
+        FAILED = "failed"
+        CANCELLED = "cancelled"
+        NEEDS_REVIEW = "needs_review"  # SSLCommerz says paid, but details don't match
+
+    order = models.ForeignKey("shop.Order", on_delete=models.PROTECT, related_name="payments")
+    tran_id = models.CharField(max_length=30, unique=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=Status, default=Status.PENDING)
+
+    sessionkey = models.CharField(max_length=50, blank=True)
+    val_id = models.CharField(max_length=50, blank=True)
+    bank_tran_id = models.CharField(max_length=80, unique=True, null=True, blank=True)
+    last_response = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "updated_at"])]
+```
+
+`shop.Order` হলো আপনার অর্ডার মডেলের জায়গায় একটা উদাহরণ। নিচের কোড ধরে নিয়েছে এতে `user`, `total`, `is_paid`, `phone`, `address`, `city`, `postcode` আর একটা `mark_paid()` মেথড আছে; নিজের মডেল অনুযায়ী নামগুলো বদলে নিন। ফিল্ডের দৈর্ঘ্য ডক অনুযায়ী: `tran_id` সর্বোচ্চ ৩০ অক্ষর, `bank_tran_id` সর্বোচ্চ ৮০। `bank_tran_id`-এর unique constraint একটা SSLCommerz পেমেন্টকে দুটো অর্ডারে রেকর্ড হতে দেয় না।
+
+## ছোট একটা SSLCommerz ক্লায়েন্ট
+
+```python
+# payments/sslcommerz.py
+import requests
+from django.conf import settings
+
+# The docs don't specify timeouts. These are my own choice.
+TIMEOUT = (5, 30)  # (connect, read) seconds
+
+SESSION_PATH = "/gwprocess/v4/api.php"
+VALIDATION_PATH = "/validator/api/validationserverAPI.php"
+# One endpoint for transaction query, refund and refund status; the parameters decide which.
+MERCHANT_API_PATH = "/validator/api/merchantTransIDvalidationAPI.php"
+
+
+class SslcommerzError(Exception):
+    def __init__(self, message, payload=None):
+        super().__init__(message)
+        self.payload = payload or {}
+
+
+class SslcommerzTimeout(SslcommerzError):
+    """No answer: the outcome is unknown, not failed."""
+
+
+class SslcommerzClient:
+    def __init__(self):
+        conf = settings.SSLCOMMERZ
+        self.base_url = conf["BASE_URL"].rstrip("/")
+        self.credentials = {"store_id": conf["STORE_ID"], "store_passwd": conf["STORE_PASSWD"]}
+
+    def _call(self, method, path, params):
+        url = self.base_url + path
+        try:
+            if method == "POST":
+                resp = requests.post(url, data={**self.credentials, **params}, timeout=TIMEOUT)
+            else:
+                # The docs mark `v` as "open for future use", but every example sends v=1.
+                query = {**self.credentials, **params, "v": 1, "format": "json"}
+                resp = requests.get(url, params=query, timeout=TIMEOUT)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.Timeout:
+            raise SslcommerzTimeout(f"{path}: timed out") from None
+        except requests.RequestException as exc:
+            # Not str(exc): for GET calls it contains the URL, and the URL
+            # contains your store password. `from None` keeps it out of tracebacks.
+            raise SslcommerzError(f"{path}: {type(exc).__name__}") from None
+
+    def create_session(self, **fields):
+        data = self._call("POST", SESSION_PATH, fields)
+        if data.get("status") != "SUCCESS" or not data.get("GatewayPageURL"):
+            raise SslcommerzError(data.get("failedreason") or "Session not created", data)
+        return data
+
+    def validate(self, val_id):
+        return self._call("GET", VALIDATION_PATH, {"val_id": val_id})
+
+    def query_by_tran_id(self, tran_id):
+        return self._merchant_api({"tran_id": tran_id})
+
+    def refund(self, *, bank_tran_id, refund_trans_id, amount, remarks):
+        return self._merchant_api({
+            "bank_tran_id": bank_tran_id,
+            "refund_trans_id": refund_trans_id,
+            "refund_amount": f"{amount:.2f}",
+            "refund_remarks": remarks,
+        })
+
+    def refund_status(self, refund_ref_id):
+        return self._merchant_api({"refund_ref_id": refund_ref_id})
+
+    def _merchant_api(self, params):
+        data = self._call("GET", MERCHANT_API_PATH, params)
+        # DONE means the call worked. INVALID_REQUEST, FAILED (authentication)
+        # and INACTIVE (store inactive) mean it didn't.
+        if data.get("APIConnect") != "DONE":
+            raise SslcommerzError(f"APIConnect: {data.get('APIConnect')}", data)
+        return data
+```
+
+দুটো জিনিস সহজেই চোখ এড়িয়ে যায়। Create Session সাধারণ form field নেয়, JSON না। ডকে content type-এর নাম নেই, কিন্তু তাদের curl উদাহরণে `-d` ব্যবহার করা হয়েছে আর অফিশিয়াল লাইব্রেরিগুলোও form data পোস্ট করে; `data=` ঠিক সেটাই করে। আর validation, query আর রিফান্ড API ডকে GET রিকোয়েস্ট হিসেবে লেখা, store password থাকে query string-এ। এটা SSLCommerz-এর ডিজাইন, আপনি বদলাতে পারবেন না, তাই খেয়াল রাখুন আপনার দিকে কোনো কিছু যেন এই URL-গুলো লগ না করে।
+
+## ধাপ ১: পেমেন্ট শুরু করা
+
+```python
+# payments/views.py
+import secrets
+from decimal import Decimal
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods, require_POST
+
+from shop.models import Order
+
+from .models import Payment
+from .services import handle_gateway_message
+from .sslcommerz import SslcommerzClient, SslcommerzError
+
+# "The transaction amount must be from 10.00 BDT to 500000.00 BDT"
+MIN_AMOUNT, MAX_AMOUNT = Decimal("10.00"), Decimal("500000.00")
+
+
+@login_required
+@require_POST
+def sslcommerz_start(request, order_id):
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    if order.is_paid:
+        return redirect("shop:order-detail", pk=order.pk)
+    if not MIN_AMOUNT <= order.total <= MAX_AMOUNT:
+        messages.error(request, "This amount can't be paid online.")
+        return redirect("shop:order-detail", pk=order.pk)
+
+    payment = Payment.objects.create(
+        order=order,
+        amount=order.total,
+        tran_id=f"ORD{order.pk}-{secrets.token_hex(4)}",
+    )
+
+    def url(name):
+        return request.build_absolute_uri(reverse(f"payments:sslcommerz-{name}"))
+
+    try:
+        data = SslcommerzClient().create_session(
+            total_amount=f"{payment.amount:.2f}",
+            currency="BDT",
+            tran_id=payment.tran_id,
+            success_url=url("success"),
+            fail_url=url("fail"),
+            cancel_url=url("cancel"),
+            ipn_url=url("ipn"),
+            cus_name=request.user.get_full_name() or request.user.get_username(),
+            cus_email=request.user.email,
+            cus_phone=order.phone,
+            cus_add1=order.address,
+            cus_city=order.city,
+            cus_postcode=order.postcode,
+            cus_country="Bangladesh",
+            shipping_method="NO",
+            num_of_item=1,
+            product_name=f"Order {order.pk}",
+            product_category="General",
+            product_profile="general",
+        )
+    except SslcommerzError as exc:
+        payment.status = Payment.Status.FAILED
+        payment.last_response = exc.payload
+        payment.save(update_fields=["status", "last_response", "updated_at"])
+        messages.error(request, "Couldn't start the payment. Please try again.")
+        return redirect("shop:order-detail", pk=order.pk)
+
+    payment.sessionkey = data.get("sessionkey", "")
+    payment.status = Payment.Status.INITIATED
+    payment.last_response = data
+    payment.save(update_fields=["sessionkey", "status", "last_response", "updated_at"])
+    # Always use the URL SSLCommerz returned. Never build it yourself.
+    return redirect(data["GatewayPageURL"])
+```
+
+- এটা POST, যাতে কোনো crawler বা prefetch পেমেন্ট শুরু করে দিতে না পারে। প্রতিটা চেষ্টায় নতুন `tran_id` থাকায় প্রতিটা IPN, callback আর query ঠিক একটা row-এর সাথে মেলে।
+- প্যারামিটার টেবিলে কাস্টমার, শিপিং আর প্রোডাক্টের ফিল্ডগুলো বাধ্যতামূলক বলা, আবার কয়েকটার গায়ে লেখা "Mandatory - … Not mandatory but useful if provided"। সবগুলো পাঠাতে কোনো খরচ নেই, তাই আমি সবই পাঠাই। SSLCommerz-এর শিপ করার দরকার নেই এমন অর্ডারের জন্য `shipping_method="NO"`; ওদের লজিস্টিকস সার্ভিস ব্যবহার করলে ডকে বাড়তি কিছু ফিল্ড বাধ্যতামূলক।
+- `product_profile` হবে `general`, `physical-goods`, `non-physical-goods`, `airline-tickets`, `travel-vertical` বা `telecom-vertical`-এর একটা। ডক এটাকে বলে "very much necessary for online transactions to avoid chargeback", আর travel ও telecom প্রোফাইলে বাড়তি ফিল্ড লাগে। আপনি যা বিক্রি করেন তার সাথে যেটা মেলে সেটা নিন।
+- API-তে `ipn_url` ঐচ্ছিক, কারণ IPN listener মার্চেন্ট প্যানেলেও সেট করা যায় (My Store → IPN Settings)। প্রতিটা রিকোয়েস্টে সেট করলে এটা কোডেই থাকে, বাকি URL-গুলোর পাশে।
+- `build_absolute_uri`-কে আপনার পাবলিক HTTPS URL বানাতে হবে। Reverse proxy-র পেছনে থাকলে তার মানে `SECURE_PROXY_SSL_HEADER` আর `ALLOWED_HOSTS` ঠিকমতো সেট করা, অথবা পাবলিক base URL একটা environment variable-এ রাখা।
+
+## ধাপ ২: IPN আর ব্রাউজার callback
+
+ডক অনুযায়ী IPN হলো SSLCommerz-এর সার্ভার থেকে আসা একটা POST, যাতে থাকে `tran_id`, `val_id`, `status`, `amount`, `currency`, `bank_tran_id` আর আরও কিছু। ডক বলছে এটা আসে "prior to user return back", কিন্তু এই ক্রমের ওপর ভরসা করবেন না: SSLCommerz-এর নিজের Laravel স্যাম্পলও success পেজে পেমেন্ট কনফার্ম করে, IPN যদি "did not work" হয় সেই কেসের জন্য।
+
+SSLCommerz `success_url`, `fail_url` আর `cancel_url`-এ কীভাবে কল করে বা কী পাঠায়, ডকে তা লেখা নেই। SSLCommerz-এর অফিশিয়াল PHP আর Laravel স্যাম্পল এগুলোকে IPN-এর মতোই ফিল্ডসহ POST হিসেবে ধরে, আর এগুলোর জন্য CSRF সুরক্ষা বন্ধ রাখে। নিচের view-গুলো সেটাই অনুসরণ করে, আবার GET-ও নেয়, যাতে SSLCommerz-এর দিকে কিছু বদলালেও checkout না ভাঙে।
+
+```python
+def _callback(request, if_not_paid):
+    data = request.POST if request.method == "POST" else request.GET
+    payment = get_object_or_404(Payment, tran_id=data.get("tran_id", ""))
+    try:
+        handle_gateway_message(payment, data, if_not_paid)
+    except SslcommerzError:
+        pass  # SSLCommerz unreachable: the reconciliation job will settle it
+    return redirect("payments:result", pk=payment.pk)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def sslcommerz_success(request):
+    return _callback(request, if_not_paid=Payment.Status.FAILED)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def sslcommerz_fail(request):
+    return _callback(request, if_not_paid=Payment.Status.FAILED)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def sslcommerz_cancel(request):
+    return _callback(request, if_not_paid=Payment.Status.CANCELLED)
+
+
+@csrf_exempt
+@require_POST
+def sslcommerz_ipn(request):
+    data = request.POST
+    payment = Payment.objects.filter(tran_id=data.get("tran_id", "")).first()
+    if payment:
+        cancelled = data.get("status") == "CANCELLED"
+        if_not_paid = Payment.Status.CANCELLED if cancelled else Payment.Status.FAILED
+        try:
+            handle_gateway_message(payment, data, if_not_paid)
+        except SslcommerzError:
+            pass  # the reconciliation job will settle it
+    # The docs: "<YOU CAN PRINT ANY MESSAGE>". No particular reply is required.
+    return HttpResponse("OK")
+
+
+@login_required
+def payment_result(request, pk):
+    payment = get_object_or_404(Payment, pk=pk, order__user=request.user)
+    return render(request, "payments/result.html", {"payment": payment})
+```
+
+এখানে `@csrf_exempt` নিরাপদ, কারণ এই view-গুলোর কিছুই পোস্ট করা ডেটাকে বিশ্বাস করে না। ডেটা শুধু সার্ভারকে জানায় *কোন* পেমেন্ট চেক করতে হবে আর *কী দিয়ে* চেক করতে হবে। পেমেন্টের status যা কিছু বদলায়, সব আসে পরের ধাপে SSLCommerz-এর API থেকে।
+
+Callback view-গুলোতে `@login_required` নেই, আর সেটা ইচ্ছাকৃত। Django-র session cookie ডিফল্টভাবে `SameSite=Lax`, আর ব্রাউজার অন্য সাইট থেকে আসা POST-এর সাথে এই কুকি পাঠায় না। তাই এই view-গুলো কাস্টমার কে, তা জানার ওপর নির্ভর করতে পারে না। Result পেজে লগইন লাগে, আর কাস্টমার শুধু নিজের পেমেন্টই দেখতে পায়। সেখানে একটা `INITIATED` পেমেন্টে লেখা থাকা উচিত "আপনার পেমেন্ট কনফার্ম করা হচ্ছে", "ব্যর্থ" না।
+
+```python
+# payments/urls.py
+from django.urls import path
+
+from . import views
+
+app_name = "payments"
+
+urlpatterns = [
+    path("orders/<int:order_id>/pay/sslcommerz/", views.sslcommerz_start, name="sslcommerz-start"),
+    path("payments/sslcommerz/success/", views.sslcommerz_success, name="sslcommerz-success"),
+    path("payments/sslcommerz/fail/", views.sslcommerz_fail, name="sslcommerz-fail"),
+    path("payments/sslcommerz/cancel/", views.sslcommerz_cancel, name="sslcommerz-cancel"),
+    path("payments/sslcommerz/ipn/", views.sslcommerz_ipn, name="sslcommerz-ipn"),
+    path("payments/<int:pk>/", views.payment_result, name="result"),
+]
+```
+
+## ধাপ ৩: SSLCommerz-এর সাথে কনফার্ম করা, ঠিক একবার
+
+IPN হোক বা ব্রাউজার, প্রতিটা মেসেজ একটাই ফাংশন দিয়ে যায়। `val_id`-সহ `VALID` status এলে সেটা Validation API দিয়ে যাচাই হয়। বাকি সবকিছু যাচাই হয় Transaction Query দিয়ে, কারণ একটা জাল "failed" মেসেজও যেন আসল পেমেন্ট বাতিল করে দিতে না পারে।
+
+```python
+# payments/services.py
+from decimal import Decimal
+
+from django.db import transaction
+from django.utils import timezone
+
+from .models import Payment
+from .sslcommerz import SslcommerzClient
+
+PAID = ("VALID", "VALIDATED")
+
+
+def handle_gateway_message(payment, data, if_not_paid):
+    """IPN or browser callback: treat the posted data as a hint, then ask SSLCommerz."""
+    if data.get("status") == "VALID" and data.get("val_id"):
+        return confirm_payment(payment.pk, data["val_id"])
+    return sync_payment(payment.pk, if_no_success=if_not_paid)
+
+
+def confirm_payment(payment_pk, val_id):
+    """Check a val_id with the Validation API and record the result. Safe to repeat."""
+    data = SslcommerzClient().validate(val_id)  # network call outside the lock
+
+    with transaction.atomic():
+        payment = Payment.objects.select_for_update().get(pk=payment_pk)
+        if payment.status == Payment.Status.COMPLETED:
+            return payment  # already recorded: never mark paid twice
+        if data.get("status") not in PAID or data.get("tran_id") != payment.tran_id:
+            # INVALID_TRANSACTION, or a real val_id from some other payment:
+            # either way, nothing about *this* payment is proven. Change nothing.
+            return payment
+
+        payment.val_id = val_id
+        payment.bank_tran_id = data.get("bank_tran_id")
+        payment.last_response = data
+        matches = (
+            Decimal(str(data.get("amount") or "0")) == payment.amount
+            and data.get("currency") == "BDT"
+        )
+        if not matches:
+            payment.status = Payment.Status.NEEDS_REVIEW
+        elif str(data.get("risk_level")) == "1":
+            payment.status = Payment.Status.ON_HOLD
+        else:
+            payment.status = Payment.Status.COMPLETED
+
+        payment.save(
+            update_fields=["status", "val_id", "bank_tran_id", "last_response", "updated_at"]
+        )
+        if payment.status == Payment.Status.COMPLETED:
+            payment.order.mark_paid(payment)  # your order logic, in the same transaction
+        return payment
+
+
+def sync_payment(payment_pk, if_no_success=None):
+    """Ask SSLCommerz about every attempt on this tran_id (when there's no val_id)."""
+    payment = Payment.objects.get(pk=payment_pk)
+    attempts = SslcommerzClient().query_by_tran_id(payment.tran_id).get("element") or []
+
+    for attempt in attempts:
+        if attempt.get("status") in PAID and attempt.get("val_id"):
+            return confirm_payment(payment.pk, attempt["val_id"])
+
+    still_pending = any(a.get("status") == "PENDING" for a in attempts)
+    if if_no_success and not still_pending:
+        Payment.objects.filter(pk=payment.pk, status=Payment.Status.INITIATED).update(
+            status=if_no_success, updated_at=timezone.now()
+        )
+    return payment
+```
+
+চেকগুলো কেন আছে:
+
+- **`VALIDATED`-ও paid হিসেবে ধরা হয়।** ডক এর সংজ্ঞা দিয়েছে "a successful transaction but called by your end more than one"। IPN আর ব্রাউজার callback দুটোই একই `val_id` validate করে, তাই দ্বিতীয় কলে সবসময় `VALIDATED` আসে। SSLCommerz-এর অফিশিয়াল PHP, Laravel আর Odoo কোড দুটোই গ্রহণ করে।
+- **`tran_id` মিলতে হবে।** এই চেক না থাকলে কেউ নিজের একটা সস্তা পেমেন্টের `val_id` নিয়ে অন্য অর্ডারের callback-এ পোস্ট করতে পারত, আর Validation API সানন্দে বলত `VALID`।
+- **Amount আর currency আসে আপনার ডাটাবেস থেকে।** ডকের "security check points" বলছে "validate amount and incoming amount from your Database" আর "check the currency type to avoid frauds"। মেলাবেন `payment.amount`-এর সাথে, POST-এ আসা amount-এর সাথে কখনো না। (SSLCommerz-এর নিজের PHP স্যাম্পল এখানে পোস্ট করা amount পাঠায়, যাতে চেকটাই অর্থহীন হয়ে যায়।) এই কোড BDT পাঠায়; অন্য currency-তে চার্জ করলে বদলে `currency_type` আর `currency_amount` মেলান, ডক যেগুলোকে আপনার পাঠানো মান হিসেবে বর্ণনা করে।
+- **`risk_level` 1 মানে hold।** ডক বলছে: "if risk_level = 1 and transaction status = VALID, then please hold the transaction and verify the customer"। টাকা কেটেছে, তাই পেমেন্টটা তার `bank_tran_id`-সহ রেকর্ড হয়, কিন্তু অর্ডার paid হয় না। কেউ একজন কাস্টমারকে যাচাই করে, তারপর অর্ডার ডেলিভারি দেয় বা রিফান্ড করে।
+- **`select_for_update()`** একসাথে আসা IPN আর ব্রাউজার callback-কে পালা করে চলতে বাধ্য করে। দ্বিতীয়টা `COMPLETED` দেখে ফিরে যায়। এর জন্য PostgreSQL বা MySQL লাগবে; SQLite এটা উপেক্ষা করে। Validation API কল হয় lock নেওয়ার আগে, তাই HTTP রিকোয়েস্ট চলার সময় কোনো ডাটাবেস lock ধরে রাখা হয় না।
+- **আগের যেকোনো status থেকে `COMPLETED`-এ যাওয়া যায়**, এমনকি `FAILED` বা `CANCELLED` থেকেও। SSLCommerz যদি বলে টাকা কেটেছে, অর্ডার paid।
+
+`verify_sign` নিয়ে একটা কথা। IPN-এ `verify_sign` আর `verify_key` থাকে, যেগুলোকে ডক শুধু "Data Validation Key" বলে। হ্যাশ করার পদ্ধতি (MD5, `verify_key`-এ লেখা ফিল্ডগুলোর ওপর) আছে কেবল SSLCommerz-এর লাইব্রেরির কোডে, আর তাদের PHP লাইব্রেরি ২০২৬-এর জুনে এটা ডিফল্টভাবে বন্ধ করে দিয়েছে। আমি এটা বাদ দিই: Validation API কল একই প্রশ্নের উত্তর দেয়, আর সেই ডেটা আসে সরাসরি SSLCommerz-এর সার্ভার থেকে, POST থেকে না।
+
+## ধাপ ৪: যেগুলো ফাঁক গলে বেরিয়ে যায়, সেগুলো মেলানো
+
+কাস্টমার পেমেন্ট পেজে ট্যাব বন্ধ করে দেয়, রিস্টার্ট হতে থাকা সার্ভারে IPN পৌঁছায় না, Validation API timeout হয়। একটা management command cron বা Celery beat দিয়ে কয়েক মিনিট পরপর চালালে এই পেমেন্টগুলোর হিসাব মিটে যায়:
+
+```python
+# payments/management/commands/reconcile_sslcommerz.py
+from datetime import timedelta
+
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+
+from payments.models import Payment
+from payments.services import sync_payment
+from payments.sslcommerz import SslcommerzError
+
+
+class Command(BaseCommand):
+    help = "Settle SSLCommerz payments that never got a usable IPN or callback."
+
+    def handle(self, *args, **options):
+        now = timezone.now()
+        stuck = Payment.objects.filter(
+            status=Payment.Status.INITIATED,
+            updated_at__lt=now - timedelta(minutes=15),
+        )
+        for payment in stuck.iterator():
+            # The docs don't say how long a session lives. After a day, I treat
+            # "no successful attempt" as failed.
+            expired = payment.created_at < now - timedelta(hours=24)
+            give_up = Payment.Status.FAILED if expired else None
+            try:
+                sync_payment(payment.pk, if_no_success=give_up)
+            except SslcommerzError as exc:
+                self.stderr.write(f"payment {payment.pk}: {exc}")
+```
+
+`tran_id` দিয়ে Transaction Query একটা `element` লিস্ট ফেরত দেয়, প্রতিটা চেষ্টার জন্য একটা এন্ট্রি (ডকের উদাহরণে একটা `tran_id`-এর জন্য পাঁচটা, কিছু `FAILED` আর কিছু `VALIDATED`)। কোনো চেষ্টা সফল হলে `sync_payment` বাকি সবকিছুর মতোই Validation API দিয়ে সেটা কনফার্ম করে। SSLCommerz-এ এখনো `PENDING` থাকা পেমেন্টে হাত দেওয়া হয় না।
+
+## রিফান্ড
+
+[Refund API](https://developer.sslcommerz.com/doc/v4/#refund-api) নেয় পেমেন্টের `bank_tran_id`, amount, একটা কারণ, আর একটা `refund_trans_id`: প্রতিটা রিফান্ডের জন্য আপনার তৈরি করা একটা ইউনিক ID, যেটা ২৪ ফেব্রুয়ারি ২০২৫ থেকে বাধ্যতামূলক। ডকের নিজের PHP উদাহরণ আর SSLCommerz-এর অফিশিয়াল লাইব্রেরিগুলো এখনো এটা পাঠায় না, তাই ওগুলো কপি করবেন না। লাইভ রিফান্ডের জন্য "your Public IP must be registered at SSLCOMMERZ Live System"। কীভাবে করতে হয় ডক তা বলে না, তাই onboarding-এর সময় SSLCommerz-কে জিজ্ঞেস করে নিন।
+
+```python
+# payments/models.py (continued)
+class Refund(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending"        # row created, SSLCommerz not called yet
+        PROCESSING = "processing"  # SSLCommerz accepted the request
+        REFUNDED = "refunded"
+        FAILED = "failed"
+        UNKNOWN = "unknown"        # no clear answer: check before retrying
+
+    payment = models.ForeignKey(Payment, on_delete=models.PROTECT, related_name="refunds")
+    refund_trans_id = models.CharField(max_length=30, unique=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    remarks = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=Status, default=Status.PENDING)
+    refund_ref_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    last_response = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+```
+
+```python
+# payments/services.py (continued; move these imports to the top of the file)
+import secrets
+
+from .models import Refund
+from .sslcommerz import SslcommerzError, SslcommerzTimeout
+
+
+def refund_payment(payment, *, amount, remarks):
+    if not payment.bank_tran_id:
+        raise ValueError("Only payments SSLCommerz confirmed can be refunded")
+
+    refund = Refund.objects.create(
+        payment=payment,
+        amount=amount,
+        remarks=remarks,
+        refund_trans_id=f"RF{payment.pk}-{secrets.token_hex(4)}",
+    )
+    try:
+        data = SslcommerzClient().refund(
+            bank_tran_id=payment.bank_tran_id,
+            refund_trans_id=refund.refund_trans_id,
+            amount=amount,
+            remarks=remarks,
+        )
+    except SslcommerzTimeout:
+        refund.status = Refund.Status.UNKNOWN
+        refund.save(update_fields=["status"])
+        return refund
+    except SslcommerzError as exc:
+        refund.status = Refund.Status.FAILED
+        refund.last_response = exc.payload
+        refund.save(update_fields=["status", "last_response"])
+        raise
+
+    refund.last_response = data
+    if data.get("status") == "success":
+        refund.status = Refund.Status.PROCESSING
+        refund.refund_ref_id = data.get("refund_ref_id")
+    elif data.get("status") == "processing":
+        # Documented as "the refund has been initiated already".
+        refund.status = Refund.Status.UNKNOWN
+    else:
+        refund.status = Refund.Status.FAILED
+    refund.save(update_fields=["status", "refund_ref_id", "last_response"])
+    return refund
+
+
+def update_refund_status(refund):
+    data = SslcommerzClient().refund_status(refund.refund_ref_id)
+    status = data.get("status")
+    if status == "refunded":
+        refund.status = Refund.Status.REFUNDED
+    elif status == "cancelled":
+        refund.status = Refund.Status.FAILED
+    refund.last_response = data
+    refund.save(update_fields=["status", "last_response"])
+    return refund
+```
+
+`success` উত্তরের মানে রিফান্ড *শুরু* হয়েছে, শেষ হয়নি। একই শিডিউলড job থেকে `PROCESSING` row-গুলোতে `update_refund_status` চালাতে থাকুন, যতক্ষণ না সেগুলো `refunded` বা `cancelled` হয়।
+
+`refund_payment` শুধু `COMPLETED` না, `ON_HOLD` আর `NEEDS_REVIEW` পেমেন্টেও কাজ করে, কারণ ঠিক এই পেমেন্টগুলোই আপনি ফেরত দেওয়ার সিদ্ধান্ত নিতে পারেন। `UNKNOWN` row-এ কাউকে দ্বিতীয়বার "Refund" চাপতে দেবেন না। ডকে আপনার `refund_trans_id` দিয়ে রিফান্ড খোঁজার কোনো উপায় নেই, তাই আগে মার্চেন্ট প্যানেল দেখে নিন। আংশিক রিফান্ডের নিয়ম বা লিমিট নিয়েও ডক কিছু বলে না, তাই অ্যাডমিনে সেগুলো বানানোর আগে SSLCommerz-এর সাথে কনফার্ম করে নিন।
+
+## ডকে যেখানে অস্পষ্টতা ছিল
+
+চুপচাপ অনুমান করার চেয়ে এগুলো লিখে রাখাই ভালো মনে করি:
+
+1. **ব্রাউজার callback।** `success_url`, `fail_url` আর `cancel_url`-এর method আর payload ডকুমেন্টেড না। অফিশিয়াল স্যাম্পলগুলো IPN-এর মতো ফিল্ডসহ POST নেয়; view-গুলো POST আর GET দুটোই নেয়, আর কোনোটাকেই বিশ্বাস করে না।
+2. **`verify_sign`।** হ্যাশ করার পদ্ধতি ডকুমেন্টেড না, আর SSLCommerz-এর PHP লাইব্রেরি এখন এটা বন্ধ অবস্থায় আসে। কোড এর বদলে Validation API-এর ওপর নির্ভর করে।
+3. **`VALID` বনাম `VALIDATED`।** `VALIDATED` গ্রহণ করতে হবে কি না, ডক কোথাও সরাসরি বলে না। এর সংজ্ঞা ("called by your end more than one") আর SSLCommerz-এর নিজের সব লাইব্রেরি বলে হ্যাঁ, কোডও তাই করে।
+4. **যে "Mandatory" ফিল্ডে লেখা "not mandatory"।** কাস্টমার আর শিপিংয়ের কয়েকটা ফিল্ডে দুটো লেবেলই আছে, আর ডকের নিজের curl উদাহরণে বাধ্যতামূলক লেখা কিছু ফিল্ড বাদ পড়েছে। কোড সবগুলোই পাঠায়।
+5. **IPN-এর খুঁটিনাটি।** Retry ডকুমেন্টেড না, প্যানেল আর `ipn_url` দুটোই সেট থাকলে কী হয় সেটাও না। IPN ফিল্ড টেবিলে `VALID`, `FAILED`, `CANCELLED`, `EXPIRED` আর `UNATTEMPTED` আছে, অথচ SSLCommerz-এর Google Pay পেজ বলছে IPN পাঠানো হয় "after a successful transaction"। Reconciliation job থাকায় কোড এই তিনটার কোনোটার ওপরই নির্ভর করে না।
+6. **Validation API-এর status।** এর response টেবিলে আছে `VALID`, `VALIDATED` আর `INVALID_TRANSACTION`, কিন্তু security check points-এ `FAILED` আর `CANCEL`-ও আছে। প্রথম দুটো ছাড়া বাকি সবকিছুকে কোড "প্রমাণিত না" হিসেবে ধরে।
+7. **Session কতক্ষণ থাকে।** `EXPIRED`-এর বর্ণনা শুধু "Payment Timeout"। Reconciliation job-এর ২৪ ঘণ্টার সীমাটা আমার নিজের বেছে নেওয়া।
+8. **রিফান্ডের ফিল্ড।** রিফান্ড শুরু করার উত্তরে মূল ট্রানজ্যাকশনকে বলা হয় `trans_id`; status-এর উত্তরে বলা হয় `tran_id`। Status টেবিলে `cancelled`-এর বর্ণনা `refunded`-এর বর্ণনার হুবহু কপি; কোড `cancelled`-কে রিফান্ড না হওয়া হিসেবে ধরে।
+9. **টেস্ট কার্ড।** ডকে দেওয়া sandbox কার্ডগুলোর (Visa `4111111111111111`, Mastercard `5111111111111111`, Amex `371111111111111`, CVV `111`, মোবাইল OTP `111111` বা `123456`) মেয়াদ লেখা 12/26, তাই ২০২৭-এ এগুলো বদলাতে পারে। বর্তমান কার্ডের জন্য [environment অংশ](https://developer.sslcommerz.com/doc/v4/#payment-process-environment) দেখে নিন।
+
+## Go-live চেকলিস্ট
+
+- [ ] SSLCommerz থেকে লাইভ `store_id` আর `store_passwd` পেয়েছেন, আর `SSLCOMMERZ_BASE_URL` বদলে `https://securepay.sslcommerz.com` করেছেন।
+- [ ] Credential শুধু সার্ভারের environment variable-এ। Validation, query বা রিফান্ড API-এর রিকোয়েস্ট URL কোনো কিছু লগ করে না, কারণ ওই URL-এ store password থাকে।
+- [ ] IPN URL পোর্ট 443-এ পাবলিক HTTPS (ডক বলছে 80 বা 443), আর আপনার firewall SSLCommerz-কে ঢুকতে দেয়। [Common issues অংশে](https://developer.sslcommerz.com/doc/v4/#common-issues) লাইভ IP-গুলো দেওয়া: আপনাকে কল করে 103.26.139.81 আর 103.132.153.81, আর আপনার বাইরের কলের জন্য 103.26.139.148 আর 103.132.153.148।
+- [ ] আপনার সার্ভার TLS 1.2 বা নতুন সাপোর্ট করে (ওপরের `curl` চেক)।
+- [ ] অর্ডার paid হয় শুধু Validation API-এর পর, `tran_id`, amount আর currency আপনার ডাটাবেসের সাথে মিলিয়ে।
+- [ ] Success পেজ রিলোড করলে, বা IPN আর callback একসাথে এলে, অর্ডার দুইবার paid হয় না। Sandbox-এ টেস্ট করুন।
+- [ ] Fail আর cancel-এর পথ টেস্ট করেছেন, পেমেন্ট পেজে ট্যাব বন্ধ করে দেওয়াটাও। IPN `localhost`-এ পৌঁছাতে পারে না, তাই staging সার্ভার বা একটা tunnel থেকে টেস্ট করুন।
+- [ ] Reconciliation command শিডিউল করা আছে আর error হলে alert দেয়। `ON_HOLD` আর `NEEDS_REVIEW` পেমেন্ট কেউ একজন দেখে।
+- [ ] রিফান্ডের জন্য: সার্ভারের পাবলিক IP SSLCommerz-এ রেজিস্টার করা, `refund_trans_id` পাঠানো হয়, আর `PROCESSING` রিফান্ডগুলো শেষ না হওয়া পর্যন্ত ফলো-আপ করা হয়।
+
+## শেষ কথা
+
+একদিক থেকে SSLCommerz bKash-এর চেয়ে সহজ: কোনো টোকেন নেই, প্রতিটা কলে শুধু দুটো credential। আসল কাজটা trust model-এ। IPN আর ব্রাউজার callback শুধু ইঙ্গিত; উত্তর দেয় Validation API, আর সেটা মেলানো হয় আপনার নিজের ডাটাবেসের transaction ID, amount আর currency-র সাথে। এর সাথে একটা lock, যাতে IPN আর callback দুটোই একসাথে কাজ করে না বসে; যে মেসেজ কখনো আসে না তার জন্য একটা reconciliation job; আর SSLCommerz যে পেমেন্টকে ঝুঁকিপূর্ণ বলে তার জন্য hold। এগুলো থাকলে নেটওয়ার্ক বেঁকে বসলেও ইন্টিগ্রেশন ঠিক থাকে।
+
+সিরিজের পরের লেখা: Django-তে aamarPay। চারটা গেটওয়ের ওভারভিউ [এখানে](/bn/blog/bangladesh-payment-gateways-for-developers)।
