@@ -1,0 +1,31 @@
+# Pushing master deploys straight to Netlify and there's no test suite, so
+# every branch and PR gets the same build Netlify runs, plus lint and a check
+# that every internal link and anchor in the export resolves. A red check here
+# means: don't merge to master yet.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24 # same as netlify.toml
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run check-links

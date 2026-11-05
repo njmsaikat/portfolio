@@ -70,7 +70,7 @@ Then write Markdown below it. Code blocks are highlighted at build time. The blo
 
 ## Deploying
 
-No change to the existing workflow: push to `master` and Netlify builds and deploys automatically, using the settings in [`netlify.toml`](netlify.toml) (`next build`, publishing the `out/` directory). There's no separate deploy step to run manually.
+No change to the existing workflow: push to `master` and Netlify builds and deploys automatically, using the settings in [`netlify.toml`](netlify.toml) (`next build`, publishing the `out/` directory). There's no separate deploy step to run manually. [CI](.github/workflows/ci.yml) runs lint, the build and an internal link check (`npm run check-links`) on every branch and PR first.
 
 `https://njmsaikat.github.io/portfolio` redirects every old URL to this site. It's deployed by [the GitHub Pages workflow](.github/workflows/github-pages-redirect.yml) from [`github-pages/`](github-pages), and requires **Settings → Pages → Source: GitHub Actions** (one-time).
 

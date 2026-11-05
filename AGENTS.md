@@ -20,12 +20,13 @@ npm install
 npm run dev      # dev server at http://localhost:3000
 npm run lint     # eslint (flat config, eslint-config-next)
 npm run build    # static export to out/ — this is what Netlify deploys
+npm run check-links  # after a build: every internal link and #anchor in out/ resolves
 npx serve out    # preview the exact static build
 ```
 
 Docker alternative (no host Node needed): `docker compose up dev` (port 3000) or `docker compose up preview` (lint + build + serve `out/`, port 4000). `Dockerfile`/`docker-compose.yml` are for local use only. Netlify does not use them.
 
-There is no test suite. **`npm run lint` and `npm run build` must both pass** before a change is considered done. A successful build is the main check that nothing breaks static export.
+There is no test suite. **`npm run lint`, `npm run build` and `npm run check-links` must all pass** before a change is considered done. A successful build is the main check that nothing breaks static export. CI (`.github/workflows/ci.yml`) runs all three on every branch push and PR; a red check means don't merge to `master` (which deploys immediately).
 
 ## Next.js version warning
 
@@ -117,7 +118,7 @@ Notes:
 ## Verifying a change
 
 1. `npm run lint`: no errors.
-2. `npm run build`: succeeds, and `out/` contains `index.html`, `portfolio-page.html`, `blog.html`, `resume.html`, one `blog/<slug>.html` per post, `rss.xml`, `sitemap.xml`, `robots.txt` and the `opengraph-image` files.
+2. `npm run build`: succeeds, then `npm run check-links` reports no broken links, and `out/` contains `index.html`, `portfolio-page.html`, `blog.html`, `resume.html`, one `blog/<slug>.html` per post, `rss.xml`, `sitemap.xml`, `robots.txt` and the `opengraph-image` files.
 3. For anything touching the contact form, check that `out/index.html` still contains `<form name="contact"` with `data-netlify="true"`.
 4. For UI changes, run `npx serve out` and check both light and dark themes plus a narrow (mobile) viewport. For `/resume`, also check print preview.
 5. Every page's HTML should have its own `og:image`, canonical and `<title>`: `grep -o '<meta property="og:image"[^>]*' out/*.html`.
