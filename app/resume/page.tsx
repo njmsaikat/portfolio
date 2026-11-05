@@ -113,7 +113,7 @@ export default function ResumePage() {
                     <h3 className="font-semibold">
                       {entry.role} ·{" "}
                       {entry.companyUrl ? (
-                        <a href={entry.companyUrl} className="text-[var(--color-accent)] hover:underline">
+                        <a href={entry.companyUrl} className="text-[var(--color-accent)] underline decoration-1 underline-offset-2">
                           {entry.company}
                         </a>
                       ) : (

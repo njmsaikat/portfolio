@@ -108,7 +108,7 @@ export default async function PostPage({ params }: Props) {
             <p className="font-semibold">{profile.name}</p>
             <p className="text-sm text-[var(--color-text-muted)]">
               {profile.jobTitle} at {profile.company}. I build Django backends for commerce platforms.{" "}
-              <Link href="/#contact" className="text-[var(--color-accent)] hover:underline">
+              <Link href="/#contact" className="text-[var(--color-accent)] underline underline-offset-2">
                 Get in touch
               </Link>
               .

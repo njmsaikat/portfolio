@@ -14,7 +14,13 @@ export function Testimonials() {
       title="Client feedback"
       description={`Screenshots of real client reviews from ${fiverr?.label} and ${upwork?.label}.`}
     >
-      <div className="-mx-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-4">
+      {/* Focusable so keyboard users can scroll it with the arrow keys. */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Client reviews"
+        className="-mx-6 flex snap-x snap-mandatory gap-6 overflow-x-auto rounded-lg px-6 pb-4 focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+      >
         {testimonials.map((testimonial, i) => (
           <figure
             key={`${testimonial.platform}-${i}`}

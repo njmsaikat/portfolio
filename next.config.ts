@@ -15,7 +15,18 @@ const withMDX = createMDX({
     remarkPlugins: ["remark-gfm"],
     rehypePlugins: [
       "rehype-slug",
-      ["@shikijs/rehype", { themes: { light: "github-light", dark: "github-dark-dimmed" } }],
+      [
+        "@shikijs/rehype",
+        {
+          themes: { light: "github-light", dark: "github-dark-dimmed" },
+          // The two theme colours below 4.5:1 on their code backgrounds (orange
+          // in github-light, comments in github-dark-dimmed), nudged to pass.
+          colorReplacements: {
+            "github-light": { "#e36209": "#bc4c00" },
+            "github-dark-dimmed": { "#768390": "#8d99a6" },
+          },
+        },
+      ],
     ],
   },
 });

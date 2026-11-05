@@ -43,7 +43,7 @@ export default function PortfolioPage() {
           <p className="mt-3 text-[var(--color-text-muted)]">
             Case studies, products I&apos;ve built, open-source repositories and client work, in one place. Production
             code for employers and clients stays private. The case studies and{" "}
-            <Link href="/#resume" className="text-[var(--color-accent)] hover:underline">
+            <Link href="/#resume" className="text-[var(--color-accent)] underline underline-offset-2">
               experience
             </Link>{" "}
             section give the fuller picture.
