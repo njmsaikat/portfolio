@@ -5,6 +5,14 @@ export const metadata = {
     "My Django + PostgreSQL Docker Compose starter, why it waits for the database, and the volume-path typo that silently lost data on every compose down.",
   date: "2026-11-02",
   tags: ["Django", "PostgreSQL", "Docker"],
+  summary:
+    "Mount a named volume at the data directory your Postgres version actually uses, pin the major version, and make Django wait until the database accepts connections. A misspelled mount path raises no error: Postgres silently writes to an anonymous volume that the next docker compose down throws away.",
+  faqs: [
+    { question: "Why does my Postgres data disappear after docker compose down?", answer: "Usually because the volume is mounted at the wrong path. Postgres then writes to an anonymous volume that Docker creates for its data directory, and docker compose down removes the container, so the next up starts with a new, empty one." },
+    { question: "Where should I mount the Postgres data volume in Docker Compose?", answer: "For postgres:17 and older, mount it at /var/lib/postgresql/data. For postgres:18 and newer, mount it at /var/lib/postgresql. Pin the major version so the right path doesn't change under you." },
+    { question: "Is depends_on enough to make Django wait for Postgres?", answer: "No. depends_on only controls start order, not whether the database is ready. Use a healthcheck with condition: service_healthy, or a small command that retries until the database answers." },
+    { question: "Should I run makemigrations when the container starts?", answer: "No. Migrations are code: generate them deliberately, review them and commit them. On startup, run only migrate." },
+  ],
 };
 
 Almost every Django backend I start needs the same few things: PostgreSQL instead of SQLite, the same environment on every machine, and one command to bring it all up. I keep that setup as a template repository, [django-postgres-setup-docker-compose](https://github.com/njmsaikat/django-postgres-setup-docker-compose), so a new project starts from a working stack instead of a blank folder.

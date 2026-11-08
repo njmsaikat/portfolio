@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { BreadcrumbJsonLd } from "@/components/JsonLd";
 import { SeriesNav } from "@/components/SeriesNav";
+import { PostFaqs, PostSummary } from "@/components/PostExtras";
 import { formatDate, getLocalizedPost, getPostSlugs, hasPost } from "@/lib/posts";
 import { bn } from "@/lib/bn";
 import { notFound } from "next/navigation";
@@ -100,14 +101,23 @@ export default async function BanglaPostPage({ params }: Props) {
         <header className="mt-8 border-b border-[var(--color-border)] pb-8">
           <p className="font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)]">
             <time dateTime={post.date}>{formatDate(post.date, "bn")}</time> · {post.readingMinutes.toLocaleString("bn-BD")} {bn.minRead}
+            {post.updated && (
+              <>
+                {" "}· সর্বশেষ যাচাই <time dateTime={post.updated}>{formatDate(post.updated, "bn")}</time>
+              </>
+            )}
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-snug tracking-tight sm:text-4xl">{post.title}</h1>
           <p className="mt-4 text-lg leading-relaxed text-[var(--color-text-muted)]">{post.description}</p>
         </header>
 
+        <PostSummary post={post} />
+
         <div className="prose mt-10">
           <Content />
         </div>
+
+        <PostFaqs post={post} />
 
         <SeriesNav post={post} />
 

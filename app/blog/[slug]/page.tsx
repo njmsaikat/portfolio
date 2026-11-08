@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { BreadcrumbJsonLd, BlogPostingJsonLd } from "@/components/JsonLd";
 import { SeriesNav } from "@/components/SeriesNav";
+import { PostFaqs, PostSummary } from "@/components/PostExtras";
 import { formatDate, getPost, getPostSlugs, hasPost } from "@/lib/posts";
 import { profile } from "@/data/profile";
 import { site } from "@/data/site";
@@ -76,14 +77,23 @@ export default async function PostPage({ params }: Props) {
         <header className="mt-8 border-b border-[var(--color-border)] pb-8">
           <p className="font-[family-name:var(--font-technical)] text-xs text-[var(--color-text-muted)]">
             <time dateTime={post.date}>{formatDate(post.date)}</time> · {post.readingMinutes} min read
+            {post.updated && (
+              <>
+                {" "}· Last verified <time dateTime={post.updated}>{formatDate(post.updated)}</time>
+              </>
+            )}
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{post.title}</h1>
           <p className="mt-4 text-lg text-[var(--color-text-muted)]">{post.description}</p>
         </header>
 
+        <PostSummary post={post} />
+
         <div className="prose mt-10">
           <Content />
         </div>
+
+        <PostFaqs post={post} />
 
         <SeriesNav post={post} />
 

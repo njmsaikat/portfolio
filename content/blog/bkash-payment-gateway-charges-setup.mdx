@@ -1,0 +1,100 @@
+export const metadata = {
+  title: "bKash payment gateway for your website: charges, API access and setup (2026)",
+  seoTitle: "bKash payment gateway: charges, API access & setup (2026)",
+  description:
+    "What bKash officially says about payment gateway charges, which merchant account you need, how to get API keys, and what to ask bKash in writing before you sign.",
+  date: "2026-11-08",
+  tags: ["Payments", "bKash", "Bangladesh"],
+  summary:
+    "bKash doesn't publish its payment gateway (PGW) rates: pricing comes from bKash during merchant onboarding, so get it in writing. To accept bKash on a website you need a bKash merchant account (or a Personal Retail Account if you have no trade license), then either a no-code payment link or an API integration, for which bKash issues the API keys.",
+  faqs: [
+    { question: "How much does the bKash payment gateway cost?", answer: "bKash doesn't publish payment gateway rates on its website or developer portal; you're contacted after applying, and the rate is part of your merchant agreement. Percentages quoted on blogs and agency sites aren't official, so ask bKash for the rate, VAT treatment and any fees in writing." },
+    { question: "Is the bKash payment gateway API free?", answer: "bKash's official pages don't say either way. Its sandbox is open to everyone for testing, and the Business Dashboard (for payment links) is free to try with a bKash merchant account, but production API terms come with your merchant agreement." },
+    { question: "Can I get the bKash payment gateway without a trade license?", answer: "bKash's online business page says that if you don't have a trade license, you can open a Personal Retail Account (PRA) instead, using your NID. bKash's developer FAQ lists PRA among the merchant categories integrated with the payment gateway." },
+    { question: "How do I get a bKash API key?", answer: "bKash issues the app_key, app_secret, username and password itself during payment gateway onboarding: sandbox credentials first, then live credentials once onboarding is complete. There are no public test credentials." },
+    { question: "Is there an official bKash app for Shopify?", answer: "No official bKash Shopify app was found. bKash publishes WooCommerce plugin code on its official GitHub, labelled for community learning and demonstration; Shopify options come from third parties." },
+  ],
+};
+
+If you run an online shop or app in Bangladesh, the first questions about bKash are rarely technical: *what does it cost, which account do I need, and how do I get the API keys?* This page answers those from bKash's own sources. It's the business side of my [bKash Tokenized Checkout guide](/blog/bkash-tokenized-checkout-django), which covers the code.
+
+> **About the sources.** Everything here comes from bKash's official sites: bkash.com, the developer portal [developer.bka.sh](https://developer.bka.sh/docs/product-overview), bKash's Business Dashboard and its [official GitHub](https://github.com/bKash-developer). I read the bkash.com pages as published in 2025 and 2026, and the developer docs as of 8 November 2026. Where bKash doesn't publish something, this page says so rather than repeating numbers from blogs. Terms change, so confirm everything with bKash before you sign.
+
+## What bKash charges merchants
+
+**bKash doesn't publish a payment gateway rate.** I couldn't find a per-transaction percentage, setup fee, annual fee or settlement fee for the payment gateway anywhere on bkash.com, the developer portal, bKash's GitHub or the Business Dashboard. The [online business sign-up page](https://www.bkash.com/en/business/online-business) is a form, and after you submit it: "You will be contacted after verifying it." In practice, your rate is part of your merchant agreement.
+
+You'll find percentages like "1.5%–2%" on agency and blog sites. They aren't from bKash, so don't plan a business around them: ask bKash for the rate in writing.
+
+What bKash *does* publish:
+
+- **Personal Retail Account (PRA) charges.** bKash's [PRA page](https://www.bkash.com/en/page/personal-retail-account) lists "Receive payment from customers" as **Free**, and payments from a PRA to another merchant at **0.20%**, marked as "a promotional offer and will be running until further notice". The page doesn't say whether "Free" covers payments received through the payment gateway, so confirm that too.
+- **Merchants can add a fee for the customer.** bKash's payment gateway terms describe "Dynamic Charging": "Based on the understanding between merchant/ service provider/ seller and bKash, additional fee may be applicable on the payment amount." The developer FAQ describes it as a product that "allows merchants to collect a service or convenience fee from their customers during payment", with fixed, percentage or slab-based fees.
+
+**Is the API free?** bKash's official pages don't say. The [developer sandbox](https://developer.bka.sh/docs/product-overview) "is open to everyone, whether or not on-boarding is complete yet", and the Business Dashboard invites you to "Try bKash Business Dashboard for free by signing up with your bKash merchant account". Neither is a statement about production pricing.
+
+## Which bKash account you need
+
+There are two routes, depending on whether you have a trade license:
+
+| | Merchant account | Personal Retail Account (PRA) |
+| --- | --- | --- |
+| **For** | Registered businesses | "micro and small businesses operating in retail and f-commerce" |
+| **Trade license** | Asked for on the sign-up form | Not required |
+| **Documents** | NID, trade license, bank account, website or app URL (from the form) | NID, a mobile number registered to your NID with no bKash account yet, proof of SIM ownership, nominee's NID if applicable |
+| **Apply at** | [Online business form](https://www.bkash.com/en/business/online-business) | [account.bkash.com](https://account.bkash.com/personal-retail-account/) |
+
+The online business form says it plainly: "If you don't have a trade license, you may open a bKash Personal Retail Account." And PRA isn't limited to in-person payments: bKash's developer FAQ lists the payment gateway's merchant categories as "Merchant Plus, Merchant Lite A, Merchant Lite B, Medium, Small, Micro, and PRA".
+
+The form asks for your business type (online shopping, marketplace, ride sharing or food delivery), contact details, and your website, Facebook page or app URL. bKash's official pages don't list further requirements such as a TIN or privacy and refund policy pages, so ask bKash what they'll need for your business type.
+
+## Ways to accept bKash online
+
+| Option | Coding needed | Good for |
+| --- | --- | --- |
+| **Payment links** (bKash Business Dashboard) | None. bKash calls it an "Easy no-code setup" | Social media sellers, invoices, low volume |
+| **Tokenized Checkout** (API) | Yes | Websites and apps. bKash marks it "Highly Recommended" |
+| **Auth & Capture** (API) | Yes | Bookings: authorise now, capture later. "Recommended for booking platforms" |
+| **Checkout iFrame** (API) | Yes | Nothing new. bKash marks it "Not Recommended", an "older integration style" |
+| **WooCommerce plugin** | Little | WordPress shops, with care (below) |
+
+**WooCommerce:** bKash publishes plugin code on its [official GitHub](https://github.com/bKash-developer/bKash-for-woocommerce), with a clear warning: "This plugin codebase is provided for community learning and demonstration purposes only. It is not guaranteed to meet production-level security." Have a developer review it before you take real money.
+
+**Shopify:** I found no official bKash app for Shopify. The apps that exist are third-party, so check whether they add their own fee on top of bKash's, and whose bKash merchant account receives the money.
+
+## Getting API access
+
+From the [developer portal's overview](https://developer.bka.sh/docs/product-overview), the path is:
+
+1. **Onboard as a bKash merchant.** "You'll need to provide the required documents (such as KYC) and sign the agreement to start activation. Your Merchant Account Manager can help with this process."
+2. **Get sandbox credentials from bKash.** The four credentials are an `app_key`, `app_secret`, username and password, which bKash's own code samples say "will be shared with merchants during pgw onboarding". There are no public test credentials.
+3. **Pass sandbox validation.** bKash's integration portal has separate steps for sandbox credentials, sandbox validation and live credentials, and bKash's sample code notes you may need to share sandbox responses with bKash's integration team.
+4. **Go live.** "Once on-boarding is officially complete, bKash issues your production credentials."
+
+Two technical requirements to know before you hire a developer: bKash's payment gateway "supports TLS 1.2 and higher", and its token API must not be called "more than two times within an hour" or the app is blocked for an hour. My [Django integration guide](/blog/bkash-tokenized-checkout-django) shows how to handle both.
+
+## Refunds and limits
+
+From the developer portal's [refund page](https://developer.bka.sh/docs/refund-transaction), refunds work across all payment gateway products: "Within 60 days of the transaction date", up to 10 refunds per transaction, and no duplicate refund within 10 minutes. Refunds "are paid out from the merchant's current collection balance", so keep enough in it.
+
+For customers, bKash's charge and limits page sets the minimum payment at 1 taka and says "the maximum limit may vary depending on the type of merchant". PRA accounts have published receiving limits on the PRA page.
+
+**Settlement**, meaning how and when collected money reaches your bank account, isn't described on bKash's public pages. Ask.
+
+## What to ask bKash in writing
+
+Before you sign, get answers to these, because none are published:
+
+- [ ] The per-transaction rate (MDR), and whether VAT is added on top.
+- [ ] Any setup, onboarding, annual or monthly fee.
+- [ ] Settlement: how often, to which account, and any settlement fee.
+- [ ] Whether customers can be charged a fee (Dynamic Charging) and on what terms.
+- [ ] Refund handling: fees, if any, and what happens if your collection balance is low.
+- [ ] For a PRA: whether payment gateway receipts are free, and the transaction limits.
+- [ ] Which product they recommend for your case (Tokenized Checkout, Auth & Capture or payment links).
+
+## The short version
+
+Pricing for bKash's payment gateway is negotiated, not published, so treat any number you read online as a guess until bKash puts it in writing. The account you need depends on your trade license, and how you integrate depends on your volume: payment links need no code, while a website or app should use Tokenized Checkout.
+
+If you'd like help with the integration itself, that's [what I do](/services/payment-gateway-integration-bangladesh). For a comparison with SSLCommerz, aamarPay and Nagad, see the [overview of Bangladesh payment gateways](/blog/bangladesh-payment-gateways-for-developers).

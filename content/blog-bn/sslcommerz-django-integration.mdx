@@ -5,6 +5,15 @@ export const metadata = {
     "Django 5-এ SSLCommerz: session তৈরি, IPN আর ব্রাউজার callback, Validation API দিয়ে কনফার্মেশন, Transaction Query দিয়ে reconciliation আর রিফান্ড।",
   date: "2026-11-05",
   tags: ["পেমেন্ট", "SSLCommerz", "Django", "বাংলাদেশ"],
+  summary:
+    "একটা session তৈরি করুন, কাস্টমারকে GatewayPageURL-এ redirect করুন, আর IPN ও success callback দুটোকেই শুধু ইঙ্গিত হিসেবে ধরুন: প্রতিটা পেমেন্ট Validation API দিয়ে কনফার্ম করুন, ট্রানজ্যাকশন ID, amount আর currency নিজের ডাটাবেসের সাথে মিলিয়ে। VALID আর VALIDATED দুটোই গ্রহণ করুন, risk level 1 হলে পেমেন্ট hold-এ রাখুন, আর আটকে থাকা পেমেন্ট Transaction Query দিয়ে মিলিয়ে নিন।",
+  faqs: [
+    { question: "Django-র জন্য কি SSLCommerz-এর অফিশিয়াল প্যাকেজ আছে?", answer: "না। SSLCommerz কোনো Django প্যাকেজ প্রকাশ করে না। তাদের অফিশিয়াল Python লাইব্রেরি শেষ আপডেট হয়েছে ২০২১-এ, আর রিফান্ড API-তে এখন বাধ্যতামূলক refund_trans_id পাঠায় না, তাই সাধারণ requests ব্যবহার করাই সহজ।" },
+    { question: "Success URL থাকলেও কি SSLCommerz IPN লাগবে?", answer: "দুটোই ব্যবহার করুন। ডক IPN-কে ঐচ্ছিক বলে, কিন্তু পেমেন্টের নোটিফিকেশন যাতে হারিয়ে না যায় (যেমন কাস্টমারের session হারালে) সেজন্য ব্যবহার করতে বলে। IPN বা success callback, কোনোটাই পেমেন্টের প্রমাণ না: প্রতিটা Validation API দিয়ে কনফার্ম করুন।" },
+    { question: "SSLCommerz-এ VALID আর VALIDATED-এর পার্থক্য কী?", answer: "দুটোই সফল ট্রানজ্যাকশন বোঝায়। ডক অনুযায়ী VALIDATED মানে এমন সফল ট্রানজ্যাকশন যেটা আপনার দিক থেকে আগেই একবার validate করা হয়েছে; IPN আর ব্রাউজার callback দুটোই একই পেমেন্ট চেক করলে এটা হয়।" },
+    { question: "SSLCommerz sandbox credential কীভাবে পাব?", answer: "SSLCommerz-এর ডেভেলপার রেজিস্ট্রেশন পেজ থেকে নিজেই সাইন-আপ করে sandbox store_id আর store_passwd নিন। লাইভ credential আলাদা, signup.sslcommerz.com-এ রেজিস্টার করার পর আসে।" },
+    { question: "লাইভে SSLCommerz রিফান্ড ফেল করে কেন?", answer: "লাইভ রিফান্ডের জন্য আপনার সার্ভারের পাবলিক IP SSLCommerz-এ রেজিস্টার করা থাকতে হয়, আর প্রতিটা রিফান্ড রিকোয়েস্টে একটা ইউনিক refund_trans_id লাগে, যা ২৪ ফেব্রুয়ারি ২০২৫ থেকে বাধ্যতামূলক।" },
+  ],
   series: { id: "bd-payment-gateways", part: 3 },
 };
 

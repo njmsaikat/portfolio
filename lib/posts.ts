@@ -11,6 +11,11 @@ export interface PostMeta {
   date: string; // ISO yyyy-mm-dd
   updated?: string;
   tags: string[];
+  // Answer-first summary (1–3 sentences) shown as an "In short" box under the header.
+  summary?: string;
+  // Questions people actually search; rendered after the post and as FAQPage JSON-LD.
+  // Answers must be grounded in the post itself.
+  faqs?: { question: string; answer: string }[];
   // Part of a multi-post series (ids in SERIES below); drives the series box under the post.
   series?: { id: SeriesId; part: number };
 }

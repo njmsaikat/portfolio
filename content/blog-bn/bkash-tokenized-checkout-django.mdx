@@ -5,6 +5,15 @@ export const metadata = {
     "Django 5-এ bKash Tokenized Checkout: টোকেন cache, create আর execute payment, callback, query fallback, idempotent অর্ডার আপডেট আর রিফান্ড।",
   date: "2026-11-03",
   tags: ["পেমেন্ট", "bKash", "Django", "বাংলাদেশ"],
+  summary:
+    "একটা টোকেন নিন, পেমেন্ট তৈরি করুন, কাস্টমারকে bKash-এ পাঠান, আর সে ফিরে এলে ঠিক একবার Execute Payment কল করুন। শুধু Execute Payment বা Query Payment থেকে Completed status এলেই পেমেন্ট হয়েছে। টোকেন cache করে রাখুন, কারণ bKash ঘণ্টায় দুইবার টোকেন চাইতে দেয়, আর Execute উত্তর না দিলে পেমেন্টটা query করুন।",
+  faqs: [
+    { question: "bKash sandbox credential আর API key কীভাবে পাব?", answer: "লাগবে username, password, app_key আর app_secret। bKash-এর প্রোডাক্ট ওভারভিউ বলছে sandbox সবার জন্য খোলা, কিন্তু ডকে নিজে নিজে সাইন-আপের উপায় নেই, তাই sandbox credential bKash-এর কাছে চেয়ে নিন। Production credential আসে মার্চেন্ট onboarding (KYC আর চুক্তি) শেষ হলে।" },
+    { question: "bKash callback-এ success এলেই কি অর্ডার paid করা যায়?", answer: "না। bKash-এর ডক বলছে সফল callback মানে শুধু Execute Payment কল করার সময় হয়েছে। অর্ডার paid হয় কেবল Execute Payment বা Query Payment Completed জানালে।" },
+    { question: "bKash-এ কি Execute Payment দুইবার কল করা যায়?", answer: "না। Execute-এর একবার চেষ্টা হয়ে গেলে, ফলাফল যা-ই হোক, সেই paymentId আর ব্যবহার করা যায় না। Execute timeout বা error দিলে কী হয়েছে জানতে Query Payment কল করুন।" },
+    { question: "bKash পেমেন্ট কতদিনের মধ্যে রিফান্ড করা যায়?", answer: "bKash-এর Refund API দিয়ে পেমেন্টের ৬০ দিনের মধ্যে পূর্ণ বা আংশিক রিফান্ড করা যায়, এক ট্রানজ্যাকশনে সর্বোচ্চ ১০টা, যতক্ষণ মোট পরিমাণ maxRefundableAmount ছাড়িয়ে না যায়।" },
+    { question: "Django-তে bKash ইন্টিগ্রেট করতে কি SDK লাগে?", answer: "না। পুরো ইন্টিগ্রেশন হলো কয়েকটা POST রিকোয়েস্ট আর একটা টোকেন cache, যা সাধারণ requests আর Django-র cache দিয়েই হয়ে যায়।" },
+  ],
   series: { id: "bd-payment-gateways", part: 2 },
 };
 
@@ -27,7 +36,7 @@ bKash-এর [Tokenized Without Agreement](https://developer.bka.sh/docs/tokeniz
 
 ## bKash-এর কাছ থেকে যা লাগবে
 
-চারটা credential: মার্চেন্ট **username** আর **password**, এবং **app_key** আর **app_secret**। [প্রোডাক্ট ওভারভিউ](https://developer.bka.sh/docs/product-overview) বলছে onboarding শেষ হওয়ার আগেও sandbox সবার জন্য খোলা; তবে যে পেজগুলো পড়েছি সেখানে নিজে নিজে সাইন-আপের উপায় দেখিনি, তাই sandbox credential bKash-এর কাছে চেয়ে নিন। Production credential আসে মার্চেন্ট onboarding (KYC আর চুক্তি) শেষ হলে। bKash শুধু TLS 1.2 বা তার নতুন ভার্সন নেয়।
+চারটা credential: মার্চেন্ট **username** আর **password**, এবং **app_key** আর **app_secret**। [প্রোডাক্ট ওভারভিউ](https://developer.bka.sh/docs/product-overview) বলছে onboarding শেষ হওয়ার আগেও sandbox সবার জন্য খোলা; তবে যে পেজগুলো পড়েছি সেখানে নিজে নিজে সাইন-আপের উপায় দেখিনি, তাই sandbox credential bKash-এর কাছে চেয়ে নিন। Production credential আসে মার্চেন্ট onboarding (KYC আর চুক্তি) শেষ হলে। ব্যবসার দিক (অ্যাকাউন্ট, চার্জ, বিকাশের কাছে কী জানতে হবে) নিয়ে দেখুন [বিকাশ পেমেন্ট গেটওয়ে: চার্জ, API অ্যাক্সেস আর সেটআপ](/bn/blog/bkash-payment-gateway-charges-setup)। bKash শুধু TLS 1.2 বা তার নতুন ভার্সন নেয়।
 
 ## Settings আর environment variable
 

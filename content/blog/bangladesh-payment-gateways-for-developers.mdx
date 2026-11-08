@@ -5,6 +5,15 @@ export const metadata = {
     "How bKash, Nagad, SSLCommerz and aamarPay integrations work, how they differ, and how to pick one for your Django or Python backend.",
   date: "2026-11-03",
   tags: ["Payments", "bKash", "Nagad", "SSLCommerz", "aamarPay", "Bangladesh"],
+  summary:
+    "Integrate bKash directly if most of your customers pay with bKash; use an aggregator (SSLCommerz or aamarPay) to accept cards, internet banking and wallets through one integration. Whichever you pick, confirm every payment from your server before marking an order paid.",
+  faqs: [
+    { question: "Which payment gateway is best for a website in Bangladesh?", answer: "It depends on how your customers pay. If most pay with bKash, integrate bKash directly. If you also need cards and internet banking, use an aggregator such as SSLCommerz or aamarPay. Many projects use both: bKash directly, plus an aggregator for everything else." },
+    { question: "Can customers pay with bKash through SSLCommerz?", answer: "Yes. SSLCommerz's payment page offers mobile banking, including bKash, alongside cards and internet banking. Integrate bKash directly if you want its own wallet experience, such as saved wallets." },
+    { question: "Which Bangladeshi payment gateways have a refund API?", answer: "In their public documentation, bKash and SSLCommerz have refund APIs and aamarPay doesn't. Nagad doesn't publish merchant API documentation openly, so ask Nagad." },
+    { question: "Can I test a payment gateway before signing a merchant contract?", answer: "SSLCommerz lets you sign up for a sandbox yourself, and aamarPay publishes public test credentials. For bKash and Nagad, ask the provider for sandbox access." },
+    { question: "How much do payment gateways in Bangladesh charge?", answer: "Fees, settlement times and contracts are commercial terms that each provider sets, so get them from the provider in writing before you choose." },
+  ],
   series: { id: "bd-payment-gateways", part: 1 },
 };
 
@@ -94,7 +103,7 @@ Step-by-step guide: [bKash Tokenized Checkout in Django](/blog/bkash-tokenized-c
 - **Support staff will issue refunds from your admin panel:** choose a gateway with a refund API (bKash or SSLCommerz).
 - **You might add a second gateway later:** design for it now. Keep one `Payment` table and your order logic gateway-agnostic, with a small adapter per gateway.
 
-Fees, settlement times and contracts are commercial terms, so get them from each provider in writing.
+Fees, settlement times and contracts are commercial terms, so get them from each provider in writing. For bKash, see [what bKash publishes about charges and setup](/blog/bkash-payment-gateway-charges-setup).
 
 ## The golden rules
 

@@ -5,6 +5,15 @@ export const metadata = {
     "Django 5-এ aamarPay: পেমেন্ট শুরু করা, success, fail আর cancel callback সামলানো, Search Transaction দিয়ে কনফার্মেশন, আর ফাঁক গলে যাওয়া পেমেন্টের reconciliation।",
   date: "2026-11-05",
   tags: ["পেমেন্ট", "aamarPay", "Django", "বাংলাদেশ"],
+  summary:
+    "পেমেন্ট শুরু করুন, কাস্টমারকে payment_url-এ redirect করুন, আর প্রতিটা সফলতা বা ব্যর্থতা Search Transaction দিয়ে কনফার্ম করুন: ঠিক amount, currency আর ট্রানজ্যাকশন ID-সহ status code 2 মানে paid। Callback-গুলোকে CSRF থেকে বাদ দিন, cancel URL-এ ট্রানজ্যাকশন ID বসিয়ে দিন কারণ aamarPay সেখানে কিছু পোস্ট করে না, আর রিফান্ড করুন মার্চেন্ট প্যানেল থেকে, কারণ কোনো refund API নেই।",
+  faqs: [
+    { question: "aamarPay-এ কি refund API আছে?", answer: "না। aamarPay-এর ডকুমেন্টেশনে কোনো refund API নেই। রিফান্ড হয় মার্চেন্ট প্যানেল (merchant.aamarpay.com) বা aamarPay Merchant অ্যাপ থেকে, তাই প্রতিটা রিফান্ড নিজের সিস্টেমেও রেকর্ড রাখুন।" },
+    { question: "মার্চেন্ট অ্যাকাউন্ট ছাড়া aamarPay কীভাবে টেস্ট করব?", answer: "aamarPay তাদের Sandbox Credentials পেজে একটা পাবলিক sandbox store ID আর signature key প্রকাশ করে রেখেছে। aamarPay-এর স্যাম্পল README বলছে sandbox-এ পেমেন্ট মেথড হিসেবে শুধু bKash পাওয়া যায়।" },
+    { question: "Credential ঠিক থাকার পরও aamarPay Invalid Store ID দেখায় কেন?", answer: "aamarPay-এর Common Issues পেজ অনুযায়ী এর মানে আপনি ভুল host-এ কল করছেন। Sandbox credential কাজ করে শুধু sandbox.aamarpay.com-এ, আর লাইভ credential শুধু secure.aamarpay.com-এ।" },
+    { question: "aamarPay-এর status code-গুলোর মানে কী?", answer: "ডক অনুযায়ী status_code 0 মানে initiated, 2 মানে successful, 3 মানে expired আর 7 মানে failed। শুধু 2, Search Transaction দিয়ে ঠিক amount-সহ কনফার্ম হলে, মানে পেমেন্ট সম্পন্ন।" },
+    { question: "aamarPay-এর success callback কি পেমেন্ট কনফার্ম করার জন্য যথেষ্ট?", answer: "না। Callback হলো ব্রাউজারের একটা POST, যেটা যে কেউ জাল করতে পারে। এর mer_txnid শুধু পেমেন্ট খুঁজতে ব্যবহার করুন, তারপর নিজের সার্ভার থেকে Search Transaction API দিয়ে কনফার্ম করুন।" },
+  ],
   series: { id: "bd-payment-gateways", part: 4 },
 };
 

@@ -28,6 +28,22 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 
 Most production work (current employer and freelance clients) lives in private repositories under NDA and isn't publicly browsable. The Portfolio section shows public GitHub repositories and client sites where a live/public link exists; it is not a complete list of work performed — see Experience and Skills for the fuller picture.
 
+## Guides (the question each one answers)
+
+Each guide is also available in Bangla at /bn/blog/<slug> and as Markdown at /blog/<slug>/index.md. Written from each provider's official documentation; every claim is sourced.
+
+- Which payment gateway should a Bangladeshi website use (bKash, Nagad, SSLCommerz or aamarPay), and how do they differ? https://saikatroy.netlify.app/blog/bangladesh-payment-gateways-for-developers
+- What does the bKash payment gateway cost, which merchant account do I need (trade license or Personal Retail Account), and how do I get bKash API keys? https://saikatroy.netlify.app/blog/bkash-payment-gateway-charges-setup
+- How do I integrate bKash Tokenized Checkout in Django (tokens, Execute Payment, callbacks, refunds)? https://saikatroy.netlify.app/blog/bkash-tokenized-checkout-django
+- How do I integrate SSLCommerz in Django (session, IPN, Validation API, refunds)? https://saikatroy.netlify.app/blog/sslcommerz-django-integration
+- How do I integrate aamarPay in Django (callbacks, Search Transaction, no refund API)? https://saikatroy.netlify.app/blog/aamarpay-django-integration
+- Why does Postgres data disappear after docker compose down, and how do I set up Django + PostgreSQL with Docker Compose? https://saikatroy.netlify.app/blog/django-postgres-docker-compose
+
+## Hire or contact
+
+- Available for freelance and contract work: payment gateway integration, Django/REST backends, Docker/DevOps, Shopify and WordPress.
+- Contact form: https://saikatroy.netlify.app/#contact · Email: njmsaikat@gmail.com
+
 ## Services
 
 - Services overview: https://saikatroy.netlify.app/services
@@ -48,11 +64,5 @@ Most production work (current employer and freelance clients) lives in private r
 - Résumé (HTML, printable to PDF): https://saikatroy.netlify.app/resume
 - Blog (English): https://saikatroy.netlify.app/blog (RSS: https://saikatroy.netlify.app/rss.xml). Each post also has a Markdown version at /blog/<slug>/index.md
 - Blog (Bangla): https://saikatroy.netlify.app/bn/blog (RSS: https://saikatroy.netlify.app/bn/rss.xml)
-- Series, Bangladesh payment gateways for developers:
-  1. bKash, Nagad, SSLCommerz or aamarPay? A developer's guide: https://saikatroy.netlify.app/blog/bangladesh-payment-gateways-for-developers
-  2. bKash Tokenized Checkout in Django, step by step: https://saikatroy.netlify.app/blog/bkash-tokenized-checkout-django
-  3. SSLCommerz in Django, step by step: https://saikatroy.netlify.app/blog/sslcommerz-django-integration
-  4. aamarPay in Django, step by step: https://saikatroy.netlify.app/blog/aamarpay-django-integration
-- Django + PostgreSQL with Docker Compose, and the volume typo that loses data: https://saikatroy.netlify.app/blog/django-postgres-docker-compose
 - Full text of this site for LLMs: https://saikatroy.netlify.app/llms-full.txt
 - All projects: https://saikatroy.netlify.app/portfolio-page

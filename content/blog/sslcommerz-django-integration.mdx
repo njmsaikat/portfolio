@@ -5,6 +5,15 @@ export const metadata = {
     "Integrate SSLCommerz in Django 5: create a session, handle the IPN and browser callbacks, confirm with the Validation API, reconcile with Transaction Query, and refund.",
   date: "2026-11-05",
   tags: ["Payments", "SSLCommerz", "Django", "Bangladesh"],
+  summary:
+    "Create a session, redirect the customer to GatewayPageURL, and treat both the IPN and the success callback as hints: confirm every payment with the Validation API, checking the transaction ID, amount and currency against your own database. Accept VALID and VALIDATED, hold payments with risk level 1, and reconcile stuck payments with Transaction Query.",
+  faqs: [
+    { question: "Is there an official SSLCommerz package for Django?", answer: "No. SSLCommerz publishes no Django package. Its official Python library was last updated in 2021 and doesn't send the refund_trans_id the refund API now requires, so plain requests is the simpler choice." },
+    { question: "Do I need the SSLCommerz IPN if I already have a success URL?", answer: "Use both. The docs call the IPN optional but recommend it to avoid missing payment notifications, for example when the customer loses their session. Neither the IPN nor the success callback is proof of payment: confirm each one with the Validation API." },
+    { question: "What is the difference between VALID and VALIDATED in SSLCommerz?", answer: "Both mean a successful transaction. The docs define VALIDATED as a successful transaction that your side has already validated before, which happens when the IPN and the browser callback both check the same payment." },
+    { question: "How do I get SSLCommerz sandbox credentials?", answer: "Sign up yourself from SSLCommerz's developer registration page to get a sandbox store_id and store_passwd. Live credentials are separate and come after you register at signup.sslcommerz.com." },
+    { question: "Why do SSLCommerz refunds fail on the live system?", answer: "For live refunds, your server's public IP must be registered with SSLCommerz, and every refund request needs a unique refund_trans_id, which has been mandatory since 24 February 2025." },
+  ],
   series: { id: "bd-payment-gateways", part: 3 },
 };
 
