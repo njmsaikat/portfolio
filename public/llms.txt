@@ -33,6 +33,7 @@ Most production work (current employer and freelance clients) lives in private r
 Each guide is also available in Bangla at /bn/blog/<slug> and as Markdown at /blog/<slug>/index.md. Written from each provider's official documentation; every claim is sourced.
 
 - Which payment gateway should a Bangladeshi website use (bKash, Nagad, SSLCommerz or aamarPay), and how do they differ? https://saikatroy.netlify.app/blog/bangladesh-payment-gateways-for-developers
+- What does the bKash payment gateway cost, which merchant account do I need (trade license or Personal Retail Account), and how do I get bKash API keys? https://saikatroy.netlify.app/blog/bkash-payment-gateway-charges-setup (English only so far)
 - How do I integrate bKash Tokenized Checkout in Django (tokens, Execute Payment, callbacks, refunds)? https://saikatroy.netlify.app/blog/bkash-tokenized-checkout-django
 - How do I integrate SSLCommerz in Django (session, IPN, Validation API, refunds)? https://saikatroy.netlify.app/blog/sslcommerz-django-integration
 - How do I integrate aamarPay in Django (callbacks, Search Transaction, no refund API)? https://saikatroy.netlify.app/blog/aamarpay-django-integration
