@@ -1,0 +1,100 @@
+export const metadata = {
+  title: "ওয়েবসাইটের জন্য বিকাশ পেমেন্ট গেটওয়ে: চার্জ, API অ্যাক্সেস আর সেটআপ (২০২৬)",
+  seoTitle: "বিকাশ পেমেন্ট গেটওয়ে: চার্জ, API আর সেটআপ (২০২৬)",
+  description:
+    "বিকাশ পেমেন্ট গেটওয়ের চার্জ নিয়ে বিকাশ অফিশিয়ালি কী বলে, কোন মার্চেন্ট অ্যাকাউন্ট লাগবে, API key কীভাবে পাবেন, আর চুক্তির আগে বিকাশের কাছে লিখিতভাবে কী জেনে নেবেন।",
+  date: "2026-11-08",
+  tags: ["পেমেন্ট", "bKash", "বাংলাদেশ"],
+  summary:
+    "বিকাশ তাদের পেমেন্ট গেটওয়ের (PGW) রেট প্রকাশ করে না: রেট আসে মার্চেন্ট onboarding-এর সময় বিকাশের কাছ থেকে, তাই লিখিতভাবে নিয়ে নিন। ওয়েবসাইটে বিকাশ পেমেন্ট নিতে লাগবে একটা বিকাশ মার্চেন্ট অ্যাকাউন্ট (ট্রেড লাইসেন্স না থাকলে Personal Retail Account), তারপর কোড ছাড়া পেমেন্ট লিংক অথবা API ইন্টিগ্রেশন, যার API key বিকাশ নিজেই দেয়।",
+  faqs: [
+    { question: "বিকাশ পেমেন্ট গেটওয়ের চার্জ কত?", answer: "বিকাশ তাদের ওয়েবসাইট বা ডেভেলপার পোর্টালে পেমেন্ট গেটওয়ের রেট প্রকাশ করে না; আবেদন করার পর তারা যোগাযোগ করে, আর রেট আপনার মার্চেন্ট চুক্তির অংশ। ব্লগ বা এজেন্সির সাইটে লেখা শতাংশগুলো অফিশিয়াল না, তাই রেট, VAT আর অন্য যেকোনো ফি বিকাশের কাছ থেকে লিখিতভাবে নিন।" },
+    { question: "বিকাশ পেমেন্ট গেটওয়ের API কি ফ্রি?", answer: "বিকাশের অফিশিয়াল পেজে এ নিয়ে কিছু বলা নেই। টেস্টের জন্য তাদের sandbox সবার জন্য খোলা, আর বিকাশ মার্চেন্ট অ্যাকাউন্ট দিয়ে Business Dashboard (পেমেন্ট লিংকের জন্য) ফ্রিতে চেষ্টা করা যায়, কিন্তু প্রোডাকশন API-এর শর্ত আসে মার্চেন্ট চুক্তির সাথে।" },
+    { question: "ট্রেড লাইসেন্স ছাড়া কি বিকাশ পেমেন্ট গেটওয়ে পাওয়া যায়?", answer: "বিকাশের অনলাইন বিজনেস পেজ বলছে, ট্রেড লাইসেন্স না থাকলে NID দিয়ে একটা Personal Retail Account (PRA) খোলা যায়। বিকাশের ডেভেলপার FAQ পেমেন্ট গেটওয়ের সাথে ইন্টিগ্রেটেড মার্চেন্ট ক্যাটাগরির মধ্যে PRA-কেও রেখেছে।" },
+    { question: "বিকাশ API key কীভাবে পাব?", answer: "app_key, app_secret, username আর password বিকাশ নিজেই দেয়, পেমেন্ট গেটওয়ে onboarding-এর সময়: আগে sandbox credential, তারপর onboarding শেষ হলে লাইভ credential। কোনো পাবলিক টেস্ট credential নেই।" },
+    { question: "Shopify-র জন্য কি বিকাশের অফিশিয়াল অ্যাপ আছে?", answer: "বিকাশের অফিশিয়াল কোনো Shopify অ্যাপ পাওয়া যায়নি। বিকাশ তাদের অফিশিয়াল GitHub-এ WooCommerce প্লাগইনের কোড প্রকাশ করে, যেটা community learning আর demonstration-এর জন্য বলে লেখা; Shopify-র অপশনগুলো তৃতীয় পক্ষের।" },
+  ],
+};
+
+অনলাইন দোকান বা অ্যাপ চালালে বিকাশ নিয়ে প্রথম প্রশ্নগুলো সাধারণত টেকনিক্যাল না: *খরচ কত, কোন অ্যাকাউন্ট লাগবে, আর API key কীভাবে পাব?* এই লেখা সেই প্রশ্নগুলোর উত্তর দেয় বিকাশের নিজের সোর্স থেকে। এটা আমার [Django-তে bKash Tokenized Checkout গাইডের](/bn/blog/bkash-tokenized-checkout-django) ব্যবসার দিক, কোডের অংশটা সেখানে আছে।
+
+> **সোর্স নিয়ে।** এখানকার সবকিছু বিকাশের অফিশিয়াল সাইট থেকে: bkash.com, ডেভেলপার পোর্টাল [developer.bka.sh](https://developer.bka.sh/docs/product-overview), বিকাশের Business Dashboard আর তাদের [অফিশিয়াল GitHub](https://github.com/bKash-developer)। bkash.com-এর পেজগুলো পড়েছি ২০২৫ আর ২০২৬-এ যেভাবে প্রকাশিত ছিল, আর ডেভেলপার ডক ৮ নভেম্বর ২০২৬ অনুযায়ী। বিকাশ যা প্রকাশ করে না, এই লেখা ব্লগের সংখ্যা না বসিয়ে সেটা সরাসরি বলে দেয়। শর্ত বদলায়, তাই চুক্তির আগে সবকিছু বিকাশের সাথে কনফার্ম করে নিন।
+
+## মার্চেন্টদের কাছ থেকে বিকাশ কত চার্জ নেয়
+
+**বিকাশ পেমেন্ট গেটওয়ের রেট প্রকাশ করে না।** bkash.com, ডেভেলপার পোর্টাল, বিকাশের GitHub বা Business Dashboard, কোথাও পেমেন্ট গেটওয়ের জন্য প্রতি ট্রানজ্যাকশনের শতাংশ, সেটআপ ফি, বার্ষিক ফি বা settlement ফি খুঁজে পাইনি। [অনলাইন বিজনেস সাইন-আপ পেজটা](https://www.bkash.com/business/online-business) একটা ফর্ম, আর সাবমিট করার পর লেখা আসে: "You will be contacted after verifying it." অর্থাৎ বাস্তবে আপনার রেট মার্চেন্ট চুক্তিরই অংশ।
+
+এজেন্সি আর ব্লগের সাইটে "১.৫%–২%"-এর মতো শতাংশ দেখবেন। ওগুলো বিকাশের না, তাই ওগুলোর ওপর ব্যবসার হিসাব করবেন না: রেটটা বিকাশের কাছ থেকে লিখিতভাবে নিন।
+
+বিকাশ যা প্রকাশ *করে*:
+
+- **Personal Retail Account (PRA)-এর চার্জ।** বিকাশের [PRA পেজে](https://www.bkash.com/page/personal-retail-account) "Receive payment from customers" লেখা আছে **ফ্রি**, আর PRA থেকে অন্য মার্চেন্টকে পেমেন্ট **০.২০%**, সাথে লেখা "a promotional offer and will be running until further notice"। পেমেন্ট গেটওয়ে দিয়ে আসা পেমেন্টও এই "ফ্রি"-র মধ্যে পড়ে কি না, পেজে বলা নেই, তাই সেটাও কনফার্ম করে নিন।
+- **মার্চেন্ট কাস্টমারের কাছ থেকে ফি নিতে পারে।** বিকাশের পেমেন্ট গেটওয়ের শর্তে "Dynamic Charging"-এর কথা আছে: "Based on the understanding between merchant/ service provider/ seller and bKash, additional fee may be applicable on the payment amount." ডেভেলপার FAQ এটাকে বর্ণনা করে এমন প্রোডাক্ট হিসেবে, যেটা "allows merchants to collect a service or convenience fee from their customers during payment", নির্দিষ্ট অঙ্ক, শতাংশ বা ধাপভিত্তিক (slab) ফি হিসেবে।
+
+**API কি ফ্রি?** বিকাশের অফিশিয়াল পেজ এ নিয়ে কিছু বলে না। [ডেভেলপার sandbox](https://developer.bka.sh/docs/product-overview) "is open to everyone, whether or not on-boarding is complete yet", আর Business Dashboard আমন্ত্রণ জানায় "Try bKash Business Dashboard for free by signing up with your bKash merchant account"। কোনোটাই প্রোডাকশনের দাম নিয়ে কথা না।
+
+## কোন বিকাশ অ্যাকাউন্ট লাগবে
+
+ট্রেড লাইসেন্স আছে কি না, তার ওপর নির্ভর করে দুটো পথ:
+
+| | মার্চেন্ট অ্যাকাউন্ট | Personal Retail Account (PRA) |
+| --- | --- | --- |
+| **কার জন্য** | রেজিস্টার্ড ব্যবসা | "micro and small businesses operating in retail and f-commerce" |
+| **ট্রেড লাইসেন্স** | সাইন-আপ ফর্মে চাওয়া হয় | লাগে না |
+| **কাগজপত্র** | NID, ট্রেড লাইসেন্স, ব্যাংক অ্যাকাউন্ট, ওয়েবসাইট বা অ্যাপের URL (ফর্ম অনুযায়ী) | NID, আপনার NID-তে রেজিস্টার্ড একটা মোবাইল নম্বর যেটাতে এখনো বিকাশ অ্যাকাউন্ট খোলা হয়নি, সিমের মালিকানার প্রমাণ, প্রযোজ্য হলে নমিনির NID |
+| **আবেদন** | [অনলাইন বিজনেস ফর্ম](https://www.bkash.com/business/online-business) | [account.bkash.com](https://account.bkash.com/personal-retail-account/) |
+
+অনলাইন বিজনেস ফর্মে সরাসরি লেখা: "If you don't have a trade license, you may open a bKash Personal Retail Account." আর PRA শুধু দোকানে সামনাসামনি পেমেন্টের জন্য না: বিকাশের ডেভেলপার FAQ পেমেন্ট গেটওয়ের মার্চেন্ট ক্যাটাগরির তালিকায় লিখেছে "Merchant Plus, Merchant Lite A, Merchant Lite B, Medium, Small, Micro, and PRA"।
+
+ফর্মে চাওয়া হয় আপনার ব্যবসার ধরন (অনলাইন শপিং, মার্কেটপ্লেস, রাইড শেয়ারিং বা ফুড ডেলিভারি), যোগাযোগের তথ্য, আর আপনার ওয়েবসাইট, ফেসবুক পেজ বা অ্যাপের URL। TIN, বা প্রাইভেসি আর রিফান্ড পলিসি পেজের মতো আর কোনো শর্ত বিকাশের অফিশিয়াল পেজে নেই, তাই আপনার ব্যবসার জন্য কী কী লাগবে, বিকাশকে জিজ্ঞেস করে নিন।
+
+## অনলাইনে বিকাশ পেমেন্ট নেওয়ার উপায়
+
+| উপায় | কোড লাগবে? | কার জন্য ভালো |
+| --- | --- | --- |
+| **পেমেন্ট লিংক** (বিকাশ Business Dashboard) | না। বিকাশ বলে "Easy no-code setup" | সোশ্যাল মিডিয়ার বিক্রেতা, ইনভয়েস, কম ভলিউম |
+| **Tokenized Checkout** (API) | হ্যাঁ | ওয়েবসাইট আর অ্যাপ। বিকাশ লিখেছে "Highly Recommended" |
+| **Auth & Capture** (API) | হ্যাঁ | বুকিং: এখন authorise, পরে capture। "Recommended for booking platforms" |
+| **Checkout iFrame** (API) | হ্যাঁ | নতুন কিছুর জন্য না। বিকাশ লিখেছে "Not Recommended", "older integration style" |
+| **WooCommerce প্লাগইন** | সামান্য | WordPress দোকান, সাবধানে (নিচে দেখুন) |
+
+**WooCommerce:** বিকাশ তাদের [অফিশিয়াল GitHub-এ](https://github.com/bKash-developer/bKash-for-woocommerce) প্লাগইনের কোড প্রকাশ করে, সাথে স্পষ্ট সতর্কতা: "This plugin codebase is provided for community learning and demonstration purposes only. It is not guaranteed to meet production-level security." সত্যিকারের টাকা নেওয়ার আগে একজন ডেভেলপারকে দিয়ে রিভিউ করিয়ে নিন।
+
+**Shopify:** Shopify-র জন্য বিকাশের অফিশিয়াল কোনো অ্যাপ পাইনি। যেগুলো আছে সেগুলো তৃতীয় পক্ষের, তাই দেখে নিন তারা বিকাশের চার্জের ওপর নিজেদের ফি যোগ করে কি না, আর টাকাটা কার বিকাশ মার্চেন্ট অ্যাকাউন্টে যায়।
+
+## API অ্যাক্সেস পাওয়া
+
+[ডেভেলপার পোর্টালের ওভারভিউ](https://developer.bka.sh/docs/product-overview) অনুযায়ী ধাপগুলো:
+
+1. **বিকাশ মার্চেন্ট হিসেবে onboard হন।** "You'll need to provide the required documents (such as KYC) and sign the agreement to start activation. Your Merchant Account Manager can help with this process."
+2. **বিকাশের কাছ থেকে sandbox credential নিন।** চারটা credential হলো `app_key`, `app_secret`, username আর password, যেগুলো বিকাশের নিজের কোড স্যাম্পল অনুযায়ী "will be shared with merchants during pgw onboarding"। কোনো পাবলিক টেস্ট credential নেই।
+3. **Sandbox validation পার হন।** বিকাশের ইন্টিগ্রেশন পোর্টালে sandbox credential, sandbox validation আর লাইভ credential-এর আলাদা ধাপ আছে, আর বিকাশের স্যাম্পল কোডে লেখা আছে, sandbox-এর response বিকাশের ইন্টিগ্রেশন টিমের সাথে শেয়ার করতে হতে পারে।
+4. **লাইভে যান।** "Once on-boarding is officially complete, bKash issues your production credentials."
+
+ডেভেলপার ঠিক করার আগে দুটো টেকনিক্যাল শর্ত জেনে রাখুন: বিকাশের পেমেন্ট গেটওয়ে "supports TLS 1.2 and higher", আর এর টোকেন API "more than two times within an hour" কল করা যাবে না, করলে অ্যাপ এক ঘণ্টার জন্য ব্লক হয়ে যায়। আমার [Django ইন্টিগ্রেশন গাইড](/bn/blog/bkash-tokenized-checkout-django) দেখায় দুটোই কীভাবে সামলাতে হয়।
+
+## রিফান্ড আর লিমিট
+
+ডেভেলপার পোর্টালের [রিফান্ড পেজ](https://developer.bka.sh/docs/refund-transaction) অনুযায়ী রিফান্ড সব পেমেন্ট গেটওয়ে প্রোডাক্টে চলে: "Within 60 days of the transaction date", প্রতি ট্রানজ্যাকশনে সর্বোচ্চ ১০টা রিফান্ড, আর ১০ মিনিটের মধ্যে একই রিফান্ড দুইবার না। রিফান্ড "are paid out from the merchant's current collection balance", তাই সেখানে যথেষ্ট টাকা রাখুন।
+
+কাস্টমারদের জন্য, বিকাশের চার্জ ও লিমিট পেজ অনুযায়ী সর্বনিম্ন পেমেন্ট ১ টাকা, আর "the maximum limit may vary depending on the type of merchant"। PRA অ্যাকাউন্টের পেমেন্ট গ্রহণের লিমিট PRA পেজে দেওয়া আছে।
+
+**Settlement**, অর্থাৎ সংগ্রহ করা টাকা কীভাবে আর কখন আপনার ব্যাংক অ্যাকাউন্টে আসে, বিকাশের পাবলিক পেজে বলা নেই। জিজ্ঞেস করে নিন।
+
+## বিকাশের কাছে লিখিতভাবে যা জেনে নেবেন
+
+চুক্তির আগে এগুলোর উত্তর নিয়ে নিন, কারণ কোনোটাই প্রকাশিত না:
+
+- [ ] প্রতি ট্রানজ্যাকশনের রেট (MDR), আর তার ওপর VAT যোগ হয় কি না।
+- [ ] কোনো সেটআপ, onboarding, বার্ষিক বা মাসিক ফি আছে কি না।
+- [ ] Settlement: কত ঘনঘন, কোন অ্যাকাউন্টে, আর কোনো settlement ফি আছে কি না।
+- [ ] কাস্টমারের কাছ থেকে ফি নেওয়া যাবে কি না (Dynamic Charging), আর কোন শর্তে।
+- [ ] রিফান্ড: কোনো ফি আছে কি না, আর collection balance কম থাকলে কী হয়।
+- [ ] PRA হলে: পেমেন্ট গেটওয়ে দিয়ে আসা পেমেন্ট ফ্রি কি না, আর ট্রানজ্যাকশন লিমিট কত।
+- [ ] আপনার ক্ষেত্রে কোন প্রোডাক্ট তারা সাজেস্ট করে (Tokenized Checkout, Auth & Capture না পেমেন্ট লিংক)।
+
+## সংক্ষেপে
+
+বিকাশ পেমেন্ট গেটওয়ের দাম আলোচনা করে ঠিক হয়, প্রকাশিত না, তাই অনলাইনে যে সংখ্যাই পড়ুন, বিকাশ লিখিতভাবে না দেওয়া পর্যন্ত সেটা অনুমান মাত্র। কোন অ্যাকাউন্ট লাগবে তা নির্ভর করে ট্রেড লাইসেন্সের ওপর, আর কীভাবে ইন্টিগ্রেট করবেন তা নির্ভর করে ভলিউমের ওপর: পেমেন্ট লিংকে কোড লাগে না, আর ওয়েবসাইট বা অ্যাপের জন্য Tokenized Checkout ব্যবহার করা উচিত।
+
+ইন্টিগ্রেশনে সাহায্য লাগলে, সেটাই [আমার কাজ](/services/payment-gateway-integration-bangladesh)। SSLCommerz, aamarPay আর Nagad-এর সাথে তুলনার জন্য দেখুন [বাংলাদেশের পেমেন্ট গেটওয়ের ওভারভিউ](/bn/blog/bangladesh-payment-gateways-for-developers)।
