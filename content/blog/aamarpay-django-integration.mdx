@@ -5,6 +5,15 @@ export const metadata = {
     "Integrate aamarPay in Django 5: initiate a payment, handle the success, fail and cancel callbacks, confirm with Search Transaction, and reconcile what slips through.",
   date: "2026-11-05",
   tags: ["Payments", "aamarPay", "Django", "Bangladesh"],
+  summary:
+    "Initiate a payment, redirect the customer to payment_url, and confirm every success or failure with Search Transaction: status code 2 with the right amount, currency and transaction ID means paid. Exempt the callbacks from CSRF, put the transaction ID in the cancel URL because aamarPay posts nothing there, and handle refunds in the merchant panel, since there's no refund API.",
+  faqs: [
+    { question: "Does aamarPay have a refund API?", answer: "No. aamarPay's documentation has no refund API. Refunds are handled through the merchant panel (merchant.aamarpay.com) or the aamarPay Merchant app, so record each one in your own system too." },
+    { question: "How can I test aamarPay without a merchant account?", answer: "aamarPay publishes a public sandbox store ID and signature key on its Sandbox Credentials page. aamarPay's sample READMEs note that only bKash is available as a payment method in the sandbox." },
+    { question: "Why does aamarPay say Invalid Store ID when my credentials are correct?", answer: "According to aamarPay's Common Issues page, it means you're calling the wrong host. Sandbox credentials only work on sandbox.aamarpay.com, and live credentials only on secure.aamarpay.com." },
+    { question: "What do aamarPay status codes mean?", answer: "The docs define status_code 0 as initiated, 2 as successful, 3 as expired and 7 as failed. Only 2, confirmed through Search Transaction with the right amount, means the payment is done." },
+    { question: "Is the aamarPay success callback enough to confirm a payment?", answer: "No. The callback is a browser POST that anyone can forge. Use its mer_txnid only to look the payment up, then confirm it with the Search Transaction API from your server." },
+  ],
   series: { id: "bd-payment-gateways", part: 4 },
 };
 

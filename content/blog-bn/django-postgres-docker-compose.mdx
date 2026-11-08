@@ -5,6 +5,14 @@ export const metadata = {
     "আমার Django + PostgreSQL Docker Compose স্টার্টার, কেন এটা ডাটাবেসের জন্য অপেক্ষা করে, আর volume path-এর যে বানান ভুল প্রতিবার compose down-এ চুপচাপ ডেটা মুছে দিত।",
   date: "2026-11-02",
   tags: ["Django", "PostgreSQL", "Docker"],
+  summary:
+    "আপনার Postgres ভার্সন যে data directory সত্যিই ব্যবহার করে, সেখানে একটা named volume mount করুন, major version pin করুন, আর ডাটাবেস connection নিতে তৈরি না হওয়া পর্যন্ত Django-কে অপেক্ষা করান। Mount path-এর বানান ভুল হলে কোনো error আসে না: Postgres চুপচাপ একটা anonymous volume-এ লেখে, যেটা পরের docker compose down ফেলে দেয়।",
+  faqs: [
+    { question: "docker compose down-এর পর Postgres-এর ডেটা হারিয়ে যায় কেন?", answer: "সাধারণত volume ভুল path-এ mount হওয়ার কারণে। তখন Postgres তার data directory-র জন্য Docker-এর বানানো একটা anonymous volume-এ লেখে, আর docker compose down container মুছে দেয়, তাই পরের up নতুন, খালি volume নিয়ে শুরু হয়।" },
+    { question: "Docker Compose-এ Postgres-এর data volume কোথায় mount করব?", answer: "postgres:17 ও পুরনো ভার্সনে /var/lib/postgresql/data-তে। postgres:18 ও নতুন ভার্সনে /var/lib/postgresql-এ। Major version pin করুন, যাতে ঠিক path-টা আপনার অজান্তে বদলে না যায়।" },
+    { question: "Django-কে Postgres-এর জন্য অপেক্ষা করাতে কি depends_on যথেষ্ট?", answer: "না। depends_on শুধু চালু হওয়ার ক্রম ঠিক করে, ডাটাবেস তৈরি কি না তা না। condition: service_healthy-সহ একটা healthcheck ব্যবহার করুন, অথবা ডাটাবেস সাড়া না দেওয়া পর্যন্ত বারবার চেষ্টা করে এমন একটা ছোট কমান্ড।" },
+    { question: "Container চালুর সময় কি makemigrations চালানো উচিত?", answer: "না। Migration-ও কোড: ভেবেচিন্তে বানান, review করুন, commit করুন। চালুর সময় শুধু migrate চালান।" },
+  ],
 };
 
 প্রায় প্রতিটা Django ব্যাকএন্ড শুরু করতে আমার একই কয়েকটা জিনিস লাগে: SQLite-এর বদলে PostgreSQL, সব মেশিনে একই environment, আর এক কমান্ডে পুরোটা চালু করা। এই সেটআপটা আমি একটা template repository হিসেবে রাখি, [django-postgres-setup-docker-compose](https://github.com/njmsaikat/django-postgres-setup-docker-compose), যাতে নতুন প্রজেক্ট খালি ফোল্ডার থেকে না, বরং চালু একটা stack থেকে শুরু হয়।

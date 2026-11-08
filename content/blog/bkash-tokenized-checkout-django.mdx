@@ -5,6 +5,15 @@ export const metadata = {
     "Integrate bKash Tokenized Checkout in Django 5: token caching, create and execute payment, callbacks, query fallback, idempotent order updates and refunds.",
   date: "2026-11-03",
   tags: ["Payments", "bKash", "Django", "Bangladesh"],
+  summary:
+    "Get a token, create a payment, send the customer to bKash, then call Execute Payment exactly once when they return. Only a Completed status from Execute Payment or Query Payment means you've been paid. Cache the token, because bKash allows two token requests an hour, and query the payment whenever Execute doesn't answer.",
+  faqs: [
+    { question: "How do I get bKash sandbox credentials and API keys?", answer: "You need a username, password, app_key and app_secret. bKash's product overview says the sandbox is open to everyone, but the docs don't describe a self-service sign-up, so ask bKash for sandbox credentials. Production credentials come after merchant onboarding (KYC and an agreement)." },
+    { question: "Is a successful bKash callback enough to mark an order paid?", answer: "No. bKash's docs say a successful callback only means it's time to call Execute Payment. The order is paid only when Execute Payment, or Query Payment, reports Completed." },
+    { question: "Can I call bKash Execute Payment twice?", answer: "No. A paymentId can't be reused after an execute attempt, whatever the result. If Execute times out or errors, call Query Payment to find out what happened." },
+    { question: "How long do I have to refund a bKash payment?", answer: "bKash's Refund API allows full or partial refunds within 60 days of the payment, up to 10 refunds per transaction, as long as the total doesn't exceed maxRefundableAmount." },
+    { question: "Do I need an SDK to integrate bKash in Django?", answer: "No. The integration is a handful of POST requests and a token cache, which plain requests and Django's cache handle." },
+  ],
   series: { id: "bd-payment-gateways", part: 2 },
 };
 
