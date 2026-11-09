@@ -163,6 +163,34 @@ export const projects: Project[] = [
     featured: true,
   },
   {
+    type: "product",
+    slug: "dimly",
+    name: "Dimly",
+    description:
+      "A free Linux app that controls your external monitor's real backlight over the cable, keeps it in step with your laptop screen, and dims both on a schedule. Open source, for GNOME on Ubuntu.",
+    overview: [
+      "Dimly is a free, open-source (MIT) desktop app for Linux. Linux desktops only dim the laptop's own screen; Dimly controls an external monitor's real backlight over the cable using DDC/CI, so you can stop reaching for the monitor's buttons.",
+      "It keeps every screen at the same level. The laptop's brightness keys change the external monitors too, a schedule switches between Night, Evening, Day and Max presets through the day, and a newly connected monitor joins in at the current level.",
+      "It's built with Python, GTK 4 and libadwaita on top of ddcutil, runs its background sync and schedule as systemd services, and ships as a .deb package for GNOME on Ubuntu 22.04 and later. The website and README are in English and Bangla.",
+    ],
+    features: [
+      "Brightness and contrast sliders for each monitor, with one-click Night, Evening, Day and Max presets",
+      "Laptop sync: the laptop's brightness keys change the external monitors too",
+      "Schedule that switches preset by time of day; a manual change lasts until the next switch",
+      "Keyboard shortcuts (Super+F6 brighter, Super+F5 dimmer) and a command line (dimly --up, --down, --set, --preset)",
+      "Hot-plug: a newly connected monitor is brought to the current level",
+      "Factory reset for monitors whose backlight stops responding, keeping brightness and contrast",
+      "One-step install from a .deb package; website and README in English and Bangla",
+    ],
+    stack: ["Python", "GTK 4", "libadwaita", "ddcutil (DDC/CI)", "systemd", "GitHub Pages"],
+    image: "/images/projects/dimly.webp",
+    imageDark: "/images/projects/dimly-dark.webp",
+    liveUrl: "https://saikatnjm.github.io/dimly/",
+    repoUrl: "https://github.com/saikatnjm/dimly",
+    platform: "Linux",
+    featured: true,
+  },
+  {
     type: "github",
     name: "django-api-cookiecutter",
     description:
