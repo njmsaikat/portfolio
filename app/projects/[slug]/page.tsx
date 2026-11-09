@@ -60,7 +60,9 @@ export default async function ProductPage({ params }: Props) {
         url={product.liveUrl}
         pageUrl={`${site.url}/projects/${slug}`}
         operatingSystem={product.platform ?? "Web"}
-        applicationCategory={isExtension ? "BrowserApplication" : "WebApplication"}
+        applicationCategory={
+          isExtension ? "BrowserApplication" : product.platform === "Linux" ? "UtilitiesApplication" : "WebApplication"
+        }
       />
 
       <section className="relative overflow-hidden border-b border-[var(--color-border)]">

@@ -73,7 +73,7 @@ export interface ProductProject {
   imageDark?: string; // optional dark-mode screenshot; shown when the site is in dark mode
   liveUrl: string;
   repoUrl?: string; // public source repository, when there is one
-  platform?: "Web" | "Chrome"; // schema.org operatingSystem; defaults to "Web"
+  platform?: "Web" | "Chrome" | "Linux"; // schema.org operatingSystem; defaults to "Web"
   featured?: boolean;
 }
 
