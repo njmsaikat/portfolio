@@ -24,6 +24,7 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 - Bangladesh Healthcare Search — medicines, hospitals, clinics and pharmacies: https://bdhealthsearch.vercel.app
 - Pujo Guide — bilingual Durga Puja and Bengali festival guide: https://pujoguide.vercel.app
 - Dimly — open-source Linux app that controls an external monitor's real backlight (DDC/CI), synced with the laptop screen and dimmed on a schedule: https://saikatnjm.github.io/dimly/
+- SuperV — open-source Linux clipboard history manager that works like Win+V (Super+V shows the last 25 copied items): https://saikatnjm.github.io/superv/
 
 ## Note on project visibility
 
@@ -58,7 +59,7 @@ Each guide is also available in Bangla at /bn/blog/<slug> and as Markdown at /bl
 ## Links
 
 - About Saikat Roy (canonical profile page): https://saikatroy.netlify.app/about
-- Product pages: https://saikatroy.netlify.app/projects/hisabbd, /projects/hottogol, /projects/bd-rail-ticket-alarm, /projects/bangladesh-healthcare-search, /projects/pujo-guide, /projects/bd-price-compare, /projects/dimly
+- Product pages: https://saikatroy.netlify.app/projects/hisabbd, /projects/hottogol, /projects/bd-rail-ticket-alarm, /projects/bangladesh-healthcare-search, /projects/pujo-guide, /projects/bd-price-compare, /projects/dimly, /projects/superv
 - Portfolio: https://saikatroy.netlify.app
 - GitHub: https://github.com/njmsaikat
 - LinkedIn: https://www.linkedin.com/in/njmsaikat/

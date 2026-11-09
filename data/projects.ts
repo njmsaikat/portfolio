@@ -191,6 +191,35 @@ export const projects: Project[] = [
     featured: true,
   },
   {
+    type: "product",
+    slug: "superv",
+    name: "SuperV",
+    description:
+      "A free clipboard history manager for Linux that works like Win+V on Windows: press Super+V to see the last 25 things you copied, then click one to paste it. Open source, tiny, and works on Ubuntu, Mint, Debian, Fedora, Arch and more.",
+    overview: [
+      "SuperV is a free, open-source (MIT) clipboard history manager for Linux, modelled on the Windows Win+V panel. Press Super+V to open your last 25 copied items, text and images including screenshots, then click one or press Enter to paste it into the app you were using.",
+      "It's built to stay out of the way: a single C program on GTK 3, under 100 KB and about 7 MB of memory, idle when the clipboard isn't changing (no polling) and with no network code, so no telemetry, analytics or update checks. History is stored in the user's home directory, readable only by them.",
+      "It runs on Wayland and X11. GNOME, Cinnamon, MATE and Xfce are supported, KDE Plasma is experimental, and Sway, Hyprland, i3 and COSMIC work with a manually added shortcut. It ships as a .deb, an .rpm, an Arch PKGBUILD and an install script for other distributions.",
+    ],
+    features: [
+      "Last 25 text and image items, newest first; copying an item again moves it to the top",
+      "Click or press Enter to paste into the app you were using, with full keyboard navigation",
+      "Pinned items survive reboots and Clear all; per-item Delete and Pin menu",
+      "Skips passwords copied from password managers",
+      "Super+Shift+S screenshots land in the history",
+      "Custom shortcut, System/Light/Dark theme, adjustable text size, and a movable, resizable panel that remembers its place",
+      "A superv --doctor command that checks the setup",
+      "Packages for Ubuntu, Mint and Debian (.deb), Fedora and openSUSE (.rpm) and Arch (PKGBUILD)",
+    ],
+    stack: ["C", "GTK 3", "X11 / Wayland", "Python (setup helper)", "GitHub Pages"],
+    image: "/images/projects/superv.webp",
+    imageDark: "/images/projects/superv-dark.webp",
+    liveUrl: "https://saikatnjm.github.io/superv/",
+    repoUrl: "https://github.com/saikatnjm/superv",
+    platform: "Linux",
+    featured: true,
+  },
+  {
     type: "github",
     name: "django-api-cookiecutter",
     description:
