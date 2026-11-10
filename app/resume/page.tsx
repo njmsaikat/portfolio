@@ -135,7 +135,7 @@ export default function ResumePage() {
             {/* In print: one compact line per product (name + summary, no stack) to keep the PDF short. */}
             <ul className="mt-4 space-y-3 print:space-y-1">
               {products.map((p) => (
-                <li key={p.slug} className="break-inside-avoid print:text-sm">
+                <li key={p.slug} className="break-inside-avoid print:text-xs">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 print:inline">
                     <h3 className="font-semibold print:inline">
                       <a href={p.liveUrl} className="text-[var(--color-accent)] hover:underline">
@@ -146,7 +146,7 @@ export default function ResumePage() {
                       {p.stack.join(" · ")}
                     </p>
                   </div>
-                  <p className="mt-1 text-sm text-[var(--color-text-muted)] print:mt-0 print:inline">
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)] print:mt-0 print:inline print:text-xs">
                     <span className="hidden print:inline"> · </span>
                     {p.summary}
                   </p>
