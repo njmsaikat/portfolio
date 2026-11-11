@@ -10,7 +10,7 @@ import { projects } from "@/data/projects";
 
 // Live products, one line each: the first sentence of the approved description.
 const products = projects.flatMap((p) =>
-  p.type === "product" ? [{ ...p, summary: p.description.split(/(?<=\.)\s/)[0] }] : [],
+  p.type === "product" ? [{ ...p, summary: p.description.split(/(?<=\.)\s(?=[A-Z])/)[0] }] : [],
 );
 
 export const metadata: Metadata = {
