@@ -23,7 +23,7 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 - BD Price Compare — Chrome extension comparing prices across Bangladeshi online stores by unit price: https://saikatnjm.github.io/bd-price-compare/
 - Bangladesh Healthcare Search — medicines, hospitals, clinics and pharmacies: https://bdhealthsearch.vercel.app
 - Pujo Guide — bilingual Durga Puja and Bengali festival guide: https://pujoguide.vercel.app
-- Dimly — open-source Linux app that controls an external monitor's real backlight (DDC/CI), synced with the laptop screen and dimmed on a schedule, with a GNOME top-bar menu: https://saikatnjm.github.io/dimly/
+- Dimly — open-source Linux app that controls an external monitor's real backlight (DDC/CI), synced with the laptop screen and dimmed on a schedule, with a warmth (night light) slider and a menu in GNOME's top bar or Linux Mint's panel: https://saikatnjm.github.io/dimly/
 - SuperV — open-source Linux clipboard history manager that works like Win+V (Super+V shows the last 25 copied items), packaged for Debian/Ubuntu, Fedora/openSUSE and Arch: https://saikatnjm.github.io/superv/
 - Louder — GNOME Shell extension that boosts speaker volume up to 300% from Quick Settings: https://saikatnjm.github.io/louder/
 
