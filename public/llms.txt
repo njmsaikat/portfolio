@@ -26,6 +26,7 @@ Python, JavaScript, TypeScript, PHP, HTML5, CSS3, Django, Django REST Framework,
 - Dimly — open-source Linux app that controls an external monitor's real backlight (DDC/CI), synced with the laptop screen and dimmed on a schedule, with a warmth (night light) slider and a menu in GNOME's top bar or Linux Mint's panel: https://saikatnjm.github.io/dimly/
 - SuperV — open-source Linux clipboard history manager that works like Win+V (Super+V shows the last 25 copied items), packaged for Debian/Ubuntu, Fedora/openSUSE and Arch: https://saikatnjm.github.io/superv/
 - Louder — GNOME Shell extension that boosts speaker volume up to 300% from Quick Settings: https://saikatnjm.github.io/louder/
+- SuperDot — open-source Linux emoji panel that works like Win+. (Super+. to search and type emoji, kaomoji and symbols), packaged for Debian/Ubuntu, Fedora/openSUSE and Arch: https://saikatnjm.github.io/superdot/
 
 ## Note on project visibility
 
@@ -60,7 +61,7 @@ Each guide is also available in Bangla at /bn/blog/<slug> and as Markdown at /bl
 ## Links
 
 - About Saikat Roy (canonical profile page): https://saikatroy.netlify.app/about
-- Product pages: https://saikatroy.netlify.app/projects/hisabbd, /projects/hottogol, /projects/bd-rail-ticket-alarm, /projects/bangladesh-healthcare-search, /projects/pujo-guide, /projects/bd-price-compare, /projects/dimly, /projects/superv, /projects/louder
+- Product pages: https://saikatroy.netlify.app/projects/hisabbd, /projects/hottogol, /projects/bd-rail-ticket-alarm, /projects/bangladesh-healthcare-search, /projects/pujo-guide, /projects/bd-price-compare, /projects/dimly, /projects/superv, /projects/louder, /projects/superdot
 - Portfolio: https://saikatroy.netlify.app
 - GitHub: https://github.com/njmsaikat
 - LinkedIn: https://www.linkedin.com/in/njmsaikat/
